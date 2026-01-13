@@ -7,68 +7,29 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --primary: #2c3e50;
-            --accent: #3498db;
-            --light: #ecf0f1;
-            --dark: #1a252f;
-            --text: #333;
-            --danger: #e74c3c;
-            --success: #27ae60;
-            --warning: #f39c12;
+            --primary: #2c3e50; --accent: #3498db; --light: #ecf0f1;
+            --dark: #1a252f; --text: #333; --danger: #e74c3c;
+            --success: #27ae60; --warning: #f39c12;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        
         body { background-color: #f4f7f6; color: var(--text); line-height: 1.6; min-height: 100vh; }
 
-        /* --- GOOGLE TRANSLATE --- */
-        .translate-container {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 9999;
-            background: white;
-            padding: 8px;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            border: 1px solid #eee;
-        }
-        .goog-te-gadget-simple { background-color: transparent !important; border: none !important; padding: 0 !important; font-size: 14px !important; }
+        /* GOOGLE TRANSLATE */
+        .translate-container { position: fixed; top: 20px; right: 20px; z-index: 9999; background: white; padding: 8px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid #eee; }
+        .goog-te-gadget-simple { background: transparent !important; border: none !important; padding: 0 !important; font-size: 14px !important; }
         .goog-te-banner-frame { display: none !important; }
         body { top: 0 !important; }
 
-        /* --- ADMIN CONTROLS --- */
-        .admin-controls {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            z-index: 1000;
-            align-items: flex-end;
-        }
-
-        .fab-btn {
-            background: var(--accent);
-            color: white;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            transition: transform 0.2s;
-            border: none;
-            font-size: 1.2rem;
-        }
+        /* ADMIN CONTROLS */
+        .admin-controls { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 15px; z-index: 1000; align-items: flex-end; }
+        .fab-btn { background: var(--accent); color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: transform 0.2s; border: none; font-size: 1.2rem; }
         .fab-btn:hover { transform: scale(1.1); }
 
-        #save-btn, #pass-btn { display: none; }
+        #save-btn, #pass-btn, #logout-btn { display: none; }
         #save-btn { background: var(--success); }
         #pass-btn { background: var(--warning); }
+        #logout-btn { background: var(--danger); }
         
         /* Edit Mode Styles */
         .editable { border: 1px dashed var(--accent); background: rgba(52, 152, 219, 0.05); padding: 2px; transition: background 0.2s; }
@@ -85,8 +46,10 @@
         body.editing .timeline-item, body.editing .category-box, body.editing .skill-tag-wrapper, body.editing .project-card, body.editing .cert-item { border: 1px solid #ddd; padding: 10px; margin-bottom: 20px; border-radius: 8px; background: #fff; }
         body.editing #save-btn { display: flex; }
         body.editing #pass-btn { display: flex; }
+        body.editing #logout-btn { display: flex; }
+        body.editing #login-btn { display: none; } /* Hide login pen when logged in */
 
-        /* --- LAYOUT --- */
+        /* LAYOUT */
         .container { max-width: 1200px; margin: 0 auto; padding: 20px; display: grid; grid-template-columns: 300px 1fr; gap: 30px; padding-top: 80px; }
         @media (max-width: 768px) { .container { grid-template-columns: 1fr; } }
 
@@ -166,169 +129,154 @@
         </div>
 
     <div class="admin-controls">
+        <button id="logout-btn" class="fab-btn" onclick="logout()" title="Déconnexion">
+            <i class="fas fa-sign-out-alt"></i>
+        </button>
         <button id="pass-btn" class="fab-btn" onclick="changePassword()" title="Changer le mot de passe">
             <i class="fas fa-key"></i>
         </button>
-        <button id="save-btn" class="fab-btn" onclick="exportData()" title="Sauvegarder les données (Copier le code)">
+        <button id="save-btn" class="fab-btn" onclick="saveDataToAPI()" title="Sauvegarder">
             <i class="fas fa-save"></i>
         </button>
-        <button class="fab-btn" onclick="toggleEditMode()" title="Admin Login">
+        <button id="login-btn" class="fab-btn" onclick="login()" title="Admin Login">
             <i class="fas fa-pen"></i>
         </button>
     </div>
 
     <script>
         // ==========================================
-        // 1. DATA OBJECT
+        // 1. CONFIGURATION
         // ==========================================
+        const API_BASE_URL = "http://localhost:8000"; // REPLACE THIS WITH YOUR ONLINE API URL
+        
+        let authToken = null;
+        let isEditMode = false;
+
         let cvData = {
-            personal: {
-                name: "Assami BAGA",
-                title: "Ingénieur IA & Full Stack",
-                availability: "Disponible dès octobre 2026",
-                email: "bagaassami09@gmail.com",
-                phone: "07 53 49 67 71",
-                location: "Thiais (94320), Ile de france",
-                linkedin: "assami-baga",
-                social: "bagus_full_stack",
-                summary: "Étudiant en dernière année du cycle d'ingénieur en informatique à l'EILCO, je suis à la recherche active d'un CDI. Mon objectif est d'exploiter ma passion pour la technologie en participant à la conception et au développement d'applications de haute qualité."
-            },
-            softSkills: ["Polyvalence", "Efficacité", "Créativité", "Adaptabilité", "Collaboration", "Autonomie", "Curiosité"],
-            languages: ["Français", "Anglais"],
-            education: [
-                { degree: "Diplôme d'ingénieur en Ingénierie Logicielle et IA", school: "EILCO, Calais, France", date: "Depuis septembre 2023" },
-                { degree: "Certifications: PUPA, LCB-FT, HDS, ISO 27001", school: "CDC Informatique, Bagneux", date: "Jan 2025 - Déc 2025" },
-                { degree: "RGPD, Protection des données, Sécurité incendie", school: "CDC Informatique, Bagneux", date: "Jan 2024 - Déc 2024" },
-                { degree: "Technologie IP, SQL, Linux, Scripting Shell", school: "Essitech, Ouagadougou", date: "Juin 2023" },
-                { degree: "Licence en Ingénierie des Systèmes d'Information", school: "ESI, Burkina Faso", date: "Oct 2019 - Fév 2023" }
-            ],
-            experience: [
-                {
-                    role: "Ingénieur Exploitation",
-                    company: "CDC Informatique, Bagneux",
-                    date: "Depuis septembre 2024",
-                    tasks: ["Participer à un travail collaboratif", "Réalisation de PYMQCOPY", "Réalisation d'un Référentiel des Services Flux (en cours)"]
-                },
-                {
-                    role: "Bénévolat (Accompagnement scolaire)",
-                    company: "AFEV Calais",
-                    date: "Sept 2023 - Sept 2024",
-                    tasks: ["Accompagnement des jeunes en difficulté scolaire", "Création de lien dans les quartiers populaires"]
-                },
-                {
-                    role: "Software Engineer",
-                    company: "Orange & Smile, Ouagadougou",
-                    date: "Sept 2022 - Sept 2023",
-                    tasks: ["Développement d'un Système Intelligent de Conception des Produits", "Participation au développement de MySpace (Frontend)", "Participation au développement de BourseFondation (Backend)"]
-                }
-            ],
-            techSkills: [
-                { cat: "Dev Multiplateforme", tools: "HTML, CSS, JS, TS, SASS, Bootstrap, Tailwind, WordPress, Flutter Flow, Java, Pygame, JavaFX, Angular, React, Kotlin, Docker" },
-                { cat: "API RESTFUL", tools: "NodeJS, ExpressJS, Spring, FastAPI, Laravel, Keycloak, JWT, Postman, Git, Swagger" },
-                { cat: "Conception & Modeling", tools: "UML, Merise, Scrum, Power AMC, Adobe XD, Figma, JSON, XML" },
-                { cat: "Data & AI", tools: "CNN, RNN, TensorFlow, Scikit-learn, PyTorch, YOLO, Pandas, NumPy, Matplotlib, Power BI" },
-                { cat: "Databases", tools: "MySQL, MariaDB, PostgreSQL, Oracle Database, SQL Server" },
-                { cat: "Languages", tools: "C, Java, Javascript, Python, R, PHP, Kotlin, Bash, Arduino, VHDL" }
-            ],
-            projects: [
-                { name: "Blue Attendance", desc: "Liste de présence électronique via Bluetooth (App Mobile).", tech: "Java, Xml, FastAPI, Android Studio", link: "#" },
-                { name: "PNP+", desc: "Système Intelligent de Conception des Produits et Promotions.", tech: "Angular, Spring boot, SQL", link: "#" },
-                { name: "Myspace", desc: "Plateforme SaaS complète.", tech: "React, Node.js, PostgreSQL", link: "#" },
-                { name: "BourseFondation", desc: "Plateforme SaaS complète.", tech: "React, Node.js, PostgreSQL", link: "#" },
-                { name: "UI Calculator", desc: "Application web UI UX Design.", tech: "HTML, CSS, SCSS", link: "#" },
-                { name: "UI Keyboard", desc: "Application web UI UX Design.", tech: "HTML, CSS, SCSS", link: "#" },
-                { name: "Projet IOT", desc: "Plateforme SaaS complète IOT.", tech: "React, Node.js, PostgreSQL", link: "#" },
-                { name: "ESI Website", desc: "Site web statique de l'ESI.", tech: "HTML, CSS, Bootstrap", link: "#" },
-                { name: "Checkers Game", desc: "Jeu de dames en mode console.", tech: "C, Linux", link: "#" },
-                { name: "Todo List", desc: "Todo-list avec auth et email verification.", tech: "PHP, Laravel, Voyager", link: "#" },
-                { name: "Technology Transfer", desc: "Plateforme de transfert de technologies.", tech: "HTML, CSS, Bootstrap, MySql", link: "#" },
-                { name: "Spare", desc: "Suivi budgétaire (synchro bancaire).", tech: "React, Node.js, Firebase", link: "#" },
-                { name: "PYMQCOPY", desc: "Recopie de messages MQ source vers destinations.", tech: "Python, MQ Series, Bash", link: "#" }
-            ],
-            certifications: [
-                { name: "C", link: "#" },
-                { name: "HTML", link: "#" },
-                { name: "CSS", link: "#" },
-                { name: "Javascript", link: "#" },
-                { name: "Java", link: "#" },
-                { name: "PHP", link: "#" },
-                { name: "SQL", link: "#" },
-                { name: "Python for Beginner", link: "#" },
-                { name: "Python Data Structures", link: "#" },
-                { name: "Coding marketers", link: "#" },
-                { name: "Responsive Web Design", link: "#" },
-                { name: "Intro référentiel HDS & ISO 27001", link: "#" },
-                { name: "Sensibilisation PUPA", link: "#" },
-                { name: "Fondamentaux de la LCB-FT", link: "#" },
-                { name: "RGPD - Protection données", link: "#" },
-                { name: "Classification et protection données", link: "#" },
-                { name: "Déontologie code", link: "#" },
-                { name: "Evacuation et sécurité incendie", link: "#" }
-            ]
+            personal: { name: "Chargement...", title: "", availability: "", email: "", phone: "", location: "", linkedin: "", social: "", summary: "" },
+            softSkills: [], languages: [], education: [], experience: [], techSkills: [], projects: [], certifications: []
         };
 
         // ==========================================
-        // 2. STATE MANAGEMENT
+        // 2. API LOGIC
         // ==========================================
-        let isEditMode = false;
         
-        // DEFAULT PASSWORD HASH (SHA-256 for "admin123")
-        // If LocalStorage has a custom hash, we use that instead.
-        let adminHash = localStorage.getItem('adminHash') || "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9"; 
-
-        function updatePersonal(field, value) { cvData.personal[field] = value; }
-        
-        function updateArrayItem(arrayName, index, field, value) {
-            if(field) {
-                cvData[arrayName][index][field] = value;
-            } else {
-                cvData[arrayName][index] = value;
+        async function loadDataFromAPI() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/data`);
+                const data = await response.json();
+                if (Object.keys(data).length > 0) {
+                    cvData = data;
+                    render();
+                }
+            } catch (error) {
+                console.warn("API Offline or connection error", error);
             }
         }
 
-        function updateTask(expIndex, taskIndex, value) {
-            cvData.experience[expIndex].tasks[taskIndex] = value;
-        }
+        async function login() {
+            const password = prompt("🔐 Mot de passe Admin:");
+            if (!password) return;
 
-        // ==========================================
-        // 3. CRUD ACTIONS
-        // ==========================================
-        
-        function addItem(type) {
-            if (type === 'experience') {
-                cvData.experience.unshift({ role: "Nouveau Poste", company: "Entreprise", date: "Date", tasks: ["Nouvelle tâche"] });
-            } else if (type === 'education') {
-                cvData.education.unshift({ degree: "Nouveau Diplôme", school: "École", date: "Date" });
-            } else if (type === 'techSkills') {
-                cvData.techSkills.push({ cat: "Nouvelle Catégorie", tools: "Outils..." });
-            } else if (type === 'softSkills') {
-                cvData.softSkills.push("Nouvelle compétence");
-            } else if (type === 'languages') {
-                cvData.languages.push("Nouvelle langue");
-            } else if (type === 'projects') {
-                cvData.projects.unshift({ name: "Nouveau Projet", desc: "Description...", tech: "Tech Stack", link: "#" });
-            } else if (type === 'certifications') {
-                cvData.certifications.unshift({ name: "Nouvelle Certification", link: "#" });
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: password })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    authToken = data.token;
+                    isEditMode = true;
+                    document.body.classList.add('editing');
+                    render();
+                } else {
+                    alert("❌ Mot de passe incorrect");
+                }
+            } catch (error) {
+                alert("Erreur connexion serveur");
             }
+        }
+
+        async function logout() {
+            if (authToken) {
+                fetch(`${API_BASE_URL}/api/logout`, {
+                    method: 'POST',
+                    headers: { 'x-token': authToken }
+                });
+            }
+            authToken = null;
+            isEditMode = false;
+            document.body.classList.remove('editing');
             render();
         }
 
-        function deleteItem(type, index) {
-            if(!confirm("Êtes-vous sûr de vouloir supprimer cet élément ?")) return;
+        async function saveDataToAPI() {
+            if (!authToken) return alert("Non connecté");
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/data`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'x-token': authToken 
+                    },
+                    body: JSON.stringify(cvData)
+                });
+
+                if (response.ok) alert("✅ Sauvegardé avec succès !");
+                else alert("❌ Erreur lors de la sauvegarde.");
+            } catch (error) {
+                alert("Erreur réseau");
+            }
+        }
+
+        async function uploadFileToAPI(file) {
+            if (!authToken) return null;
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/upload`, {
+                    method: 'POST',
+                    headers: { 'x-token': authToken },
+                    body: formData
+                });
+                const result = await response.json();
+                // Return full URL. Assuming backend returns relative path like "/uploads/..."
+                return API_BASE_URL + result.url;
+            } catch (error) {
+                console.error("Upload error", error);
+                alert("Erreur d'upload");
+                return null;
+            }
+        }
+
+        async function changePassword() {
+            if (!authToken) return;
+            const oldPass = prompt("Ancien mot de passe :");
+            const newPass = prompt("Nouveau mot de passe :");
             
-            if (type === 'experience') cvData.experience.splice(index, 1);
-            else if (type === 'education') cvData.education.splice(index, 1);
-            else if (type === 'techSkills') cvData.techSkills.splice(index, 1);
-            else if (type === 'softSkills') cvData.softSkills.splice(index, 1);
-            else if (type === 'languages') cvData.languages.splice(index, 1);
-            else if (type === 'projects') cvData.projects.splice(index, 1);
-            else if (type === 'certifications') cvData.certifications.splice(index, 1);
-            
-            render();
+            if(!oldPass || !newPass) return;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/change-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ old_password: oldPass, new_password: newPass })
+                });
+                const res = await response.json();
+                if(response.ok) {
+                    alert("✅ " + res.message);
+                    logout(); // Force login with new password
+                } else {
+                    alert("❌ " + res.detail);
+                }
+            } catch(e) { alert("Erreur serveur"); }
         }
 
         // ==========================================
-        // 4. RENDER FUNCTION
+        // 3. RENDER FUNCTION (Exact Design)
         // ==========================================
         function render() {
             const app = document.getElementById('app');
@@ -338,28 +286,33 @@
             const delBtn = (type, index) => 
                 `<button class="btn-action btn-delete" onclick="deleteItem('${type}', ${index})"><i class="fas fa-trash"></i></button>`;
 
+            // Ensure Personal Data exists to avoid crash
+            const p = cvData.personal || {};
+            const photoSrc = p.photoUrl || 'https://via.placeholder.com/150';
+            const cvLink = p.cvUrl || '#';
+
             app.innerHTML = `
                 <div class="container">
                     <aside class="sidebar">
                         <div class="profile-wrapper">
-                            <img src="https://via.placeholder.com/150" alt="Profile" id="profile-img" class="profile-img">
+                            <img src="${photoSrc}" alt="Profile" id="profile-img" class="profile-img">
                             <label for="photo-upload" class="upload-btn"><i class="fas fa-camera"></i></label>
                             <input type="file" id="photo-upload" accept="image/*" style="display:none">
                         </div>
                         
-                        <h1 class="name ${editClass}" ${contentEditable} oninput="updatePersonal('name', this.innerText)">${cvData.personal.name}</h1>
-                        <p class="title ${editClass}" ${contentEditable} oninput="updatePersonal('title', this.innerText)">${cvData.personal.title}</p>
-                        <div class="status-badge ${editClass}" ${contentEditable} oninput="updatePersonal('availability', this.innerText)">${cvData.personal.availability}</div>
+                        <h1 class="name ${editClass}" ${contentEditable} oninput="updatePersonal('name', this.innerText)">${p.name}</h1>
+                        <p class="title ${editClass}" ${contentEditable} oninput="updatePersonal('title', this.innerText)">${p.title}</p>
+                        <div class="status-badge ${editClass}" ${contentEditable} oninput="updatePersonal('availability', this.innerText)">${p.availability}</div>
                         
                         <div class="contact-info">
-                            <div class="contact-item"><i class="fas fa-envelope"></i> <span class="${editClass}" ${contentEditable} oninput="updatePersonal('email', this.innerText)">${cvData.personal.email}</span></div>
-                            <div class="contact-item"><i class="fas fa-phone"></i> <span class="${editClass}" ${contentEditable} oninput="updatePersonal('phone', this.innerText)">${cvData.personal.phone}</span></div>
-                            <div class="contact-item"><i class="fas fa-map-marker-alt"></i> <span class="${editClass}" ${contentEditable} oninput="updatePersonal('location', this.innerText)">${cvData.personal.location}</span></div>
-                            <div class="contact-item"><i class="fab fa-linkedin"></i> <span class="${editClass}" ${contentEditable} oninput="updatePersonal('linkedin', this.innerText)">${cvData.personal.linkedin}</span></div>
+                            <div class="contact-item"><i class="fas fa-envelope"></i> <span class="${editClass}" ${contentEditable} oninput="updatePersonal('email', this.innerText)">${p.email}</span></div>
+                            <div class="contact-item"><i class="fas fa-phone"></i> <span class="${editClass}" ${contentEditable} oninput="updatePersonal('phone', this.innerText)">${p.phone}</span></div>
+                            <div class="contact-item"><i class="fas fa-map-marker-alt"></i> <span class="${editClass}" ${contentEditable} oninput="updatePersonal('location', this.innerText)">${p.location}</span></div>
+                            <div class="contact-item"><i class="fab fa-linkedin"></i> <span class="${editClass}" ${contentEditable} oninput="updatePersonal('linkedin', this.innerText)">${p.linkedin}</span></div>
                         </div>
 
                         <div class="cv-download-wrapper">
-                            <a href="#" id="cv-download-btn" class="btn-cv ${isEditMode ? 'upload-mode' : ''}" ${isEditMode ? 'onclick="document.getElementById(\'cv-upload\').click(); return false;"' : 'download="CV_Assami_BAGA.pdf"'}>
+                            <a href="${cvLink}" id="cv-download-btn" class="btn-cv ${isEditMode ? 'upload-mode' : ''}" ${isEditMode ? 'onclick="document.getElementById(\'cv-upload\').click(); return false;"' : 'target="_blank"'}>
                                 <i class="fas ${isEditMode ? 'fa-file-upload' : 'fa-download'}"></i> 
                                 ${isEditMode ? 'Uploader CV (PDF)' : 'Télécharger mon CV'}
                             </a>
@@ -370,7 +323,7 @@
                         
                         <h3>Atouts</h3>
                         <div class="skills-list">
-                            ${cvData.softSkills.map((s, i) => `
+                            ${(cvData.softSkills || []).map((s, i) => `
                                 <div class="skill-tag-wrapper">
                                     <span class="skill-tag ${editClass}" ${contentEditable} oninput="updateArrayItem('softSkills', ${i}, null, this.innerText)">${s}</span>
                                     ${delBtn('softSkills', i)}
@@ -381,7 +334,7 @@
 
                         <h3 style="margin-top:20px">Langues</h3>
                         <div class="skills-list">
-                            ${cvData.languages.map((s, i) => `
+                            ${(cvData.languages || []).map((s, i) => `
                                 <div class="skill-tag-wrapper">
                                     <span class="skill-tag ${editClass}" ${contentEditable} oninput="updateArrayItem('languages', ${i}, null, this.innerText)">${s}</span>
                                     ${delBtn('languages', i)}
@@ -394,13 +347,13 @@
                     <main class="main-content">
                         <section class="section">
                             <h2 class="section-title">À propos de moi</h2>
-                            <p class="${editClass}" ${contentEditable} oninput="updatePersonal('summary', this.innerText)">${cvData.personal.summary}</p>
+                            <p class="${editClass}" ${contentEditable} oninput="updatePersonal('summary', this.innerText)">${p.summary}</p>
                         </section>
 
                         <section class="section">
                             <h2 class="section-title">🏆 Projets Phares</h2>
                             <div class="project-grid">
-                                ${cvData.projects.map((proj, i) => `
+                                ${(cvData.projects || []).map((proj, i) => `
                                     <div class="project-card">
                                         ${delBtn('projects', i)}
                                         <div class="project-header">
@@ -420,7 +373,7 @@
                         <section class="section">
                             <h2 class="section-title">📊 Mes Certifications</h2>
                             <div class="cert-grid">
-                                ${cvData.certifications.map((cert, i) => `
+                                ${(cvData.certifications || []).map((cert, i) => `
                                     <div class="cert-item">
                                         ${delBtn('certifications', i)}
                                         <div class="cert-name ${editClass}" ${contentEditable} oninput="updateArrayItem('certifications', ${i}, 'name', this.innerText)">${cert.name}</div>
@@ -437,7 +390,7 @@
                         <section class="section">
                             <h2 class="section-title">Compétences Techniques</h2>
                             <div class="tech-grid">
-                                ${cvData.techSkills.map((skill, i) => `
+                                ${(cvData.techSkills || []).map((skill, i) => `
                                     <div class="category-box">
                                         ${delBtn('techSkills', i)}
                                         <div class="category-title ${editClass}" ${contentEditable} oninput="updateArrayItem('techSkills', ${i}, 'cat', this.innerText)">${skill.cat}</div>
@@ -450,7 +403,7 @@
 
                         <section class="section">
                             <h2 class="section-title">Expériences Professionnelles</h2>
-                            ${cvData.experience.map((exp, i) => `
+                            ${(cvData.experience || []).map((exp, i) => `
                                 <div class="timeline-item">
                                     ${delBtn('experience', i)}
                                     <div class="job-title ${editClass}" ${contentEditable} oninput="updateArrayItem('experience', ${i}, 'role', this.innerText)">${exp.role}</div>
@@ -458,7 +411,7 @@
                                     <span class="date ${editClass}" ${contentEditable} oninput="updateArrayItem('experience', ${i}, 'date', this.innerText)">${exp.date}</span>
                                     <div class="description">
                                         <ul>
-                                            ${exp.tasks.map((t, ti) => `<li class="${editClass}" ${contentEditable} oninput="updateTask(${i}, ${ti}, this.innerText)">${t}</li>`).join('')}
+                                            ${(exp.tasks || []).map((t, ti) => `<li class="${editClass}" ${contentEditable} oninput="updateTask(${i}, ${ti}, this.innerText)">${t}</li>`).join('')}
                                         </ul>
                                     </div>
                                 </div>
@@ -468,7 +421,7 @@
 
                         <section class="section">
                             <h2 class="section-title">Diplômes et Formations</h2>
-                            ${cvData.education.map((edu, i) => `
+                            ${(cvData.education || []).map((edu, i) => `
                                 <div class="timeline-item">
                                     ${delBtn('education', i)}
                                     <div class="job-title ${editClass}" ${contentEditable} oninput="updateArrayItem('education', ${i}, 'degree', this.innerText)">${edu.degree}</div>
@@ -486,120 +439,72 @@
         }
 
         // ==========================================
-        // 5. EXPORT DATA (Include new password hash)
+        // 4. DATA UPDATE HELPERS
         // ==========================================
-        function exportData() {
-            // We explain to the user that we are copying the Hash, not the password itself.
-            let exportScript = `// Remplacer le bloc existant avec ceci :\n` +
-                               `let cvData = ${JSON.stringify(cvData, null, 4)};\n` +
-                               `// Note: Si vous avez changé le mot de passe, mettez à jour la variable adminHash plus bas avec : "${adminHash}"`;
-            
-            navigator.clipboard.writeText(exportScript).then(() => {
-                alert("✅ Code copié !\n\n1. Allez dans index.html\n2. Remplacez 'let cvData = ...'\n3. IMPORTANT: Si vous avez changé le mot de passe, n'oubliez pas de copier le nouveau Hash indiqué dans le texte copié.");
-            }, (err) => {
-                console.error('Erreur', err);
-            });
-        }
-
-        // ==========================================
-        // 6. CRYPTO & ADMIN LOGIC
-        // ==========================================
+        function updatePersonal(field, value) { cvData.personal[field] = value; }
         
-        // Hashing Helper
-        async function sha256(message) {
-            const msgBuffer = new TextEncoder().encode(message);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        function updateArrayItem(arrayName, index, field, value) {
+            if(field) cvData[arrayName][index][field] = value;
+            else cvData[arrayName][index] = value;
         }
 
-        // TOGGLE EDIT
-        async function toggleEditMode() {
-            if (document.documentElement.classList.contains('translated-ltr')) {
-                alert("Attention : Impossible d'éditer en mode traduction. Rafraîchissez la page.");
-                return;
-            }
+        function updateTask(expIndex, taskIndex, value) {
+            cvData.experience[expIndex].tasks[taskIndex] = value;
+        }
 
-            if (isEditMode) {
-                isEditMode = false;
-                document.body.classList.remove('editing');
-            } else {
-                const input = prompt("🔐 Accès Admin : Mot de passe");
-                if (input !== null) {
-                    const hashedInput = await sha256(input);
-                    // Check against current active hash (from variable or localStorage)
-                    if (hashedInput === adminHash) {
-                        isEditMode = true;
-                        document.body.classList.add('editing');
-                    } else {
-                        alert("❌ Mot de passe incorrect.");
-                    }
-                }
-            }
+        function addItem(type) {
+            const map = {
+                experience: { role: "Nouveau Poste", company: "Entreprise", date: "Date", tasks: ["Tâche"] },
+                education: { degree: "Nouveau Diplôme", school: "École", date: "Date" },
+                techSkills: { cat: "Catégorie", tools: "Outils..." },
+                projects: { name: "Nouveau Projet", desc: "Description...", tech: "Stack", link: "#" },
+                certifications: { name: "Certification", link: "#" },
+                softSkills: "Nouvelle compétence",
+                languages: "Nouvelle langue"
+            };
+            if(!cvData[type]) cvData[type] = [];
+            cvData[type].unshift(map[type]);
             render();
         }
 
-        // CHANGE PASSWORD (Saves to Browser Memory)
-        async function changePassword() {
-            const newPass = prompt("Entrez le nouveau mot de passe :");
-            if(newPass) {
-                const newHash = await sha256(newPass);
-                adminHash = newHash; // Update memory
-                localStorage.setItem('adminHash', newHash); // Update browser storage
-                alert("✅ Mot de passe changé (sur ce navigateur) !\n\nN'oubliez pas d'utiliser le bouton Sauvegarder pour récupérer le code Hash si vous voulez le rendre permanent.");
+        function deleteItem(type, index) {
+            if(confirm("Supprimer ?")) {
+                cvData[type].splice(index, 1);
+                render();
             }
         }
 
         function attachListeners() {
-            // PHOTO
-            const photoInput = document.getElementById('photo-upload');
-            const imgElement = document.getElementById('profile-img');
-            const savedImage = localStorage.getItem('profilePhoto');
-            if (savedImage && imgElement) imgElement.src = savedImage;
-            if(photoInput) {
-                photoInput.addEventListener('change', function(e) {
-                    const file = e.target.files[0];
-                    if(file && file.size < 3*1024*1024) {
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            if(imgElement) imgElement.src = e.target.result;
-                            try { localStorage.setItem('profilePhoto', e.target.result); } catch(e){}
-                        };
-                        reader.readAsDataURL(file);
+            const pi = document.getElementById('photo-upload');
+            if(pi) pi.onchange = async (e) => {
+                const file = e.target.files[0];
+                if(file) {
+                    const url = await uploadFileToAPI(file);
+                    if(url) {
+                        cvData.personal.photoUrl = url;
+                        render();
                     }
-                });
-            }
+                }
+            };
 
-            // CV PDF
-            const cvInput = document.getElementById('cv-upload');
-            const cvBtn = document.getElementById('cv-download-btn');
-            const savedCV = localStorage.getItem('cvFile');
-            if (savedCV && cvBtn && !isEditMode) cvBtn.href = savedCV;
-            else if (!savedCV && cvBtn && !isEditMode) {
-                cvBtn.style.opacity = "0.5";
-                cvBtn.style.cursor = "not-allowed";
-                cvBtn.onclick = (e) => { e.preventDefault(); alert("Aucun CV disponible."); };
-            }
-            if(cvInput) {
-                cvInput.addEventListener('change', function(e) {
-                    const file = e.target.files[0];
-                    if(file && file.size < 3*1024*1024) {
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            try {
-                                localStorage.setItem('cvFile', e.target.result);
-                                alert("CV sauvegardé !");
-                                render();
-                            } catch (err) { alert("Erreur stockage."); }
-                        };
-                        reader.readAsDataURL(file);
-                    } else { alert("Fichier trop gros (Max 3MB)"); }
-                });
-            }
+            const ci = document.getElementById('cv-upload');
+            if(ci) ci.onchange = async (e) => {
+                const file = e.target.files[0];
+                if(file) {
+                    const url = await uploadFileToAPI(file);
+                    if(url) {
+                        cvData.personal.cvUrl = url;
+                        alert("CV PDF uploadé !");
+                        render();
+                    }
+                }
+            };
         }
 
-        // Initial Render
-        render();
+        // ==========================================
+        // 5. INITIALIZE
+        // ==========================================
+        loadDataFromAPI();
 
     </script>
 

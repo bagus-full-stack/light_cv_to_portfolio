@@ -1,79 +1,159 @@
-# Portfolio CV éditable (HTML/JS)
+# Portfolio CV éditable + API (FastAPI + HTML)
 
-Ce projet est une page HTML monopage qui sert de portfolio/CV interactif pour **Assami BAGA**. Il fonctionne sans backend : toutes les données sont stockées en mémoire et dans le `localStorage` du navigateur. Un mode admin permet d’éditer le contenu directement dans la page, puis d’exporter le code JSON mis à jour (et le hash du mot de passe) pour le rendre permanent dans le fichier.
+Ce projet propose :
+- Une **SPA HTML/JS** de portfolio/CV entièrement éditable côté client (pas de build tooling).
+- Une **API FastAPI** pour persister les données, gérer l’authentification par token et uploader les fichiers (photo, CV PDF).
 
-## Sommaire
-- [Fonctionnalités](#fonctionnalités)
-- [Structure et données](#structure-et-données)
-- [Mode Admin et authentification](#mode-admin-et-authentification)
-- [Sauvegarde et export](#sauvegarde-et-export)
-- [Gestion des médias (photo, CV PDF)](#gestion-des-médias-photo-cv-pdf)
-- [Traduction Google](#traduction-google)
-- [Lancer le projet](#lancer-le-projet)
-- [Personnalisation rapide](#personnalisation-rapide)
-- [Notes et limites](#notes-et-limites)
-
-## Fonctionnalités
-- **CV/Portfolio statique** en HTML/CSS/JS, aucune dépendance backend.
-- **Mode Admin** (protégé par mot de passe, hash SHA-256) pour éditer le contenu en place (contenteditable).
-- **CRUD front** sur toutes les sections : expériences, formations, compétences techniques, soft skills, langues, projets, certifications.
-- **Export des données** : copie dans le presse-papiers du JSON `cvData` et rappel du hash de mot de passe à replacer dans `index.html`.
-- **Mémorisation locale** via `localStorage` : photo de profil, CV PDF uploadé, hash de mot de passe si modifié.
-- **Bouton de téléchargement du CV** (ou upload en mode édition).
-- **Traduction** avec le widget Google Translate.
-- **UI mobile-friendly** (mise en page responsive).
-
-## Structure et données
-- Tout est dans `index.html`.
-- Les données sont contenues dans l’objet `cvData` :
-  - `personal` : nom, titre, disponibilité, email, téléphone, localisation, LinkedIn, social, résumé.
-  - `softSkills`, `languages` : tableaux simples.
-  - `education`, `experience` : listes d’objets (avec tâches pour l’expérience).
-  - `techSkills` : catégories + outils.
-  - `projects` : nom, description, stack, lien.
-  - `certifications` : nom + lien.
-- Les boutons d’ajout/suppression n’apparaissent qu’en mode édition (`body.editing`).
-
-## Mode Admin et authentification
-- Mot de passe par défaut : hash SHA-256 de `"admin123"` stocké dans `adminHash`.
-- Au clic sur le crayon (bouton flottant), un prompt demande le mot de passe. Si le hash correspond à `adminHash`, le mode édition est activé (`isEditMode = true`, classe `editing` sur le `body`).
-- **Changement de mot de passe** : bouton clé → prompt → calcule un nouveau hash SHA-256 → sauvegarde dans `localStorage` et en mémoire (`adminHash`).
-
-## Sauvegarde et export
-- Bouton disque (save) : copie dans le presse-papiers un script contenant :
-  - Le nouveau `cvData` sérialisé (JSON beautifié).
-  - Un rappel du hash à mettre à jour dans `adminHash`.
-- Pour rendre les changements permanents côté fichier :
-  1) Copier le bloc exporté,
-  2) Ouvrir `index.html`,
-  3) Remplacer la déclaration `let cvData = ...` par le bloc,
-  4) Mettre à jour `adminHash` si le mot de passe a changé.
-
-## Gestion des médias (photo, CV PDF)
-- **Photo de profil** : input file caché ; l’image est encodée en base64 et stockée dans `localStorage` (`profilePhoto`). Taille max ~3 Mo.
-- **CV PDF** : en mode édition, le bouton “Uploader CV” ouvre un input file ; le PDF est stocké en base64 dans `localStorage` (`cvFile`). En mode visiteur, le bouton tente de télécharger ce fichier (ou affiche “Aucun CV” si absent).
-
-## Traduction Google
-- Intègre le widget Google Translate (`translate.google.com/translate_a/element.js`) pour proposer une traduction de la page.
-- Restriction : l’édition est bloquée si la page est en mode traduction (test sur la classe `translated-ltr`).
-
-## Lancer le projet
-1. Cloner/télécharger le fichier `index.html`.
-2. Ouvrir `index.html` dans un navigateur moderne (Chrome/Firefox/Edge).
-3. (Optionnel) Servir via un petit serveur local pour éviter certains blocages CORS liés à `file://` (ex. `python -m http.server 8000`).
-
-## Personnalisation rapide
-- **Texte et données** : éditer en mode Admin puis exporter, ou modifier directement l’objet `cvData` dans `index.html`.
-- **Mot de passe** : bouton clé → changer → exporter pour récupérer le nouveau hash → remplacer `adminHash` dans le fichier.
-- **Liens projets/certifs** : remplir les champs `link` (actuellement `#` pour certains).
-- **Couleurs/Styles** : palette dans `:root` (variables CSS).
-
-## Notes et limites
-- **Persistance locale** : les médias et le hash modifié sont stockés dans le `localStorage` du navigateur courant uniquement. Pour les rendre permanents, il faut réintégrer le code exporté dans `index.html`.
-- **Sécurité** : le mot de passe est géré côté front (hash en clair dans le code), donc ne pas utiliser un mot de passe sensible. Convient à un usage portfolio/démo.
-- **Poids des fichiers** : uploads limités à ~3 Mo pour l’image et le PDF.
-- **Traduction** : désactive l’édition pour éviter les incohérences du DOM traduit.
+La page reste fonctionnelle même si l’API est hors ligne (fallback sur les données par défaut intégrées au front). Quand l’API est active, on peut modifier le contenu en mode admin et sauvegarder côté serveur.
 
 ---
 
-Bon travail et bonne personnalisation ! 🎉
+## Sommaire
+- [Architecture](#architecture)
+- [Fonctionnalités côté front](#fonctionnalités-côté-front)
+- [Fonctionnalités côté API](#fonctionnalités-côté-api)
+- [Données et schéma](#données-et-schéma)
+- [Endpoints](#endpoints)
+- [Sécurité & Authentification](#sécurité--authentification)
+- [Mise en route](#mise-en-route)
+- [Flux d’édition complet](#flux-dédition-complet)
+- [Personnalisation](#personnalisation)
+- [Notes & limites](#notes--limites)
+- [Améliorations possibles](#améliorations-possibles)
+
+---
+
+## Architecture
+- **Frontend** : `index.html` autonome (HTML/CSS/JS) avec édition inline (`contentEditable`). Appels REST vers l’API quand disponible.
+- **Backend** : `main.py` (FastAPI)
+  - Persistance JSON (`database.json`), config admin (`admin.json`), et uploads statiques (`/uploads`).
+  - CORS ouvert (`*`) par défaut.
+  - Tokens en mémoire pour les sessions admin.
+
+---
+
+## Fonctionnalités côté front
+- **Affichage CV/portfolio** : sections profil, à-propos, expériences, formations, compétences (tech/soft), langues, projets, certifications.
+- **Mode Admin** :
+  - Login par mot de passe → récupère un **token** REST.
+  - Active l’édition inline, boutons d’ajout/suppression, upload photo/CV.
+  - Sauvegarde via `POST /api/data`.
+- **CRUD front** : ajout/suppression d’éléments (expériences, formations, compétences, projets, certifications, soft skills, langues).
+- **Uploads** : photo + CV PDF, envoyés à `POST /api/upload` (URL retournée stockée dans `cvData`).
+- **Traduction** : widget Google Translate (désactive l’édition si la page est traduite).
+- **Responsive** : grille sidebar + contenu, adaptée mobile.
+
+---
+
+## Fonctionnalités côté API
+- **Lecture** : `GET /api/data` charge le CV (fallback créé depuis `DEFAULT_DATA` si `database.json` absent).
+- **Écriture** : `POST /api/data` sauvegarde le CV (protégé par token).
+- **Auth** :
+  - `POST /api/login` (mot de passe hashé côté serveur, hash stocké dans `admin.json`).
+  - `POST /api/logout` (invalide le token en mémoire).
+  - `POST /api/change-password` (re-hash + invalide les tokens existants).
+- **Uploads** : `POST /api/upload` (protégé par token) sauvegarde dans `uploads/` et renvoie l’URL publique `/uploads/<filename>`.
+- **Static** : `/uploads/**` sert les fichiers.
+
+---
+
+## Données et schéma
+- Fichier de persistance : `database.json`.
+- Modèle principal (côté API) : `PortfolioData`
+  - `personal`: `{ name, title, availability, email, phone, location, linkedin, social?, summary, photoUrl?, cvUrl? }`
+  - `softSkills`: `string[]`
+  - `languages`: `string[]`
+  - `education`: `{ degree, school, date }[]`
+  - `experience`: `{ role, company, date, tasks: string[] }[]`
+  - `techSkills`: `{ cat, tools }[]`
+  - `projects`: `{ name, desc, tech, link }[]`
+  - `certifications`: `{ name, link }[]`
+
+---
+
+## Endpoints
+
+### Public
+- `GET /api/data`  
+  Retourne le JSON complet du CV.
+
+### Auth
+- `POST /api/login`  
+  Body: `{ "password": "<plain>" }`  
+  Retour: `{ "token": "<uuid>" }` (à passer dans `x-token`).
+- `POST /api/logout`  
+  Header: `x-token`.
+- `POST /api/change-password`  
+  Body: `{ "old_password": "...", "new_password": "..." }`  
+  Invalide tous les tokens.
+
+### Protégés (Header `x-token: <token>`)
+- `POST /api/data`  
+  Body: `PortfolioData` (écrase `database.json`).
+- `POST /api/upload`  
+  FormData: `file` (UploadFile) → Retour `{ "url": "/uploads/<filename>" }`.
+
+---
+
+## Sécurité & Authentification
+- Hash SHA-256 du mot de passe stocké dans `admin.json` (initial: hash de `"admin123"`).
+- Les tokens sont **en mémoire** (liste `active_tokens`). Un redémarrage invalide les sessions.
+- Changements de mot de passe → purge des tokens.
+
+---
+
+## Mise en route
+
+### Prérequis
+- Python 3.9+
+- `pip install fastapi uvicorn python-multipart`
+
+### Lancer l’API
+```bash
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+```
+- Génère `database.json` et `admin.json` si absents.
+- Servez les uploads via `/uploads`.
+
+### Lancer le front
+- Ouvrir `index.html` dans un navigateur.  
+- Pour éviter certains blocages CORS en `file://`, servez-le via un petit serveur statique (ex. `python -m http.server 5500`), puis ouvrez `http://localhost:5500/index.html`.
+- Ajuster `API_BASE_URL` dans `index.html` (par défaut `http://localhost:8000`).
+
+---
+
+## Flux d’édition complet
+1. Ouvrir la page, cliquer sur le crayon (Login Admin).
+2. Saisir le mot de passe admin (`admin123` par défaut).
+3. La page passe en mode édition (bordures, boutons +/trash, upload).
+4. Modifier le contenu inline, ajouter/supprimer des entrées.
+5. (Optionnel) Uploader photo/CV → envoie vers `POST /api/upload`, stocke l’URL dans `cvData.personal.photoUrl/cvUrl`.
+6. Cliquer sur Sauvegarder → `POST /api/data` persiste dans `database.json`.
+7. Se déconnecter (bouton rouge) pour quitter l’édition.
+
+---
+
+## Personnalisation
+- **API_BASE_URL** : éditer en haut de `index.html`.
+- **Style** : variables CSS dans `:root` (couleurs), classes `.section`, `.sidebar`, `.project-card`, etc.
+- **Données par défaut** : `DEFAULT_DATA` dans `main.py` (utilisé si `database.json` manquant).
+- **Mot de passe admin** : `admin.json` contient le hash. Changer via `POST /api/change-password` ou en remplaçant le hash manuellement.
+- **Uploads** : répertoire `uploads/` (cr��é automatiquement). Assurez-vous que l’app FastAPI a les droits d’écriture.
+
+---
+
+## Notes & limites
+- Tokens non persistés : un redémarrage API déconnecte les admins.
+- CORS ouvert (`*`) pour faciliter les tests, à restreindre en production.
+- Pas de taille limite côté serveur sur les uploads (penser à ajouter des garde-fous Nginx/uvicorn ou validation).
+- Front sans bundler : tout est dans `index.html`; privilégier un serveur statique plutôt que `file://` pour un comportement réseau fiable.
+
+---
+
+## Améliorations possibles
+- Ajouter de la validation côté front (champs obligatoires, formats email/tél, URLs).
+- Gérer des tailles/types de fichiers côté API (mime/type, max size).
+- Ajouter un stockage persistant pour les tokens (Redis) ou passer à des JWT.
+- Mettre en place un mécanisme de versioning des données (snapshots) et d’historique.
+- Intégrer un envoi de mail ou webhook après sauvegarde.
+- Ajouter des tests (unitaires FastAPI) et un workflow CI.
