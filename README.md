@@ -63,8 +63,8 @@ Une application composée d’une **SPA HTML/JS** (édition inline, sans build) 
 ---
 
 ## Documentation API
-- **Swagger UI** : https://light-cv-to-portfolio-api.onrender.com:8000/docs
-- **ReDoc** : https://light-cv-to-portfolio-api.onrender.com:8000/redoc
+- **Swagger UI** : https://light-cv-to-portfolio-api.onrender.com/docs
+- **ReDoc** : https://light-cv-to-portfolio-api.onrender.com/redoc
 
 Ces pages se lancent automatiquement dès que l’API tourne avec `uvicorn main:app ...`.
 
