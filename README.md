@@ -1,165 +1,79 @@
-# Portfolio Admin (FastAPI + Static Frontend)
+# Portfolio CV éditable (HTML/JS)
 
-Un mini-CMS léger pour gérer et afficher un portfolio avec édition inline côté front, persistance via API FastAPI et upload de fichiers. Le frontend est un fichier `index.html` autonome qui consomme l’API (JSON) et propose un mode édition après authentification par mot de passe. Le backend expose des endpoints pour récupérer/sauvegarder les données, gérer l’authentification et stocker les fichiers uploadés.
+Ce projet est une page HTML monopage qui sert de portfolio/CV interactif pour **Assami BAGA**. Il fonctionne sans backend : toutes les données sont stockées en mémoire et dans le `localStorage` du navigateur. Un mode admin permet d’éditer le contenu directement dans la page, puis d’exporter le code JSON mis à jour (et le hash du mot de passe) pour le rendre permanent dans le fichier.
 
-## Vue d’ensemble
+## Sommaire
+- [Fonctionnalités](#fonctionnalités)
+- [Structure et données](#structure-et-données)
+- [Mode Admin et authentification](#mode-admin-et-authentification)
+- [Sauvegarde et export](#sauvegarde-et-export)
+- [Gestion des médias (photo, CV PDF)](#gestion-des-médias-photo-cv-pdf)
+- [Traduction Google](#traduction-google)
+- [Lancer le projet](#lancer-le-projet)
+- [Personnalisation rapide](#personnalisation-rapide)
+- [Notes et limites](#notes-et-limites)
 
-- **Frontend** : SPA minimaliste en HTML/CSS/JS (vanilla) avec mode lecture/édition. L’édition se fait via `contenteditable` et les boutons d’action (ajout/suppression).
-- **Backend** : FastAPI, stockage JSON file-based (`database.json` + `admin.json` pour le hash du mot de passe), upload statique via `/uploads`.
-- **Auth** : login par mot de passe (hashé SHA-256 côté serveur). Retourne un token stocké en mémoire (ensemble `active_tokens`), transmis via header `x-token`.
-- **Persistance** : les données sont lues/écrites dans `database.json`. Un seed (`DEFAULT_DATA`) initialise le fichier s’il n’existe pas.
-- **Uploads** : fichiers envoyés via `/api/upload`, servis ensuite par `/uploads/<filename>`.
+## Fonctionnalités
+- **CV/Portfolio statique** en HTML/CSS/JS, aucune dépendance backend.
+- **Mode Admin** (protégé par mot de passe, hash SHA-256) pour éditer le contenu en place (contenteditable).
+- **CRUD front** sur toutes les sections : expériences, formations, compétences techniques, soft skills, langues, projets, certifications.
+- **Export des données** : copie dans le presse-papiers du JSON `cvData` et rappel du hash de mot de passe à replacer dans `index.html`.
+- **Mémorisation locale** via `localStorage` : photo de profil, CV PDF uploadé, hash de mot de passe si modifié.
+- **Bouton de téléchargement du CV** (ou upload en mode édition).
+- **Traduction** avec le widget Google Translate.
+- **UI mobile-friendly** (mise en page responsive).
 
-## Stack technique
+## Structure et données
+- Tout est dans `index.html`.
+- Les données sont contenues dans l’objet `cvData` :
+  - `personal` : nom, titre, disponibilité, email, téléphone, localisation, LinkedIn, social, résumé.
+  - `softSkills`, `languages` : tableaux simples.
+  - `education`, `experience` : listes d’objets (avec tâches pour l’expérience).
+  - `techSkills` : catégories + outils.
+  - `projects` : nom, description, stack, lien.
+  - `certifications` : nom + lien.
+- Les boutons d’ajout/suppression n’apparaissent qu’en mode édition (`body.editing`).
 
-- **Frontend** : HTML5, CSS (inline), JS vanilla, Font Awesome CDN.
-- **Backend** : Python 3, FastAPI, Uvicorn, Pydantic, CORS Middleware.
-- **Stockage** : fichiers locaux (`database.json`, `admin.json`, répertoire `uploads/`).
+## Mode Admin et authentification
+- Mot de passe par défaut : hash SHA-256 de `"admin123"` stocké dans `adminHash`.
+- Au clic sur le crayon (bouton flottant), un prompt demande le mot de passe. Si le hash correspond à `adminHash`, le mode édition est activé (`isEditMode = true`, classe `editing` sur le `body`).
+- **Changement de mot de passe** : bouton clé → prompt → calcule un nouveau hash SHA-256 → sauvegarde dans `localStorage` et en mémoire (`adminHash`).
 
-## Fonctionnalités principales
+## Sauvegarde et export
+- Bouton disque (save) : copie dans le presse-papiers un script contenant :
+  - Le nouveau `cvData` sérialisé (JSON beautifié).
+  - Un rappel du hash à mettre à jour dans `adminHash`.
+- Pour rendre les changements permanents côté fichier :
+  1) Copier le bloc exporté,
+  2) Ouvrir `index.html`,
+  3) Remplacer la déclaration `let cvData = ...` par le bloc,
+  4) Mettre à jour `adminHash` si le mot de passe a changé.
 
-- Affichage du portfolio (profil, à-propos, expériences, diplômes, projets, certifications, compétences, soft skills, langues).
-- Mode édition sécurisé (login) avec :
-  - Champs `contenteditable`
-  - Ajout/suppression d’items (listes : expériences, formations, projets, compétences, certifications, soft skills, langues)
-  - Upload photo et CV (PDF) via API, mise à jour des URLs dans les données
-- Sauvegarde des modifications vers l’API (`/api/data`).
-- Changement de mot de passe admin.
-- Déconnexion et invalidation des tokens (en mémoire).
+## Gestion des médias (photo, CV PDF)
+- **Photo de profil** : input file caché ; l’image est encodée en base64 et stockée dans `localStorage` (`profilePhoto`). Taille max ~3 Mo.
+- **CV PDF** : en mode édition, le bouton “Uploader CV” ouvre un input file ; le PDF est stocké en base64 dans `localStorage` (`cvFile`). En mode visiteur, le bouton tente de télécharger ce fichier (ou affiche “Aucun CV” si absent).
 
-## Structure des données (JSON)
+## Traduction Google
+- Intègre le widget Google Translate (`translate.google.com/translate_a/element.js`) pour proposer une traduction de la page.
+- Restriction : l’édition est bloquée si la page est en mode traduction (test sur la classe `translated-ltr`).
 
-```json
-{
-  "personal": {
-    "name": "string",
-    "title": "string",
-    "availability": "string",
-    "email": "string",
-    "phone": "string",
-    "location": "string",
-    "linkedin": "string",
-    "social": "string",
-    "summary": "string",
-    "photoUrl": "string",
-    "cvUrl": "string"
-  },
-  "softSkills": ["string", "..."],
-  "languages": ["string", "..."],
-  "education": [{ "degree": "string", "school": "string", "date": "string" }],
-  "experience": [{ "role": "string", "company": "string", "date": "string", "tasks": ["string", "..."] }],
-  "techSkills": [{ "cat": "string", "tools": "string" }],
-  "projects": [{ "name": "string", "desc": "string", "tech": "string", "link": "string" }],
-  "certifications": [{ "name": "string", "link": "string" }]
-}
-```
-
-## Endpoints backend (FastAPI)
-
-- `GET  /api/data` : retourne le JSON complet du portfolio.
-- `POST /api/login` : `{ "password": "<plain>" }` → `{ token }` (token UUID ajouté à `active_tokens`).
-- `POST /api/logout` : header `x-token` (optionnel) → supprime le token du set.
-- `POST /api/change-password` : `{ "old_password", "new_password" }` → met à jour `admin.json`, vide `active_tokens`.
-- `POST /api/data` : (auth requis) envoie le JSON complet `PortfolioData` pour sauvegarder dans `database.json`.
-- `POST /api/upload` : (auth requis) upload multipart `file` → `{ "url": "/uploads/<filename>" }`.
-- Static : `/uploads/<filename>` sert les fichiers uploadés.
-
-## Authentification & sécurité
-
-- Hash SHA-256 stocké dans `admin.json` (par défaut hash de `admin123`).
-- Les tokens sont conservés en mémoire (non persistés). Un redémarrage du serveur invalide tout.
-- Header attendu : `x-token` pour les routes protégées.
-- CORS ouvert (`*`) pour simplifier le développement (à restreindre en production).
-- Aucune gestion de rôles, ni de refresh token : solution simple pour usage personnel.
-
-## Frontend : comportement
-
-- `loadDataFromAPI()` : fetch sur `/api/data`, puis `render()`.
-- `login()` : prompt mot de passe → `/api/login` → stocke `authToken`, active `isEditMode`, ajoute classe `editing` au `body`.
-- `saveDataToAPI()` : POST `/api/data` avec le JSON courant et `x-token`.
-- `uploadFileToAPI(file)` : POST `/api/upload` avec `x-token`, renvoie l’URL à intégrer (photo ou CV).
-- `changePassword()` : prompts pour ancien/nouveau, appelle `/api/change-password`.
-- Boutons flottants : login (crayon), save, change password, logout.
-- En mode édition : bordures, boutons add/delete, upload photo/CV, champs éditables.
-
-## Mise en place locale
-
-### Prérequis
-- Python 3.9+ recommandé
-- `pip` (ou `pipenv`/`poetry`)
-
-### Installation
-```bash
-pip install fastapi uvicorn pydantic
-```
-
-### Lancement du backend
-```bash
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
-```
-- Démarre l’API sur `http://localhost:8000`.
-- Initialise `database.json` et `admin.json` si absents.
-- Sert les uploads sous `http://localhost:8000/uploads/<filename>`.
-
-### Frontend
-- Ouvrir `index.html` dans le navigateur.
-- Assurez-vous que `API_BASE_URL` dans le script pointe vers le backend (par défaut `http://localhost:8000`).
-
-## Exemples d’appels API (curl)
-
-- Login :
-```bash
-curl -X POST http://localhost:8000/api/login \
-  -H "Content-Type: application/json" \
-  -d '{"password": "admin123"}'
-```
-
-- Sauvegarder les données :
-```bash
-curl -X POST http://localhost:8000/api/data \
-  -H "Content-Type: application/json" \
-  -H "x-token: <token>" \
-  -d @database.json
-```
-
-- Upload d’un fichier :
-```bash
-curl -X POST http://localhost:8000/api/upload \
-  -H "x-token: <token>" \
-  -F "file=@/chemin/vers/fichier.pdf"
-```
-
-- Changer le mot de passe :
-```bash
-curl -X POST http://localhost:8000/api/change-password \
-  -H "Content-Type: application/json" \
-  -d '{"old_password": "admin123", "new_password": "monNouveauPass"}'
-```
-
-## Conseils de prod / durcissement
-
-- Restreindre `allow_origins` à votre domaine.
-- Servir le frontend via un serveur statique (NGINX) et reverse proxy vers FastAPI.
-- Stocker `uploads/` dans un volume ou un bucket si conteneurisé.
-- Ajouter une limite de taille d’upload et filtrer les types MIME.
-- Envisager une persistance token (DB) ou des sessions signées si plusieurs instances.
-- Surveiller et sauvegarder `database.json` et `admin.json` (backups).
-- Mettre un HTTPS (Let’s Encrypt) et désactiver l’auto-indexation des fichiers.
-
-## Dépannage
-
-- **401 Unauthorized** : token manquant ou expiré (redémarrage serveur) → relogin.
-- **Fichiers non servis** : vérifier `uploads/` existe et que FastAPI est lancé avec la bonne cwd.
-- **CORS** : adapter `allow_origins` si le frontend est sur un autre domaine/port.
-- **Ports** : si déjà occupé, changer `PORT` dans l’environnement ou l’argument uvicorn.
-- **Cache navigateur** : vider ou hard refresh après des changements frontend.
+## Lancer le projet
+1. Cloner/télécharger le fichier `index.html`.
+2. Ouvrir `index.html` dans un navigateur moderne (Chrome/Firefox/Edge).
+3. (Optionnel) Servir via un petit serveur local pour éviter certains blocages CORS liés à `file://` (ex. `python -m http.server 8000`).
 
 ## Personnalisation rapide
+- **Texte et données** : éditer en mode Admin puis exporter, ou modifier directement l’objet `cvData` dans `index.html`.
+- **Mot de passe** : bouton clé → changer → exporter pour récupérer le nouveau hash → remplacer `adminHash` dans le fichier.
+- **Liens projets/certifs** : remplir les champs `link` (actuellement `#` pour certains).
+- **Couleurs/Styles** : palette dans `:root` (variables CSS).
 
-- Modifier les styles dans le `<style>` de `index.html`.
-- Adapter les sections rendues dans `render()` (timeline, projets, compétences).
-- Changer le seed de `DEFAULT_DATA` dans `main.py` pour un nouvel utilisateur.
+## Notes et limites
+- **Persistance locale** : les médias et le hash modifié sont stockés dans le `localStorage` du navigateur courant uniquement. Pour les rendre permanents, il faut réintégrer le code exporté dans `index.html`.
+- **Sécurité** : le mot de passe est géré côté front (hash en clair dans le code), donc ne pas utiliser un mot de passe sensible. Convient à un usage portfolio/démo.
+- **Poids des fichiers** : uploads limités à ~3 Mo pour l’image et le PDF.
+- **Traduction** : désactive l’édition pour éviter les incohérences du DOM traduit.
 
 ---
 
-Bon développement ! 🎉
+Bon travail et bonne personnalisation ! 🎉
