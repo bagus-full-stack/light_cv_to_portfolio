@@ -240,7 +240,12 @@
                 user = session.user;
                 enableEditMode();
             }
+
+            // Charger les données du CV
             await loadData();
+
+            // Gérer le compteur de vues
+            await handleVisits();
         }
 
         async function loadData() {
@@ -354,6 +359,10 @@
                             <div class="contact-item"><i class="fas fa-map-marker-alt"></i> <span class="${editClass}" ${contentEditable} oninput="updatePersonal('location', this.innerText)">${p.location}</span></div>
                             <div class="contact-item"><i class="fab fa-linkedin"></i> <span class="${editClass}" ${contentEditable} oninput="updatePersonal('linkedin', this.innerText)">${p.linkedin}</span></div>
                             <div class="contact-item"><i class="fab fa-github"></i> <span class="${editClass}" ${contentEditable} oninput="updatePersonal('social', this.innerText)">${p.social}</span></div>
+                        </div>
+
+                        <div class="visitor-counter" style="margin-top: 20px; font-size: 0.85rem; color: #7f8c8d; border-top: 1px solid #eee; padding-top: 10px;">
+                            <i class="fas fa-eye"></i> Vues du profil : <b id="visit-count">...</b>
                         </div>
                         
                         <div class="cv-download-wrapper">
@@ -528,6 +537,31 @@
                     if(url) { cvData.personal.cvUrl = url; alert("CV Uploadé !"); render(); }
                 }
             };
+        }
+
+        async function handleVisits() {
+            const COUNTER_KEY = 'portfolio_visited_session';
+            const counterElement = document.getElementById('visit-count');
+            
+            // 1. Si c'est la première fois qu'on ouvre le site dans cette session, on incrémente
+            if (!sessionStorage.getItem(COUNTER_KEY)) {
+                // Appel de la fonction SQL qu'on a créée (RPC = Remote Procedure Call)
+                const { error } = await supabaseClient.rpc('increment_visits');
+                if (error) console.error("Erreur compteur:", error);
+                
+                // On marque la session comme "visitée" pour ne pas recompter au refresh
+                sessionStorage.setItem(COUNTER_KEY, 'true');
+            }
+
+            // 2. On récupère le nombre total à jour pour l'afficher
+            const { data, error } = await supabaseClient
+                .from('site_stats')
+                .select('visits')
+                .single();
+
+            if (data && counterElement) {
+                counterElement.innerText = data.visits;
+            }
         }
 
         init();
