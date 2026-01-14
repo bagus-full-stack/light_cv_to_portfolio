@@ -36,6 +36,8 @@
         body.logged-in #save-btn { display: flex; }
         body.logged-in #logout-btn { display: flex; }
         body.logged-in #login-btn { display: none; } /* Cache le bouton login si connecté */
+        
+        body.logged-in #reset-btn { display: flex; } /* Ajouter l'affichage du bouton reset quand connecté */
 
         /* LAYOUT (Reste du CSS inchangé) */
         .container { max-width: 1200px; margin: 0 auto; padding: 20px; display: grid; grid-template-columns: 300px 1fr; gap: 30px; padding-top: 80px; }
@@ -91,6 +93,7 @@
 
     <div class="admin-controls">
         <button id="logout-btn" class="fab-btn" onclick="logout()" title="Déconnexion"><i class="fas fa-sign-out-alt"></i></button>
+        <button id="reset-btn" class="fab-btn" onclick="resetDatabase()" title="Réinitialiser (Remettre à zéro)"><i class="fas fa-trash-restore"></i></button>
         <button id="save-btn" class="fab-btn" onclick="saveDataToSupabase()" title="Sauvegarder en ligne"><i class="fas fa-save"></i></button>
         <button id="login-btn" class="fab-btn" onclick="login()" title="Connexion Admin"><i class="fas fa-pen"></i></button>
     </div>
@@ -259,6 +262,31 @@
             user = null;
             disableEditMode();
             alert("Déconnecté.");
+        }
+
+        async function resetDatabase() {
+            if (!user) return alert("Vous devez être connecté !");
+
+            // Double confirmation pour sécurité
+            const confirmation = confirm("⚠️ ATTENTION IRRÉVERSIBLE !\n\nVous allez effacer toutes les données en ligne et rétablir le CV par défaut.\n\nÊtes-vous sûr de vouloir continuer ?");
+            
+            if (!confirmation) return;
+
+            // On écrase la base de données avec DEFAULT_DATA
+            const { error } = await supabaseClient
+                .from(DB_TABLE)
+                .upsert({ id: CV_ID, json_data: DEFAULT_DATA });
+
+            if (error) {
+                alert("❌ Erreur : " + error.message);
+            } else {
+                alert("♻️ Base de données réinitialisée avec succès !");
+                
+                // On met à jour l'affichage local immédiatement
+                // On utilise JSON.parse/stringify pour créer une copie propre des données par défaut
+                cvData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+                render();
+            }
         }
 
         function enableEditMode() {
