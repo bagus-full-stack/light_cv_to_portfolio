@@ -160,27 +160,6 @@
         // ==========================================
         // 2. API LOGIC
         // ==========================================
-        
-        // async function loadDataFromAPI() {
-        //     const cachedData = localStorage.getItem('portfolio_cache');
-        //     if (cachedData) {
-        //         console.log("Chargement depuis le cache local...");
-        //         cvData = JSON.parse(cachedData);
-        //         render(); // Affiche la photo et le texte instantanément !
-        //     }
-
-        //     try {
-        //         const response = await fetch(`${API_BASE_URL}/api/data`);
-        //         const data = await response.json();
-        //         if (Object.keys(data).length > 0) {
-        //             cvData = data;
-        //             localStorage.setItem('portfolio_cache', JSON.stringify(cvData));
-        //             render();
-        //         }
-        //     } catch (error) {
-        //         console.warn("API Offline or connection error", error);
-        //     }
-        // }
 
         async function loadDataFromAPI() {
             // --- ÉTAPE 1 : Chargement du Cache (Instantané) ---
@@ -301,7 +280,9 @@
                 });
                 const result = await response.json();
                 // Return full URL. Assuming backend returns relative path like "/uploads/..."
-                return API_BASE_URL + result.url;
+                const fullUrl = API_BASE_URL + result.url;
+                console.log("Fichier disponible à :", fullUrl);
+                return fullUrl;
             } catch (error) {
                 console.error("Upload error", error);
                 alert("Erreur d'upload");
@@ -360,7 +341,7 @@
                         <h1 class="name ${editClass}" ${contentEditable} oninput="updatePersonal('name', this.innerText)">${p.name}</h1>
                         <p class="title ${editClass}" ${contentEditable} oninput="updatePersonal('title', this.innerText)">${p.title}</p>
                         <div class="status-badge ${editClass}" ${contentEditable} oninput="updatePersonal('availability', this.innerText)">${p.availability}</div>
-                        
+
                         <div class="contact-info">
                             <div class="contact-item"><i class="fas fa-envelope"></i> <span class="${editClass}" ${contentEditable} oninput="updatePersonal('email', this.innerText)">${p.email}</span></div>
                             <div class="contact-item"><i class="fas fa-phone"></i> <span class="${editClass}" ${contentEditable} oninput="updatePersonal('phone', this.innerText)">${p.phone}</span></div>
