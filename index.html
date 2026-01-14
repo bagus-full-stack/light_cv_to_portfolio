@@ -97,47 +97,140 @@
 
     <script>
         // ==========================================
-        // 1. CONFIGURATION SUPABASE
+        // 1. SUPABASE CONFIGURATION
         // ==========================================
-        const SUPABASE_URL = "https://votre-projet.supabase.co"; // À REMPLACER
-        const SUPABASE_KEY = "votre-cle-publique-anon"; // À REMPLACER
+        // ⚠️ REMPLACEZ CES VALEURS PAR LES VÔTRES
+        const SUPABASE_URL = "https://votre-projet.supabase.co"; 
+        const SUPABASE_KEY = "votre-cle-publique-anon";
 
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         const DB_TABLE = 'portfolio';
         const STORAGE_BUCKET = 'uploads';
         const CV_ID = 1;
 
-        // Variables d'état
-        let user = null; // L'utilisateur connecté
-        let cvData = { personal: { name: "Chargement..." }, softSkills: [], languages: [], education: [], experience: [], techSkills: [], projects: [], certifications: [] };
+        // ==========================================
+        // 2. DONNÉES PAR DÉFAUT (VOTRE CV)
+        // ==========================================
+        const DEFAULT_DATA = {
+            "personal": {
+                "name": "Assami BAGA",
+                "title": "Ingénieur IA & Full Stack",
+                "availability": "Disponible dès octobre 2026",
+                "email": "bagaassami09@gmail.com",
+                "phone": "07 53 49 67 71",
+                "location": "Thiais (94320), Ile de france",
+                "linkedin": "assami-baga",
+                "social": "bagus_full_stack",
+                "summary": "Étudiant en dernière année du cycle d'ingénieur en informatique à l'EILCO, je suis à la recherche active d'un CDI. Mon objectif est d'exploiter ma passion pour la technologie en participant à la conception et au développement d'applications de haute qualité.",
+                "photoUrl": "",
+                "cvUrl": ""
+            },
+            "softSkills": ["Polyvalence", "Efficacité", "Créativité", "Adaptabilité", "Collaboration", "Autonomie", "Curiosité"],
+            "languages": ["Français", "Anglais"],
+            "education": [
+                { "degree": "Diplôme d'ingénieur en Ingénierie Logicielle et IA", "school": "EILCO, Calais, France", "date": "Depuis septembre 2023" },
+                { "degree": "Certifications: PUPA, LCB-FT, HDS, ISO 27001", "school": "CDC Informatique, Bagneux", "date": "Jan 2025 - Déc 2025" },
+                { "degree": "RGPD, Protection des données, Sécurité incendie", "school": "CDC Informatique, Bagneux", "date": "Jan 2024 - Déc 2024" },
+                { "degree": "Technologie IP, SQL, Linux, Scripting Shell", "school": "Essitech, Ouagadougou", "date": "Juin 2023" },
+                { "degree": "Licence en Ingénierie des Systèmes d'Information", "school": "ESI, Burkina Faso", "date": "Oct 2019 - Fév 2023" }
+            ],
+            "experience": [
+                {
+                    "role": "Ingénieur Exploitation",
+                    "company": "CDC Informatique, Bagneux",
+                    "date": "Depuis septembre 2024",
+                    "tasks": ["Participer à un travail collaboratif", "Réalisation de PYMQCOPY", "Réalisation d'un Référentiel des Services Flux (en cours)"]
+                },
+                {
+                    "role": "Bénévolat (Accompagnement scolaire)",
+                    "company": "AFEV Calais",
+                    "date": "Sept 2023 - Sept 2024",
+                    "tasks": ["Accompagnement des jeunes en difficulté scolaire", "Création de lien dans les quartiers populaires"]
+                },
+                {
+                    "role": "Software Engineer",
+                    "company": "Orange & Smile, Ouagadougou",
+                    "date": "Sept 2022 - Sept 2023",
+                    "tasks": ["Développement d'un Système Intelligent de Conception des Produits", "Participation au développement de MySpace (Frontend)", "Participation au développement de BourseFondation (Backend)"]
+                }
+            ],
+            "techSkills": [
+                { "cat": "Dev Multiplateforme", "tools": "HTML, CSS, JS, TS, SASS, Bootstrap, Tailwind, WordPress, Flutter Flow, Java, Pygame, JavaFX, Angular, React, Kotlin, Docker" },
+                { "cat": "API RESTFUL", "tools": "NodeJS, ExpressJS, Spring, FastAPI, Laravel, Keycloak, JWT, Postman, Git, Swagger" },
+                { "cat": "Conception & Modeling", "tools": "UML, Merise, Scrum, Power AMC, Adobe XD, Figma, JSON, XML" },
+                { "cat": "Data & AI", "tools": "CNN, RNN, TensorFlow, Scikit-learn, PyTorch, YOLO, Pandas, NumPy, Matplotlib, Power BI" },
+                { "cat": "Databases", "tools": "MySQL, MariaDB, PostgreSQL, Oracle Database, SQL Server" },
+                { "cat": "Languages", "tools": "C, Java, Javascript, Python, R, PHP, Kotlin, Bash, Arduino, VHDL" }
+            ],
+            "projects": [
+                { "name": "Blue Attendance", "desc": "Liste de présence électronique via Bluetooth (App Mobile).", "tech": "Java, Xml, FastAPI, Android Studio", "link": "#" },
+                { "name": "PNP+", "desc": "Système Intelligent de Conception des Produits et Promotions.", "tech": "Angular, Spring boot, SQL", "link": "#" },
+                { "name": "Myspace", "desc": "Plateforme SaaS complète.", "tech": "React, Node.js, PostgreSQL", "link": "#" },
+                { "name": "BourseFondation", "desc": "Plateforme SaaS complète.", "tech": "React, Node.js, PostgreSQL", "link": "#" },
+                { "name": "UI Calculator", "desc": "Application web UI UX Design.", "tech": "HTML, CSS, SCSS", "link": "#" },
+                { "name": "UI Keyboard", "desc": "Application web UI UX Design.", "tech": "HTML, CSS, SCSS", "link": "#" },
+                { "name": "Projet IOT", "desc": "Plateforme SaaS complète IOT.", "tech": "React, Node.js, PostgreSQL", "link": "#" },
+                { "name": "ESI Website", "desc": "Site web statique de l'ESI.", "tech": "HTML, CSS, Bootstrap", "link": "#" },
+                { "name": "Checkers Game", "desc": "Jeu de dames en mode console.", "tech": "C, Linux", "link": "#" },
+                { "name": "Todo List", "desc": "Todo-list avec auth et email verification.", "tech": "PHP, Laravel, Voyager", "link": "#" },
+                { "name": "Technology Transfer", "desc": "Plateforme de transfert de technologies.", "tech": "HTML, CSS, Bootstrap, MySql", "link": "#" },
+                { "name": "Spare", "desc": "Suivi budgétaire (synchro bancaire).", "tech": "React, Node.js, Firebase", "link": "#" },
+                { "name": "PYMQCOPY", "desc": "Recopie de messages MQ source vers destinations.", "tech": "Python, MQ Series, Bash", "link": "#" }
+            ],
+            "certifications": [
+                { "name": "C", "link": "#" }, { "name": "HTML", "link": "#" }, { "name": "CSS", "link": "#" },
+                { "name": "Javascript", "link": "#" }, { "name": "Java", "link": "#" }, { "name": "PHP", "link": "#" },
+                { "name": "SQL", "link": "#" }, { "name": "Python for Beginner", "link": "#" },
+                { "name": "Python Data Structures", "link": "#" }, { "name": "Coding marketers", "link": "#" },
+                { "name": "Responsive Web Design", "link": "#" }, { "name": "Intro référentiel HDS & ISO 27001", "link": "#" },
+                { "name": "Sensibilisation PUPA", "link": "#" }, { "name": "Fondamentaux de la LCB-FT", "link": "#" },
+                { "name": "RGPD - Protection données", "link": "#" }, { "name": "Classification et protection données", "link": "#" },
+                { "name": "Déontologie code", "link": "#" }, { "name": "Evacuation et sécurité incendie", "link": "#" }
+            ]
+        };
+
+        let user = null;
+        let cvData = DEFAULT_DATA; // On initialise avec les données par défaut au cas où la base est vide
 
         // ==========================================
-        // 2. AUTHENTIFICATION & CHARGEMENT
+        // 3. AUTHENTIFICATION & CHARGEMENT
         // ==========================================
 
         async function init() {
-            // 1. Vérifier si l'utilisateur est déjà connecté (Session persistante)
+            // Vérifier la session
             const { data: { session } } = await supabase.auth.getSession();
             if (session) {
                 user = session.user;
                 enableEditMode();
             }
 
-            // 2. Charger les données (Public)
+            // Charger les données
             await loadData();
         }
 
         async function loadData() {
             try {
+                // Tente de récupérer les données en base
                 const { data, error } = await supabase.from(DB_TABLE).select('json_data').eq('id', CV_ID).single();
+                
                 if (data && data.json_data) {
+                    console.log("✅ Données chargées depuis Supabase");
                     cvData = data.json_data;
-                    render();
                 } else {
-                    console.log("Aucune donnée trouvée ou erreur:", error);
-                    render(); // Affiche les données par défaut
+                    console.log("ℹ️ Aucune donnée en base. Affichage des données par défaut.");
+                    // Si l'utilisateur est admin, on propose d'initialiser la base
+                    if (user) {
+                        const initConfirm = confirm("La base de données est vide. Voulez-vous sauvegarder les données par défaut (votre CV) maintenant ?");
+                        if(initConfirm) {
+                            await saveDataToSupabase();
+                        }
+                    }
                 }
-            } catch (err) { console.warn("Erreur réseau", err); }
+                render();
+            } catch (err) {
+                console.warn("Erreur réseau ou base vide", err);
+                render(); // Affiche DEFAULT_DATA
+            }
         }
 
         async function login() {
@@ -156,6 +249,8 @@
                 user = data.user;
                 enableEditMode();
                 alert("✅ Connecté !");
+                // Recharger les données pour vérifier si on doit initialiser
+                loadData();
             }
         }
 
@@ -177,18 +272,21 @@
         }
 
         // ==========================================
-        // 3. SAUVEGARDE & UPLOAD
+        // 4. SAUVEGARDE
         // ==========================================
 
         async function saveDataToSupabase() {
-            if (!user) return alert("Vous devez être connecté !");
+            if (!user) return alert("Vous devez être connecté pour sauvegarder !");
 
             const { error } = await supabase
                 .from(DB_TABLE)
                 .upsert({ id: CV_ID, json_data: cvData });
 
-            if (error) alert("❌ Erreur : " + error.message);
-            else alert("✅ Données sauvegardées !");
+            if (error) {
+                alert("❌ Erreur de sauvegarde : " + error.message);
+            } else {
+                alert("✅ Données sauvegardées sur Supabase !");
+            }
         }
 
         async function uploadFileToSupabase(file) {
@@ -206,12 +304,12 @@
         }
 
         // ==========================================
-        // 4. RENDER (LOGIQUE D'AFFICHAGE)
+        // 5. RENDER (VOTRE DESIGN)
         // ==========================================
         
         function render() {
             const app = document.getElementById('app');
-            const isEditing = !!user; // Mode édition si utilisateur connecté
+            const isEditing = !!user;
             const editClass = isEditing ? 'editable' : '';
             const contentEditable = isEditing ? 'contenteditable="true"' : '';
             const delBtn = (type, index) => `<button class="btn-action btn-delete" onclick="deleteItem('${type}', ${index})"><i class="fas fa-trash"></i></button>`;
@@ -265,6 +363,9 @@
             attachListeners();
         }
 
+        // ==========================================
+        // 6. HELPER FUNCTIONS
+        // ==========================================
         function updatePersonal(f, v) { cvData.personal[f] = v; }
         function updateArrayItem(arr, idx, f, v) { if(f) cvData[arr][idx][f] = v; else cvData[arr][idx] = v; }
         function updateTask(idx, tIdx, val) { cvData.experience[idx].tasks[tIdx] = val; }
@@ -295,7 +396,7 @@
             };
         }
 
-        // Lancement
+        // Démarrage
         init();
     </script>
     <script>function googleTranslateElementInit() { new google.translate.TranslateElement({pageLanguage: 'fr', layout: google.translate.TranslateElement.InlineLayout.SIMPLE}, 'google_translate_element'); }</script>
