@@ -8,72 +8,99 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
-        /* [VOTRE CSS EST CONSERVÉ À L'IDENTIQUE] */
         :root { --primary: #2c3e50; --accent: #3498db; --light: #ecf0f1; --dark: #1a252f; --text: #333; --danger: #e74c3c; --success: #27ae60; --warning: #f39c12; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #f4f7f6; color: var(--text); line-height: 1.6; min-height: 100vh; }
+        
+        /* Traduction */
         .translate-container { position: fixed; top: 20px; right: 20px; z-index: 9999; background: white; padding: 8px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid #eee; }
         .goog-te-gadget-simple { background: transparent !important; border: none !important; padding: 0 !important; font-size: 14px !important; }
         .goog-te-banner-frame { display: none !important; }
         body { top: 0 !important; }
+
+        /* Admin Controls */
         .admin-controls { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 15px; z-index: 1000; align-items: flex-end; }
         .fab-btn { background: var(--accent); color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: transform 0.2s; border: none; font-size: 1.2rem; }
         .fab-btn:hover { transform: scale(1.1); }
-        #save-btn, #logout-btn, #reset-btn { display: none; } /* On cache les boutons admin par défaut */
+        #save-btn, #logout-btn, #reset-btn { display: none; }
         #save-btn { background: var(--success); }
         #logout-btn { background: var(--dark); }
         #reset-btn { background: var(--danger); }
+
+        /* Mode Édition */
         .editable { border: 1px dashed var(--accent); background: rgba(52, 152, 219, 0.05); padding: 2px; transition: background 0.2s; cursor: text; }
         .editable:focus { background: white; outline: 2px solid var(--accent); border: none; }
+        
+        /* Boutons d'action (Ajout/Suppression) */
         .btn-action { display: none; cursor: pointer; border: none; color: white; border-radius: 5px; padding: 5px 10px; font-size: 0.8rem; margin-top: 5px; }
         .btn-delete { background-color: var(--danger); position: absolute; right: -10px; top: -10px; border-radius: 50%; width: 25px; height: 25px; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .btn-add { background-color: var(--success); width: 100%; margin-top: 15px; padding: 10px; display: none; text-align: center; }
         .btn-add:hover { background-color: #219150; }
         
+        /* Petits boutons pour les tâches (Nouveau style) */
+        .task-controls { display: none; margin-left: 10px; }
+        .btn-task-del { background: var(--danger); color: white; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; cursor: pointer; vertical-align: middle; }
+        .btn-task-add { background: var(--accent); color: white; border: none; border-radius: 4px; padding: 2px 8px; font-size: 12px; cursor: pointer; margin-top: 5px; display: none; }
+
         /* Affichage conditionnel quand connecté */
         body.logged-in .btn-delete { display: flex; z-index: 10; }
         body.logged-in .btn-add { display: block; }
+        body.logged-in .task-controls { display: inline-block; }
+        body.logged-in .btn-task-add { display: inline-block; }
         body.logged-in .timeline-item, body.logged-in .category-box, body.logged-in .skill-tag-wrapper, body.logged-in .project-card, body.logged-in .cert-item { border: 1px solid #ddd; padding: 10px; margin-bottom: 20px; border-radius: 8px; background: #fff; }
         body.logged-in #save-btn { display: flex; }
         body.logged-in #logout-btn { display: flex; }
-        body.logged-in #login-btn { display: none; } /* Cache le bouton login si connecté */
-        
-        body.logged-in #reset-btn { display: flex; } /* Ajouter l'affichage du bouton reset quand connecté */
+        body.logged-in #login-btn { display: none; }
+        body.logged-in #reset-btn { display: flex; }
+        body.logged-in .upload-btn { display: flex; }
+        body.logged-in .timeline-item { border-left: none; } /* Enlever la bordure gauche en mode édition pour clarté */
 
-        /* LAYOUT (Reste du CSS inchangé) */
+        /* LAYOUT */
         .container { max-width: 1200px; margin: 0 auto; padding: 20px; display: grid; grid-template-columns: 300px 1fr; gap: 30px; padding-top: 80px; }
         @media (max-width: 768px) { .container { grid-template-columns: 1fr; } }
+        
+        /* Sidebar */
         .sidebar { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); text-align: center; }
         .profile-wrapper { position: relative; display: inline-block; width: 150px; height: 150px; margin-bottom: 20px; }
         .profile-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 4px solid var(--accent); }
         .upload-btn { position: absolute; bottom: 5px; right: 5px; background: var(--primary); color: white; width: 35px; height: 35px; border-radius: 50%; display: none; align-items: center; justify-content: center; cursor: pointer; border: 2px solid white; }
-        body.logged-in .upload-btn { display: flex; }
+        
         .name { font-size: 1.8rem; color: var(--primary); font-weight: 700; margin-bottom: 5px; }
         .title { font-size: 1rem; color: var(--accent); font-weight: 600; margin-bottom: 20px; }
+        
         .contact-info { text-align: left; margin-top: 20px; font-size: 0.9rem; }
         .contact-item { margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
-        .contact-item i { color: var(--accent); width: 20px; }
+        .contact-item i { color: var(--accent); width: 20px; text-align: center;}
+        
         .cv-download-wrapper { margin-top: 20px; margin-bottom: 20px; }
         .btn-cv { display: inline-flex; align-items: center; gap: 10px; background: var(--primary); color: white; padding: 10px 20px; border-radius: 30px; text-decoration: none; font-weight: bold; transition: all 0.3s; border: 2px solid var(--primary); cursor: pointer; }
         .btn-cv:hover { background: transparent; color: var(--primary); }
         .btn-cv.upload-mode { background: var(--warning); border-color: var(--warning); }
         .btn-cv.upload-mode:hover { background: transparent; color: var(--warning); }
+        
         .skills-list { text-align: left; margin-top: 30px; display: flex; flex-wrap: wrap; gap: 5px; }
         .skill-tag { background: var(--light); color: var(--dark); padding: 5px 10px; border-radius: 15px; font-size: 0.8rem; }
         .skill-tag-wrapper { position: relative; display: inline-block; } 
+        
+        /* Main Content */
         .main-content { display: flex; flex-direction: column; gap: 30px; }
         .section { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
         .section-title { font-size: 1.4rem; color: var(--primary); border-bottom: 2px solid var(--light); padding-bottom: 10px; margin-bottom: 20px; }
+        
         .timeline-item { border-left: 3px solid var(--accent); padding-left: 20px; margin-bottom: 25px; position: relative; }
-        body.logged-in .timeline-item { border-left: none; }
         .job-title { font-weight: bold; font-size: 1.1rem; }
         .company { color: #666; font-style: italic; font-size: 0.95rem; margin-bottom: 5px; }
         .date { font-size: 0.85rem; color: #999; margin-bottom: 10px; display: block; }
         .description ul { list-style-position: inside; margin-top: 5px; }
+        .description li { margin-bottom: 5px; }
+        
         .category-box { border-left: 4px solid #3498db; background-color: #fff; padding: 20px; border-radius: 0 8px 8px 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .category-title { font-weight: bold; font-size: 1.1rem; margin-bottom: 10px; color: #333; }
         .category-content { font-size: 0.9rem; color: #555; line-height: 1.5; }
+        .category-content.editable { background: #f0f8ff; padding: 10px; border-radius: 5px; line-height: 1.8; width: 100%; display: block; }
+
         .status-badge { background: #27ae60; color: white; padding: 5px 10px; border-radius: 4px; font-size: 0.8rem; display: inline-block; margin-bottom: 15px;}
+        
         .project-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
         .project-card { background: #f9f9f9; padding: 20px; border-radius: 8px; border: 1px solid #eee; position: relative; display: flex; flex-direction: column; justify-content: space-between; }
         .project-header h3 { font-size: 1.1rem; color: var(--primary); margin-bottom: 5px; display: flex; align-items: center; gap: 8px; }
@@ -81,18 +108,17 @@
         .project-tech { font-size: 0.8rem; color: var(--accent); margin-bottom: 15px; font-style: italic; }
         .project-link { text-decoration: none; background: var(--accent); color: white; padding: 5px 15px; border-radius: 5px; font-size: 0.85rem; display: inline-block; text-align: center; width: fit-content;}
         .project-link:hover { background: var(--primary); }
+        
         .cert-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
         .cert-item { background: #f9f9f9; padding: 15px; border-radius: 8px; display: flex; flex-direction: column; gap: 10px; position: relative; border-left: 4px solid var(--accent); }
         .cert-name { font-weight: 600; font-size: 0.95rem; }
         .cert-link { font-size: 0.8rem; color: var(--accent); text-decoration: none; display: flex; align-items: center; gap: 5px; }
         .cert-link:hover { text-decoration: underline; }
+        
         .tech-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; }
-        /* .category-box { background: #fff; padding: 20px; border-radius: 12px; border: none; box-shadow: 0 4px 20px rgba(0,0,0,0.03); transition: transform 0.2s; margin-bottom: 0; } */
-        /* .category-box:hover { transform: translateY(-3px); box-shadow: 0 6px 25px rgba(0,0,0,0.06); } */
         .tech-badges { display: flex; flex-wrap: wrap; gap: 8px; }
         .tech-tag { background: #f8f9fa; color: var(--dark); padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 500; border: 1px solid #e9ecef; transition: all 0.2s; }
         .tech-tag:hover { background: var(--accent); color: white; border-color: var(--accent); }
-        .category-content.editable { background: #f0f8ff; padding: 10px; border-radius: 5px; line-height: 1.8; width: 100%; display: block; }
     </style>
 </head>
 <body>
@@ -111,7 +137,6 @@
         // ==========================================
         // 1. SUPABASE CONFIGURATION
         // ==========================================
-        // ⚠️ REMPLACEZ CES VALEURS PAR LES VÔTRES
         const SUPABASE_URL = "https://ofjbztpsifilkptuhhit.supabase.co"; 
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9mamJ6dHBzaWZpbGtwdHVoaGl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNjY4NzQsImV4cCI6MjA4Mzk0Mjg3NH0.NQDJYOPHYtQsP-XH3FVa_yYzenSzKfkO7iBu1q8dy8M";
 
@@ -121,7 +146,7 @@
         const CV_ID = 1;
 
         // ==========================================
-        // 2. DONNÉES PAR DÉFAUT (VOTRE CV)
+        // 2. DONNÉES PAR DÉFAUT
         // ==========================================
         const DEFAULT_DATA = {
             "personal": {
@@ -132,7 +157,7 @@
                 "phone": "07 53 49 67 71",
                 "location": "Thiais (94320), Ile de france",
                 "linkedin": "assami-baga",
-                "social": "bagus_full_stack",
+                "social": "bagus_full_stack", 
                 "summary": "Étudiant en dernière année du cycle d'ingénieur en informatique à l'EILCO, je suis à la recherche active d'un CDI. Mon objectif est d'exploiter ma passion pour la technologie en participant à la conception et au développement d'applications de haute qualité.",
                 "photoUrl": "",
                 "cvUrl": ""
@@ -202,46 +227,37 @@
         };
 
         let user = null;
-        let cvData = DEFAULT_DATA; // On initialise avec les données par défaut au cas où la base est vide
+        let cvData = DEFAULT_DATA;
 
         // ==========================================
         // 3. AUTHENTIFICATION & CHARGEMENT
         // ==========================================
 
         async function init() {
-            // Vérifier la session
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) {
                 user = session.user;
                 enableEditMode();
             }
-
-            // Charger les données
             await loadData();
         }
 
         async function loadData() {
             try {
-                // Tente de récupérer les données en base
                 const { data, error } = await supabaseClient.from(DB_TABLE).select('json_data').eq('id', CV_ID).single();
-                
                 if (data && data.json_data) {
                     console.log("✅ Données chargées depuis Supabase");
                     cvData = data.json_data;
                 } else {
-                    console.log("ℹ️ Aucune donnée en base. Affichage des données par défaut.");
-                    // Si l'utilisateur est admin, on propose d'initialiser la base
-                    if (user) {
-                        const initConfirm = confirm("La base de données est vide. Voulez-vous sauvegarder les données par défaut (votre CV) maintenant ?");
-                        if(initConfirm) {
-                            await saveDataToSupabase();
-                        }
+                    console.log("ℹ️ Aucune donnée en base. Utilisation des données par défaut.");
+                    if (user && confirm("Initialiser la base de données avec votre CV par défaut ?")) {
+                        await saveDataToSupabase();
                     }
                 }
                 render();
             } catch (err) {
-                console.warn("Erreur réseau ou base vide", err);
-                render(); // Affiche DEFAULT_DATA
+                console.warn("Erreur chargement ou base vide", err);
+                render();
             }
         }
 
@@ -250,18 +266,13 @@
             const password = prompt("Mot de passe :");
             if (!email || !password) return;
 
-            const { data, error } = await supabaseClient.auth.signInWithPassword({
-                email: email,
-                password: password,
-            });
-
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
             if (error) {
                 alert("❌ Erreur : " + error.message);
             } else {
                 user = data.user;
                 enableEditMode();
                 alert("✅ Connecté !");
-                // Recharger les données pour vérifier si on doit initialiser
                 loadData();
             }
         }
@@ -274,74 +285,43 @@
         }
 
         async function resetDatabase() {
-            if (!user) return alert("Vous devez être connecté !");
+            if (!user) return alert("Connexion requise");
+            if (!confirm("⚠️ ATTENTION : Cela va effacer toutes les modifications et rétablir le CV par défaut.\nContinuer ?")) return;
 
-            // Double confirmation pour sécurité
-            const confirmation = confirm("⚠️ ATTENTION IRRÉVERSIBLE !\n\nVous allez effacer toutes les données en ligne et rétablir le CV par défaut.\n\nÊtes-vous sûr de vouloir continuer ?");
-            
-            if (!confirmation) return;
-
-            // On écrase la base de données avec DEFAULT_DATA
-            const { error } = await supabaseClient
-                .from(DB_TABLE)
-                .upsert({ id: CV_ID, json_data: DEFAULT_DATA });
-
-            if (error) {
-                alert("❌ Erreur : " + error.message);
-            } else {
-                alert("♻️ Base de données réinitialisée avec succès !");
-                
-                // On met à jour l'affichage local immédiatement
-                // On utilise JSON.parse/stringify pour créer une copie propre des données par défaut
+            const { error } = await supabaseClient.from(DB_TABLE).upsert({ id: CV_ID, json_data: DEFAULT_DATA });
+            if (error) alert("Erreur: " + error.message);
+            else {
+                alert("♻️ Base réinitialisée !");
                 cvData = JSON.parse(JSON.stringify(DEFAULT_DATA));
                 render();
             }
         }
 
-        function enableEditMode() {
-            document.body.classList.add('logged-in');
-            render();
-        }
-
-        function disableEditMode() {
-            document.body.classList.remove('logged-in');
-            render();
-        }
+        function enableEditMode() { document.body.classList.add('logged-in'); render(); }
+        function disableEditMode() { document.body.classList.remove('logged-in'); render(); }
 
         // ==========================================
-        // 4. SAUVEGARDE
+        // 4. SAUVEGARDE & UPLOAD
         // ==========================================
 
         async function saveDataToSupabase() {
-            if (!user) return alert("Vous devez être connecté pour sauvegarder !");
-
-            const { error } = await supabaseClient
-                .from(DB_TABLE)
-                .upsert({ id: CV_ID, json_data: cvData });
-
-            if (error) {
-                alert("❌ Erreur de sauvegarde : " + error.message);
-            } else {
-                alert("✅ Données sauvegardées sur Supabase !");
-            }
+            if (!user) return alert("Connexion requise");
+            const { error } = await supabaseClient.from(DB_TABLE).upsert({ id: CV_ID, json_data: cvData });
+            if (error) alert("❌ Erreur: " + error.message);
+            else alert("✅ Sauvegardé !");
         }
 
         async function uploadFileToSupabase(file) {
             if (!user) return null;
             const fileName = `${Date.now()}_${file.name.replace(/\s/g, '_')}`;
-            
-            const { data, error } = await supabaseClient.storage.from(STORAGE_BUCKET).upload(fileName, file);
-            if (error) {
-                alert("Erreur upload : " + error.message);
-                return null;
-            }
-
-            const { data: publicUrlData } = supabaseClient.storage.from(STORAGE_BUCKET).getPublicUrl(fileName);
-            return publicUrlData.publicUrl;
+            const { error } = await supabaseClient.storage.from(STORAGE_BUCKET).upload(fileName, file);
+            if (error) { alert("Erreur upload: " + error.message); return null; }
+            const { data } = supabaseClient.storage.from(STORAGE_BUCKET).getPublicUrl(fileName);
+            return data.publicUrl;
         }
 
         // ==========================================
-        // 5. RENDER (VOTRE DESIGN)
+        // 5. RENDER (AFFICHAGE)
         // ==========================================
         
         function render() {
@@ -359,7 +339,7 @@
                 <div class="container">
                     <aside class="sidebar">
                         <div class="profile-wrapper">
-                            <img src="${photoSrc}" alt="Profile" id="profile-img" class="profile-img">
+                            <img src="${photoSrc}" alt="Profile" class="profile-img">
                             <label for="photo-upload" class="upload-btn"><i class="fas fa-camera"></i></label>
                             <input type="file" id="photo-upload" accept="image/*" style="display:none">
                         </div>
@@ -372,28 +352,118 @@
                             <div class="contact-item"><i class="fas fa-phone"></i> <span class="${editClass}" ${contentEditable} oninput="updatePersonal('phone', this.innerText)">${p.phone}</span></div>
                             <div class="contact-item"><i class="fas fa-map-marker-alt"></i> <span class="${editClass}" ${contentEditable} oninput="updatePersonal('location', this.innerText)">${p.location}</span></div>
                             <div class="contact-item"><i class="fab fa-linkedin"></i> <span class="${editClass}" ${contentEditable} oninput="updatePersonal('linkedin', this.innerText)">${p.linkedin}</span></div>
+                            <div class="contact-item"><i class="fab fa-github"></i> <span class="${editClass}" ${contentEditable} oninput="updatePersonal('social', this.innerText)">${p.social}</span></div>
                         </div>
+                        
                         <div class="cv-download-wrapper">
-                            <a href="${cvLink}" id="cv-download-btn" class="btn-cv ${isEditing ? 'upload-mode' : ''}" ${isEditing ? 'onclick="document.getElementById(\'cv-upload\').click(); return false;"' : 'target="_blank"'}>
+                            <a href="${cvLink}" class="btn-cv ${isEditing ? 'upload-mode' : ''}" ${isEditing ? 'onclick="document.getElementById(\'cv-upload\').click(); return false;"' : 'target="_blank"'}>
                                 <i class="fas ${isEditing ? 'fa-file-upload' : 'fa-download'}"></i> ${isEditing ? 'Uploader CV (PDF)' : 'Télécharger mon CV'}
                             </a>
                             <input type="file" id="cv-upload" accept="application/pdf" style="display:none">
                         </div>
+                        
                         <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+                        
                         <h3>Atouts</h3>
                         <div class="skills-list">${(cvData.softSkills || []).map((s, i) => `<div class="skill-tag-wrapper"><span class="skill-tag ${editClass}" ${contentEditable} oninput="updateArrayItem('softSkills', ${i}, null, this.innerText)">${s}</span>${delBtn('softSkills', i)}</div>`).join('')}</div>
                         <button class="btn-action btn-add" onclick="addItem('softSkills')"><i class="fas fa-plus"></i> Ajouter</button>
+                        
                         <h3 style="margin-top:20px">Langues</h3>
                         <div class="skills-list">${(cvData.languages || []).map((s, i) => `<div class="skill-tag-wrapper"><span class="skill-tag ${editClass}" ${contentEditable} oninput="updateArrayItem('languages', ${i}, null, this.innerText)">${s}</span>${delBtn('languages', i)}</div>`).join('')}</div>
                         <button class="btn-action btn-add" onclick="addItem('languages')"><i class="fas fa-plus"></i> Ajouter</button>
                     </aside>
+                    
                     <main class="main-content">
-                        <section class="section"><h2 class="section-title">ℹ️ À propos de moi</h2><p class="${editClass}" ${contentEditable} oninput="updatePersonal('summary', this.innerText)">${p.summary}</p></section>
-                        <section class="section"><h2 class="section-title">🏆 Projets Phares</h2><div class="project-grid">${(cvData.projects || []).map((proj, i) => `<div class="project-card">${delBtn('projects', i)}<div class="project-header"><h3 class="${editClass}" ${contentEditable} oninput="updateArrayItem('projects', ${i}, 'name', this.innerText)"><i class="fas fa-robot"></i> ${proj.name}</h3></div><p class="project-desc ${editClass}" ${contentEditable} oninput="updateArrayItem('projects', ${i}, 'desc', this.innerText)">${proj.desc}</p><div class="project-tech ${editClass}" ${contentEditable} oninput="updateArrayItem('projects', ${i}, 'tech', this.innerText)">${proj.tech}</div><a href="${isEditing ? '#' : proj.link}" target="${isEditing ? '_self' : '_blank'}" class="project-link" ${isEditing ? 'onclick="event.preventDefault();"' : ''}><span class="${editClass}" ${contentEditable} oninput="updateArrayItem('projects', ${i}, 'link', this.innerText)">${isEditing ? proj.link : 'Voir le projet'}</span></a></div>`).join('')}</div><button class="btn-action btn-add" onclick="addItem('projects')"><i class="fas fa-plus"></i> Ajouter un projet</button></section>
-                        <section class="section"><h2 class="section-title">📊 Mes Certifications</h2><div class="cert-grid">${(cvData.certifications || []).map((cert, i) => `<div class="cert-item">${delBtn('certifications', i)}<div class="cert-name ${editClass}" ${contentEditable} oninput="updateArrayItem('certifications', ${i}, 'name', this.innerText)">${cert.name}</div><a href="${isEditing ? '#' : cert.link}" target="${isEditing ? '_self' : '_blank'}" class="cert-link" ${isEditing ? 'onclick="event.preventDefault();"' : ''}><i class="fas fa-external-link-alt"></i><span class="${editClass}" ${contentEditable} oninput="updateArrayItem('certifications', ${i}, 'link', this.innerText)">${isEditing ? cert.link : 'Voir le certificat'}</span></a></div>`).join('')}</div><button class="btn-action btn-add" onclick="addItem('certifications')"><i class="fas fa-plus"></i> Ajouter une certification</button></section>
-                        <section class="section"><h2 class="section-title">💻 Compétences Techniques</h2><div class="tech-grid">${(cvData.techSkills || []).map((skill, i) => { const contentHtml = isEditing ? `<div class="category-content ${editClass}" ${contentEditable} oninput="updateArrayItem('techSkills', ${i}, 'tools', this.innerText)">${skill.tools}</div>` : `<div class="tech-badges">${skill.tools.split(',').map(t => `<span class="tech-tag">${t.trim()}</span>`).join('')}</div>`;return `<div class="category-box">${delBtn('techSkills', i)}<div class="category-title ${editClass}" ${contentEditable} oninput="updateArrayItem('techSkills', ${i}, 'cat', this.innerText)">${skill.cat}</div>${contentHtml}</div>`;}).join('')}</div><button class="btn-action btn-add" onclick="addItem('techSkills')"><i class="fas fa-plus"></i> Ajouter</button></section>
-                        <section class="section"><h2 class="section-title">💼 Expériences Professionnelles</h2>${(cvData.experience || []).map((exp, i) => `<div class="timeline-item">${delBtn('experience', i)}<div class="job-title ${editClass}" ${contentEditable} oninput="updateArrayItem('experience', ${i}, 'role', this.innerText)">${exp.role}</div><div class="company ${editClass}" ${contentEditable} oninput="updateArrayItem('experience', ${i}, 'company', this.innerText)">${exp.company}</div><span class="date ${editClass}" ${contentEditable} oninput="updateArrayItem('experience', ${i}, 'date', this.innerText)">${exp.date}</span><div class="description"><ul>${(exp.tasks || []).map((t, ti) => `<li class="${editClass}" ${contentEditable} oninput="updateTask(${i}, ${ti}, this.innerText)">${t}</li>`).join('')}</ul></div></div>`).join('')}<button class="btn-action btn-add" onclick="addItem('experience')"><i class="fas fa-plus"></i> Ajouter</button></section>
-                        <section class="section"><h2 class="section-title">🎓 Diplômes et Formations</h2>${(cvData.education || []).map((edu, i) => `<div class="timeline-item">${delBtn('education', i)}<div class="job-title ${editClass}" ${contentEditable} oninput="updateArrayItem('education', ${i}, 'degree', this.innerText)">${edu.degree}</div><div class="company ${editClass}" ${contentEditable} oninput="updateArrayItem('education', ${i}, 'school', this.innerText)">${edu.school}</div><span class="date ${editClass}" ${contentEditable} oninput="updateArrayItem('education', ${i}, 'date', this.innerText)">${edu.date}</span></div>`).join('')}<button class="btn-action btn-add" onclick="addItem('education')"><i class="fas fa-plus"></i> Ajouter</button></section>
+                        <section class="section">
+                            <h2 class="section-title">ℹ️ À propos de moi</h2>
+                            <p class="${editClass}" ${contentEditable} oninput="updatePersonal('summary', this.innerText)">${p.summary}</p>
+                        </section>
+                        
+                        <section class="section">
+                            <h2 class="section-title">🏆 Projets Phares</h2>
+                            <div class="project-grid">
+                                ${(cvData.projects || []).map((proj, i) => `
+                                    <div class="project-card">
+                                        ${delBtn('projects', i)}
+                                        <div class="project-header">
+                                            <h3 class="${editClass}" ${contentEditable} oninput="updateArrayItem('projects', ${i}, 'name', this.innerText)"><i class="fas fa-robot"></i> ${proj.name}</h3>
+                                        </div>
+                                        <p class="project-desc ${editClass}" ${contentEditable} oninput="updateArrayItem('projects', ${i}, 'desc', this.innerText)">${proj.desc}</p>
+                                        <div class="project-tech ${editClass}" ${contentEditable} oninput="updateArrayItem('projects', ${i}, 'tech', this.innerText)">${proj.tech}</div>
+                                        <a href="${isEditing ? '#' : proj.link}" target="${isEditing ? '_self' : '_blank'}" class="project-link" ${isEditing ? 'onclick="event.preventDefault();"' : ''}>
+                                            <span class="${editClass}" ${contentEditable} oninput="updateArrayItem('projects', ${i}, 'link', this.innerText)">${isEditing ? proj.link : 'Voir le projet'}</span>
+                                        </a>
+                                    </div>`).join('')}
+                            </div>
+                            <button class="btn-action btn-add" onclick="addItem('projects')"><i class="fas fa-plus"></i> Ajouter un projet</button>
+                        </section>
+                        
+                        <section class="section">
+                            <h2 class="section-title">📊 Mes Certifications</h2>
+                            <div class="cert-grid">
+                                ${(cvData.certifications || []).map((cert, i) => `
+                                    <div class="cert-item">
+                                        ${delBtn('certifications', i)}
+                                        <div class="cert-name ${editClass}" ${contentEditable} oninput="updateArrayItem('certifications', ${i}, 'name', this.innerText)">${cert.name}</div>
+                                        <a href="${isEditing ? '#' : cert.link}" target="${isEditing ? '_self' : '_blank'}" class="cert-link" ${isEditing ? 'onclick="event.preventDefault();"' : ''}>
+                                            <i class="fas fa-external-link-alt"></i><span class="${editClass}" ${contentEditable} oninput="updateArrayItem('certifications', ${i}, 'link', this.innerText)">${isEditing ? cert.link : 'Voir le certificat'}</span>
+                                        </a>
+                                    </div>`).join('')}
+                            </div>
+                            <button class="btn-action btn-add" onclick="addItem('certifications')"><i class="fas fa-plus"></i> Ajouter</button>
+                        </section>
+                        
+                        <section class="section">
+                            <h2 class="section-title">💻 Compétences Techniques</h2>
+                            <div class="tech-grid">
+                                ${(cvData.techSkills || []).map((skill, i) => { 
+                                    const contentHtml = isEditing 
+                                        ? `<div class="category-content ${editClass}" ${contentEditable} oninput="updateArrayItem('techSkills', ${i}, 'tools', this.innerText)">${skill.tools}</div>` 
+                                        : `<div class="tech-badges">${skill.tools.split(',').map(t => `<span class="tech-tag">${t.trim()}</span>`).join('')}</div>`;
+                                    return `
+                                    <div class="category-box">
+                                        ${delBtn('techSkills', i)}
+                                        <div class="category-title ${editClass}" ${contentEditable} oninput="updateArrayItem('techSkills', ${i}, 'cat', this.innerText)">${skill.cat}</div>
+                                        ${contentHtml}
+                                    </div>`;
+                                }).join('')}
+                            </div>
+                            <button class="btn-action btn-add" onclick="addItem('techSkills')"><i class="fas fa-plus"></i> Ajouter</button>
+                        </section>
+                        
+                        <section class="section">
+                            <h2 class="section-title">💼 Expériences Professionnelles</h2>
+                            ${(cvData.experience || []).map((exp, i) => `
+                                <div class="timeline-item">
+                                    ${delBtn('experience', i)}
+                                    <div class="job-title ${editClass}" ${contentEditable} oninput="updateArrayItem('experience', ${i}, 'role', this.innerText)">${exp.role}</div>
+                                    <div class="company ${editClass}" ${contentEditable} oninput="updateArrayItem('experience', ${i}, 'company', this.innerText)">${exp.company}</div>
+                                    <span class="date ${editClass}" ${contentEditable} oninput="updateArrayItem('experience', ${i}, 'date', this.innerText)">${exp.date}</span>
+                                    <div class="description">
+                                        <ul>
+                                            ${(exp.tasks || []).map((t, ti) => `
+                                                <li>
+                                                    <span class="${editClass}" ${contentEditable} oninput="updateTask(${i}, ${ti}, this.innerText)">${t}</span>
+                                                    <span class="task-controls"><button class="btn-task-del" onclick="deleteTask(${i}, ${ti})">x</button></span>
+                                                </li>`).join('')}
+                                        </ul>
+                                        <button class="btn-task-add" onclick="addTask(${i})">+ Tâche</button>
+                                    </div>
+                                </div>`).join('')}
+                            <button class="btn-action btn-add" onclick="addItem('experience')"><i class="fas fa-plus"></i> Ajouter</button>
+                        </section>
+                        
+                        <section class="section">
+                            <h2 class="section-title">🎓 Diplômes et Formations</h2>
+                            ${(cvData.education || []).map((edu, i) => `
+                                <div class="timeline-item">
+                                    ${delBtn('education', i)}
+                                    <div class="job-title ${editClass}" ${contentEditable} oninput="updateArrayItem('education', ${i}, 'degree', this.innerText)">${edu.degree}</div>
+                                    <div class="company ${editClass}" ${contentEditable} oninput="updateArrayItem('education', ${i}, 'school', this.innerText)">${edu.school}</div>
+                                    <span class="date ${editClass}" ${contentEditable} oninput="updateArrayItem('education', ${i}, 'date', this.innerText)">${edu.date}</span>
+                                </div>`).join('')}
+                            <button class="btn-action btn-add" onclick="addItem('education')"><i class="fas fa-plus"></i> Ajouter</button>
+                        </section>
                     </main>
                 </div>
             `;
@@ -405,14 +475,40 @@
         // ==========================================
         function updatePersonal(f, v) { cvData.personal[f] = v; }
         function updateArrayItem(arr, idx, f, v) { if(f) cvData[arr][idx][f] = v; else cvData[arr][idx] = v; }
-        function updateTask(idx, tIdx, val) { cvData.experience[idx].tasks[tIdx] = val; }
+        
+        // --- Gestion des Tâches (AMÉLIORÉ) ---
+        function updateTask(expIndex, taskIndex, val) { 
+            cvData.experience[expIndex].tasks[taskIndex] = val; 
+        }
+        function addTask(expIndex) {
+            if(!cvData.experience[expIndex].tasks) cvData.experience[expIndex].tasks = [];
+            cvData.experience[expIndex].tasks.push("Nouvelle tâche...");
+            render();
+        }
+        function deleteTask(expIndex, taskIndex) {
+            if(confirm("Supprimer cette tâche ?")) {
+                cvData.experience[expIndex].tasks.splice(taskIndex, 1);
+                render();
+            }
+        }
+        // -------------------------------------
+
         function addItem(type) {
-            const map = { experience: { role: "Nouveau", company: "...", date: "...", tasks: ["..."] }, education: { degree: "...", school: "...", date: "..." }, techSkills: { cat: "...", tools: "..." }, projects: { name: "Projet", desc: "...", tech: "...", link: "#" }, certifications: { name: "...", link: "#" }, softSkills: "...", languages: "..." };
+            const map = { 
+                experience: { role: "Nouveau poste", company: "Entreprise", date: "Date", tasks: ["Tâche 1"] }, 
+                education: { degree: "Diplôme", school: "École", date: "Date" }, 
+                techSkills: { cat: "Catégorie", tools: "Outils" }, 
+                projects: { name: "Nouveau Projet", desc: "Description", tech: "Technos", link: "#" }, 
+                certifications: { name: "Nouvelle Certif", link: "#" }, 
+                softSkills: "Nouvel atout", 
+                languages: "Langue" 
+            };
             if(!cvData[type]) cvData[type] = [];
             cvData[type].unshift(map[type]);
             render();
         }
-        function deleteItem(t, i) { if(confirm("Supprimer?")) { cvData[t].splice(i, 1); render(); } }
+
+        function deleteItem(t, i) { if(confirm("Supprimer cet élément ?")) { cvData[t].splice(i, 1); render(); } }
 
         function attachListeners() {
             const pi = document.getElementById('photo-upload');
@@ -433,9 +529,9 @@
             };
         }
 
-        // Démarrage
         init();
     </script>
+    
     <script>function googleTranslateElementInit() { new google.translate.TranslateElement({pageLanguage: 'fr', layout: google.translate.TranslateElement.InlineLayout.SIMPLE}, 'google_translate_element'); }</script>
     <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 </body>
