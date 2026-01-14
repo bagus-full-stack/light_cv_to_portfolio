@@ -161,17 +161,73 @@
         // 2. API LOGIC
         // ==========================================
         
+        // async function loadDataFromAPI() {
+        //     const cachedData = localStorage.getItem('portfolio_cache');
+        //     if (cachedData) {
+        //         console.log("Chargement depuis le cache local...");
+        //         cvData = JSON.parse(cachedData);
+        //         render(); // Affiche la photo et le texte instantanément !
+        //     }
+
+        //     try {
+        //         const response = await fetch(`${API_BASE_URL}/api/data`);
+        //         const data = await response.json();
+        //         if (Object.keys(data).length > 0) {
+        //             cvData = data;
+        //             localStorage.setItem('portfolio_cache', JSON.stringify(cvData));
+        //             render();
+        //         }
+        //     } catch (error) {
+        //         console.warn("API Offline or connection error", error);
+        //     }
+        // }
+
         async function loadDataFromAPI() {
+            // --- ÉTAPE 1 : Chargement du Cache (Instantané) ---
+            const cachedData = localStorage.getItem('portfolio_cache');
+            
+            if (cachedData) {
+                try {
+                    console.log("Chargement depuis le cache local...");
+                    cvData = JSON.parse(cachedData);
+                    render(); 
+                } catch (e) {
+                    // Si le cache est corrompu (ex: "undefined"), on évite le crash et on nettoie
+                    console.error("Cache corrompu, suppression...", e);
+                    localStorage.removeItem('portfolio_cache');
+                }
+            }
+
+            // --- ÉTAPE 2 : Mise à jour via API (Arrière-plan) ---
             try {
                 const response = await fetch(`${API_BASE_URL}/api/data`);
+
+                // Important : fetch() ne rejette pas l'erreur sur une 404 ou 500
+                if (!response.ok) {
+                    throw new Error(`Erreur HTTP: ${response.status}`);
+                }
+
                 const data = await response.json();
-                if (Object.keys(data).length > 0) {
-                    cvData = data;
-                    localStorage.setItem('portfolio_cache', JSON.stringify(cvData));
-                    render();
+
+                // Vérification que l'objet n'est pas vide
+                if (data && Object.keys(data).length > 0) {
+                    
+                    // OPTIMISATION : Comparer pour éviter un "flash" inutile si les données n'ont pas changé
+                    // Note: JSON.stringify est suffisant pour des petits objets simples
+                    const isDataDifferent = JSON.stringify(data) !== cachedData; 
+
+                    if (isDataDifferent) {
+                        console.log("Nouvelles données reçues, mise à jour...");
+                        cvData = data;
+                        localStorage.setItem('portfolio_cache', JSON.stringify(cvData));
+                        render();
+                    } else {
+                        console.log("Données API identiques au cache. Pas de re-render nécessaire.");
+                    }
                 }
             } catch (error) {
-                console.warn("API Offline or connection error", error);
+                console.warn("Mode hors-ligne ou erreur API :", error);
+                // Ici, l'utilisateur voit toujours la version du cache chargée à l'étape 1
             }
         }
 
@@ -506,12 +562,6 @@
         // ==========================================
         // 5. INITIALIZE
         // ==========================================
-        const cachedData = localStorage.getItem('portfolio_cache');
-        if (cachedData) {
-            console.log("Chargement depuis le cache local...");
-            cvData = JSON.parse(cachedData);
-            render(); // Affiche la photo et le texte instantanément !
-        }
         loadDataFromAPI();
 
     </script>
