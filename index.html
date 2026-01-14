@@ -103,7 +103,7 @@
         const SUPABASE_URL = "https://ofjbztpsifilkptuhhit.supabase.co"; 
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9mamJ6dHBzaWZpbGtwdHVoaGl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNjY4NzQsImV4cCI6MjA4Mzk0Mjg3NH0.NQDJYOPHYtQsP-XH3FVa_yYzenSzKfkO7iBu1q8dy8M";
 
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         const DB_TABLE = 'portfolio';
         const STORAGE_BUCKET = 'uploads';
         const CV_ID = 1;
@@ -198,7 +198,7 @@
 
         async function init() {
             // Vérifier la session
-            const { data: { session } } = await supabase.auth.getSession();
+            const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) {
                 user = session.user;
                 enableEditMode();
@@ -211,7 +211,7 @@
         async function loadData() {
             try {
                 // Tente de récupérer les données en base
-                const { data, error } = await supabase.from(DB_TABLE).select('json_data').eq('id', CV_ID).single();
+                const { data, error } = await supabaseClient.from(DB_TABLE).select('json_data').eq('id', CV_ID).single();
                 
                 if (data && data.json_data) {
                     console.log("✅ Données chargées depuis Supabase");
@@ -238,7 +238,7 @@
             const password = prompt("Mot de passe :");
             if (!email || !password) return;
 
-            const { data, error } = await supabase.auth.signInWithPassword({
+            const { data, error } = await supabaseClient.auth.signInWithPassword({
                 email: email,
                 password: password,
             });
@@ -255,7 +255,7 @@
         }
 
         async function logout() {
-            await supabase.auth.signOut();
+            await supabaseClient.auth.signOut();
             user = null;
             disableEditMode();
             alert("Déconnecté.");
@@ -278,7 +278,7 @@
         async function saveDataToSupabase() {
             if (!user) return alert("Vous devez être connecté pour sauvegarder !");
 
-            const { error } = await supabase
+            const { error } = await supabaseClient
                 .from(DB_TABLE)
                 .upsert({ id: CV_ID, json_data: cvData });
 
@@ -293,13 +293,13 @@
             if (!user) return null;
             const fileName = `${Date.now()}_${file.name.replace(/\s/g, '_')}`;
             
-            const { data, error } = await supabase.storage.from(STORAGE_BUCKET).upload(fileName, file);
+            const { data, error } = await supabaseClient.storage.from(STORAGE_BUCKET).upload(fileName, file);
             if (error) {
                 alert("Erreur upload : " + error.message);
                 return null;
             }
 
-            const { data: publicUrlData } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(fileName);
+            const { data: publicUrlData } = supabaseClient.storage.from(STORAGE_BUCKET).getPublicUrl(fileName);
             return publicUrlData.publicUrl;
         }
 
