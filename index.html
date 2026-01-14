@@ -291,14 +291,24 @@
         }
 
         async function resetDatabase() {
-            if (!user) return alert("Connexion requise");
+            if (!user) return alert("Vous devez être connecté !");
             if (!confirm("⚠️ ATTENTION : Cela va effacer toutes les modifications et rétablir le CV par défaut.\nContinuer ?")) return;
 
-            const { error } = await supabaseClient.from(DB_TABLE).upsert({ id: CV_ID, json_data: DEFAULT_DATA });
-            if (error) alert("Erreur: " + error.message);
-            else {
-                alert("♻️ Base réinitialisée !");
+            // 1. On remet le CV à zéro
+            const { error: errorCV } = await supabaseClient.from(DB_TABLE).upsert({ id: CV_ID, json_data: DEFAULT_DATA });
+
+            // 2. On remet le compteur de visites à zéro (Nouvelle partie)
+            const { error: errorStats } = await supabaseClient.from('site_stats').update({ visits: 0 }).eq('id', 1);
+
+            if (errorCV || errorStats) {
+                alert("❌ Une erreur est survenue.");
+                console.error(errorCV, errorStats);
+            } else {
+                alert("♻️ CV et Compteur réinitialisés !");
+                
+                // Mise à jour visuelle immédiate
                 cvData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+                document.getElementById('visit-count').innerText = "0"; // Reset visuel du compteur
                 render();
             }
         }
