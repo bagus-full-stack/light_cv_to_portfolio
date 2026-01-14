@@ -333,7 +333,7 @@
             const delBtn = (type, index) => `<button class="btn-action btn-delete" onclick="deleteItem('${type}', ${index})"><i class="fas fa-trash"></i></button>`;
 
             const p = cvData.personal || {};
-            const photoSrc = p.photoUrl || 'https://via.placeholder.com/150';
+            const photoSrc = p.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=3498db&color=fff&size=150`;
             const cvLink = p.cvUrl || '#';
 
             app.innerHTML = `
