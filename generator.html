@@ -6,30 +6,24 @@
     <title>Générateur de Portfolio (Powered by Gemini)</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --primary: #2c3e50; --accent: #3498db; --light: #ecf0f1; --success: #27ae60; }
+        :root { --primary: #2c3e50; --accent: #3498db; --light: #ecf0f1; --success: #27ae60; --danger: #e74c3c; }
         body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; color: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        
         .card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 500px; text-align: center; }
         h1 { color: var(--primary); margin-bottom: 10px; font-size: 1.8rem; }
         p { color: #666; margin-bottom: 30px; font-size: 0.9rem; }
-        
         .input-group { margin-bottom: 20px; text-align: left; }
         label { display: block; margin-bottom: 5px; font-weight: bold; color: var(--primary); font-size: 0.9rem; }
         input[type="text"], input[type="password"] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; outline: none; }
         input:focus { border-color: var(--accent); }
-        
         .file-drop { border: 2px dashed var(--accent); padding: 30px; border-radius: 8px; cursor: pointer; transition: 0.3s; background: #f9fbff; margin-top: 20px; }
         .file-drop:hover { background: #eef5ff; border-color: var(--primary); }
         .file-drop i { font-size: 2rem; color: var(--accent); margin-bottom: 10px; }
-        
         .btn { background: var(--accent); color: white; border: none; padding: 12px 25px; border-radius: 30px; font-size: 1rem; cursor: pointer; width: 100%; margin-top: 20px; transition: 0.3s; font-weight: bold; }
         .btn:hover { background: var(--primary); }
         .btn:disabled { background: #ccc; cursor: not-allowed; }
-
         .status { margin-top: 20px; font-size: 0.9rem; min-height: 20px; font-weight: 500; }
         .success { color: var(--success); }
-        .error { color: #e74c3c; }
-        
+        .error { color: var(--danger); }
         .hidden { display: none; }
         .logo-ai { display: inline-block; background: linear-gradient(45deg, #4285F4, #9B72CB); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: bold; }
     </style>
@@ -52,7 +46,7 @@
                 <label>Mot de passe</label>
                 <input type="password" id="password" placeholder="••••••••">
             </div>
-            <button class="btn" onclick="login()">Se connecter pour commencer</button>
+            <button class="btn" id="login-btn">Se connecter</button>
         </div>
 
         <div id="upload-section" class="hidden">
@@ -64,13 +58,13 @@
                 </small>
             </div>
 
-            <div class="file-drop" onclick="document.getElementById('cv-file').click()">
+            <div class="file-drop" id="drop-area">
                 <i class="fas fa-file-pdf"></i>
                 <div id="file-label">Cliquez pour choisir votre CV (PDF)</div>
-                <input type="file" id="cv-file" accept="application/pdf" style="display:none" onchange="handleFileSelect(this)">
+                <input type="file" id="cv-file" accept="application/pdf" style="display:none">
             </div>
 
-            <button id="generate-btn" class="btn" onclick="processCV()" disabled>
+            <button id="generate-btn" class="btn" disabled>
                 <i class="fas fa-magic"></i> Générer le Portfolio
             </button>
             
@@ -82,12 +76,12 @@
 
     <script>
         // ==========================================
-        // 1. CONFIGURATION (A REMPLIR)
+        // 1. CONFIGURATION (REMPLIR ICI)
         // ==========================================
-        const SUPABASE_URL = "https://ofjbztpsifilkptuhhit.supabase.co"; // ⚠️ METTRE VOTRE URL
-        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9mamJ6dHBzaWZpbGtwdHVoaGl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNjY4NzQsImV4cCI6MjA4Mzk0Mjg3NH0.NQDJYOPHYtQsP-XH3FVa_yYzenSzKfkO7iBu1q8dy8M"; // ⚠️ METTRE VOTRE CLE ANON
+        const SUPABASE_URL = "https://ofjbztpsifilkptuhhit.supabase.co"; // ⚠️ REMPLACEZ ICI
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9mamJ6dHBzaWZpbGtwdHVoaGl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNjY4NzQsImV4cCI6MjA4Mzk0Mjg3NH0.NQDJYOPHYtQsP-XH3FVa_yYzenSzKfkO7iBu1q8dy8M"; // ⚠️ REMPLACEZ ICI
         
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         
         // Config Worker PDF.js
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
@@ -96,31 +90,68 @@
         let selectedFile = null;
 
         // ==========================================
-        // 2. AUTHENTIFICATION
+        // 2. INITIALISATION & LISTENERS
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // Attacher les événements manuellement pour éviter ReferenceError
+            document.getElementById('login-btn').addEventListener('click', login);
+            document.getElementById('generate-btn').addEventListener('click', processCV);
+            
+            const dropArea = document.getElementById('drop-area');
+            const fileInput = document.getElementById('cv-file');
+
+            dropArea.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', (e) => handleFileSelect(e.target));
+
+            // Charger la clé Gemini si sauvegardée
+            const savedKey = localStorage.getItem('my_gemini_key');
+            if (savedKey) document.getElementById('gemini-key').value = savedKey;
+
+            // Vérifier session existante
+            checkSession();
+        });
+
+        async function checkSession() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) {
+                user = session.user;
+                showUploadSection();
+            }
+        }
+
+        function showUploadSection() {
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('upload-section').classList.remove('hidden');
+        }
+
+        // ==========================================
+        // 3. AUTHENTIFICATION
         // ==========================================
         async function login() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            const btn = document.querySelector('#login-section button');
+            const btn = document.getElementById('login-btn');
             
+            if(!email || !password) return alert("Veuillez remplir tous les champs");
+
             btn.disabled = true;
             btn.innerText = "Connexion...";
 
-            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
             
             if (error) {
-                alert("Erreur de connexion : " + error.message);
+                alert("Erreur : " + error.message);
                 btn.disabled = false;
-                btn.innerText = "Se connecter pour commencer";
+                btn.innerText = "Se connecter";
             } else {
                 user = data.user;
-                document.getElementById('login-section').classList.add('hidden');
-                document.getElementById('upload-section').classList.remove('hidden');
+                showUploadSection();
             }
         }
 
         // ==========================================
-        // 3. GESTION DU FICHIER
+        // 4. GESTION FICHIER
         // ==========================================
         function handleFileSelect(input) {
             if (input.files && input.files[0]) {
@@ -133,7 +164,7 @@
         }
 
         // ==========================================
-        // 4. PROCESSUS PRINCIPAL (EXTRACTION -> IA -> DB)
+        // 5. PROCESSUS IA (GEMINI)
         // ==========================================
         async function processCV() {
             const apiKey = document.getElementById('gemini-key').value;
@@ -143,37 +174,37 @@
             if (!apiKey) return alert("Veuillez entrer une clé API Gemini");
             if (!selectedFile) return alert("Veuillez choisir un fichier");
 
-            // UI Update
+            // Sauvegarder la clé pour la prochaine fois
+            localStorage.setItem('my_gemini_key', apiKey);
+
             btn.disabled = true;
             statusDiv.className = "status";
             
             try {
-                // ÉTAPE 1 : Lire le PDF
+                // ÉTAPE 1
                 statusDiv.innerText = "1/4 Extraction du texte du PDF...";
                 const text = await extractTextFromPDF(selectedFile);
                 
-                // ÉTAPE 2 : Analyser avec Gemini
+                // ÉTAPE 2
                 statusDiv.innerText = "2/4 Analyse intelligente par Gemini...";
                 const jsonData = await analyzeWithGemini(text, apiKey);
                 
-                // ÉTAPE 3 : Upload du PDF (Fichier)
+                // ÉTAPE 3
                 statusDiv.innerText = "3/4 Sauvegarde du fichier PDF...";
                 const pdfUrl = await uploadPDFFile(selectedFile);
                 if(pdfUrl) {
-                    jsonData.personal.cvUrl = pdfUrl; // On ajoute le lien du fichier au JSON
+                    jsonData.personal.cvUrl = pdfUrl;
                 }
 
-                // ÉTAPE 4 : Sauvegarde des données (JSON)
+                // ÉTAPE 4
                 statusDiv.innerText = "4/4 Mise à jour de la base de données...";
-                
-                const { error } = await supabase
+                const { error } = await supabaseClient
                     .from('portfolio')
                     .upsert({ id: 1, json_data: jsonData });
 
                 if (error) throw error;
 
                 statusDiv.innerHTML = "<span class='success'>✅ Terminé ! Redirection...</span>";
-                
                 setTimeout(() => window.location.href = 'index.html', 2000);
 
             } catch (err) {
@@ -184,15 +215,13 @@
         }
 
         // ==========================================
-        // 5. FONCTIONS HELPER (PDF & GEMINI)
+        // 6. HELPER FUNCTIONS
         // ==========================================
 
-        // A. Extraction de texte via PDF.js
         async function extractTextFromPDF(file) {
             const arrayBuffer = await file.arrayBuffer();
             const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
             let fullText = "";
-
             for (let i = 1; i <= pdf.numPages; i++) {
                 const page = await pdf.getPage(i);
                 const textContent = await page.getTextContent();
@@ -202,10 +231,49 @@
             return fullText;
         }
 
-        // B. Analyse via Google Gemini API
+        // async function analyzeWithGemini(text, apiKey) {
+        //     const prompt = `
+        //     Agis comme un expert RH. Analyse ce texte de CV et extrais les données au format JSON strict.
+        //     Si une info manque, laisse vide. Pas de markdown.
+        //     Structure:
+        //     {
+        //         "personal": { "name": "", "title": "", "email": "", "phone": "", "location": "", "summary": "", "linkedin": "" },
+        //         "softSkills": ["String"],
+        //         "languages": ["String"],
+        //         "education": [{ "degree": "", "school": "", "date": "" }],
+        //         "experience": [{ "role": "", "company": "", "date": "", "tasks": ["String"] }],
+        //         "techSkills": [{ "cat": "Categorie", "tools": "Outils" }],
+        //         "projects": [{ "name": "", "desc": "", "tech": "" }],
+        //         "certifications": [{ "name": "" }]
+        //     }
+        //     Texte : ${text.substring(0, 30000)}`;
+
+        //     // const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+        //     const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+
+        //     const response = await fetch(url, {
+        //         method: "POST",
+        //         headers: { "Content-Type": "application/json" },
+        //         body: JSON.stringify({
+        //             contents: [{ parts: [{ text: prompt }] }],
+        //             generationConfig: { response_mime_type: "application/json" }
+        //         })
+        //     });
+
+        //     if (!response.ok) {
+        //         const err = await response.json();
+        //         throw new Error(err.error.message);
+        //     }
+
+        //     const result = await response.json();
+        //     const rawText = result.candidates[0].content.parts[0].text;
+        //     return JSON.parse(rawText);
+        // }
+
+        // B. Analyse via Google Gemini API (CORRIGÉ)
         async function analyzeWithGemini(text, apiKey) {
             const prompt = `
-            Tu es un expert en recrutement et en parsing de données. Analyse le texte de ce CV et extrais les informations pour remplir strictement ce format JSON.
+            Agis comme un expert RH. Analyse le texte de ce CV et extrais les données au format JSON strict.
             
             Structure JSON obligatoire :
             {
@@ -214,58 +282,60 @@
                 "languages": ["Langue 1"],
                 "education": [{ "degree": "Diplôme", "school": "Ecole", "date": "Année" }],
                 "experience": [{ "role": "Poste", "company": "Entreprise", "date": "Période", "tasks": ["Tâche 1", "Tâche 2"] }],
-                "techSkills": [{ "cat": "Catégorie (ex: Langages)", "tools": "Liste outils séparés par virgules" }],
+                "techSkills": [{ "cat": "Catégorie", "tools": "Liste outils" }],
                 "projects": [{ "name": "Nom Projet", "desc": "Description courte", "tech": "Technologies utilisées" }],
                 "certifications": [{ "name": "Nom Certification" }]
             }
 
             Règles :
-            1. Réponds UNIQUEMENT le JSON brut. Pas de markdown, pas de \`\`\`.
+            1. Réponds UNIQUEMENT le JSON brut. Pas de markdown (\`\`\`json), pas de texte avant/après.
             2. Si une info est manquante, mets "" ou [].
-            3. Sois précis et concis.
-
+            
             CV Texte :
             ${text.substring(0, 30000)}
             `;
 
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+            // CORRECTION ICI : Passage en v1 (plus stable) et utilisation de gemini-1.5-flash
+            const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
             const response = await fetch(url, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     contents: [{ parts: [{ text: prompt }] }],
-                    generationConfig: { response_mime_type: "application/json" }
+                    generationConfig: { 
+                        response_mime_type: "application/json" 
+                    }
                 })
             });
 
             if (!response.ok) {
                 const err = await response.json();
+                // Affiche l'erreur précise de Google dans la console pour débugger
+                console.error("Détail erreur Gemini:", err);
                 throw new Error(err.error.message || "Erreur API Gemini");
             }
 
             const result = await response.json();
+            
+            // Vérification que la réponse contient bien du texte
+            if (!result.candidates || !result.candidates[0] || !result.candidates[0].content) {
+                throw new Error("Gemini n'a pas renvoyé de résultat valide.");
+            }
+
             const rawText = result.candidates[0].content.parts[0].text;
             
-            // Nettoyage de sécurité
+            // Nettoyage de sécurité (au cas où le JSON est entouré de balises)
             const cleanJson = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
             
             return JSON.parse(cleanJson);
         }
 
-        // C. Upload du fichier PDF physique
         async function uploadPDFFile(file) {
-            // Nettoyer le nom du fichier
             const fileName = `cv_auto_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
-            
-            const { data, error } = await supabase.storage.from('uploads').upload(fileName, file);
-            
-            if (error) {
-                console.warn("Erreur upload PDF:", error);
-                return null;
-            }
-
-            const { data: publicUrlData } = supabase.storage.from('uploads').getPublicUrl(fileName);
+            const { data, error } = await supabaseClient.storage.from('uploads').upload(fileName, file);
+            if (error) { console.warn("Erreur upload PDF:", error); return null; }
+            const { data: publicUrlData } = supabaseClient.storage.from('uploads').getPublicUrl(fileName);
             return publicUrlData.publicUrl;
         }
 
