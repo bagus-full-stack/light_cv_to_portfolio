@@ -167,6 +167,7 @@
                 const data = await response.json();
                 if (Object.keys(data).length > 0) {
                     cvData = data;
+                    localStorage.setItem('portfolio_cache', JSON.stringify(cvData));
                     render();
                 }
             } catch (error) {
@@ -482,6 +483,7 @@
                     const url = await uploadFileToAPI(file);
                     if(url) {
                         cvData.personal.photoUrl = url;
+                        localStorage.setItem('portfolio_cache', JSON.stringify(cvData));
                         render();
                     }
                 }
@@ -504,6 +506,12 @@
         // ==========================================
         // 5. INITIALIZE
         // ==========================================
+        const cachedData = localStorage.getItem('portfolio_cache');
+        if (cachedData) {
+            console.log("Chargement depuis le cache local...");
+            cvData = JSON.parse(cachedData);
+            render(); // Affiche la photo et le texte instantanément !
+        }
         loadDataFromAPI();
 
     </script>
