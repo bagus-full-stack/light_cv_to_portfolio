@@ -13,7 +13,7 @@
            1. VARIABLES & THÈMES
            ========================================= */
         :root {
-            /* Couleurs par défaut (Mode Clair) */
+            /* --- MODE CLAIR (Défaut) --- */
             --primary: #2c3e50;
             --accent: #3498db;
             --light: #ecf0f1;
@@ -24,12 +24,14 @@
             --success: #27ae60;
             --warning: #f39c12;
             
-            /* Variables de fond pour le Dark Mode */
             --bg: #f4f7f6;
             --card-bg: #ffffff;
             --card-border: #ddd;
             --card-hover: #f9f9f9;
             --input-bg: #fff;
+            
+            --font-main: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            --glow: none;
         }
 
         /* --- MODE SOMBRE --- */
@@ -49,7 +51,29 @@
             --input-bg: #2c2c2c;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        /* --- MODE HACKER (TERMINAL) --- */
+        body.hacker-mode {
+            --primary: #00ff00;
+            --accent: #00ff00;
+            --light: #003300;
+            --dark: #00ff00;
+            --text: #00ff00;
+            --text-muted: #00cc00;
+            --danger: #ff0000;
+            --success: #00ff00;
+            --warning: #ffff00;
+            
+            --bg: #000000;
+            --card-bg: #0a0a0a;
+            --card-border: #00ff00;
+            --card-hover: #111111;
+            --input-bg: #000000;
+            
+            --font-main: 'Courier New', Courier, monospace;
+            --glow: 0 0 4px rgba(0, 255, 0, 0.4);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: var(--font-main); }
         
         body { 
             background-color: var(--bg); 
@@ -59,6 +83,10 @@
             transition: background 0.3s, color 0.3s;
         }
         
+        /* Effet Glow pour le mode Hacker */
+        body.hacker-mode * { text-shadow: var(--glow); box-shadow: none; }
+        body.hacker-mode .btn-action, body.hacker-mode input, body.hacker-mode textarea { border: 1px solid #00ff00; }
+
         /* =========================================
            2. COMPOSANTS UI
            ========================================= */
@@ -87,7 +115,7 @@
 
         /* Traduction */
         .translate-container { position: fixed; top: 20px; right: 20px; z-index: 9999; background: var(--card-bg); padding: 8px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid var(--card-border); }
-        .goog-te-gadget-simple { background: transparent !important; border: none !important; padding: 0 !important; font-size: 14px !important; }
+        .goog-te-gadget-simple { background: transparent !important; border: none !important; padding: 0 !important; font-size: 14px !important; color: var(--text) !important; }
         .goog-te-banner-frame { display: none !important; }
         body { top: 0 !important; }
 
@@ -198,7 +226,7 @@
         .tech-tag:hover { background: var(--accent); color: white; border-color: var(--accent); }
 
         /* =========================================
-           4. FORMULAIRE & MESSAGES (Nouveau)
+           4. FORMULAIRE & MESSAGES
            ========================================= */
         .contact-form { display: flex; flex-direction: column; gap: 15px; }
         .form-group input, .form-group textarea { width: 100%; padding: 12px; border: 1px solid var(--card-border); background: var(--input-bg); color: var(--text); border-radius: 6px; font-size: 0.95rem; }
@@ -212,11 +240,38 @@
         .msg-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.85rem; color: var(--text-muted); }
         .msg-sender { font-weight: bold; color: var(--text); }
         .msg-body { color: var(--text); white-space: pre-wrap; font-size: 0.95rem; }
+
+        /* =========================================
+           5. MODE IMPRESSION (PRINT / PDF)
+           ========================================= */
+        @media print {
+            .admin-controls, .theme-toggle, .translate-container, 
+            .btn-action, .btn-delete, .btn-add, .task-controls,
+            .cv-download-wrapper, .btn-submit, .form-group { display: none !important; }
+
+            body, .section, .sidebar, .category-box, .project-card, .cert-item {
+                background: white !important;
+                color: black !important;
+                box-shadow: none !important;
+                border: 1px solid #ddd !important;
+                text-shadow: none !important;
+            }
+
+            .container { display: block; padding-top: 0; }
+            .sidebar { margin-bottom: 20px; border: none; padding: 0; text-align: left; }
+            .profile-wrapper { width: 100px; height: 100px; float: right; margin: 0; }
+            .main-content { gap: 15px; }
+            .section { padding: 10px 0; border: none; border-bottom: 1px solid #eee; break-inside: avoid; }
+            
+            a::after { content: " (" attr(href) ")"; font-size: 0.8rem; color: #666; }
+            .project-link, .cert-link { background: none; color: black; padding: 0; text-decoration: underline; }
+            .project-link span, .cert-link span { display: inline; }
+        }
     </style>
 </head>
 <body>
 
-    <button class="theme-toggle" onclick="toggleTheme()" title="Changer de thème">
+    <button class="theme-toggle" onclick="toggleTheme()" title="Changer de thème (Clair / Sombre / Hacker)">
         <i id="theme-icon" class="fas fa-moon"></i>
     </button>
 
@@ -270,21 +325,20 @@
 
         let user = null;
         let cvData = DEFAULT_DATA;
-        let messages = []; // Stockage local des messages reçus
+        let messages = [];
 
         // ==========================================
         // 3. INITIALISATION & AUTH
         // ==========================================
 
         async function init() {
-            // Lancer le thème tout de suite
-            initTheme();
+            initTheme(); // Lancer le thème tout de suite
 
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) {
                 user = session.user;
                 enableEditMode();
-                loadMessages(); // Charger les messages si admin
+                loadMessages();
             }
 
             await loadData();
@@ -297,7 +351,6 @@
                 if (data && data.json_data) {
                     cvData = data.json_data;
                 } else if (user) {
-                     // Si pas de données et admin, on propose d'init
                      if(confirm("Initialiser la base ?")) saveDataToSupabase();
                 }
                 render();
@@ -317,7 +370,7 @@
                 enableEditMode();
                 alert("✅ Connecté !");
                 loadData();
-                loadMessages(); // Charger les messages
+                loadMessages();
             }
         }
 
@@ -395,11 +448,11 @@
             const { error } = await supabaseClient.from('messages').insert(formData);
 
             if (error) {
-                alert("❌ Erreur : " + error.message);
+                alert("❌ Erreur (Avez-vous créé la table 'messages' ?) : " + error.message);
             } else {
-                alert("✅ Message envoyé avec succès ! Je vous répondrai bientôt.");
+                alert("✅ Message envoyé !");
                 form.reset();
-                if(user) loadMessages(); // Si je m'envoie un msg à moi-même
+                if(user) loadMessages(); 
             }
             btn.innerHTML = originalText;
             btn.disabled = false;
@@ -413,38 +466,52 @@
         }
 
         // ==========================================
-        // 6. GESTION DU THÈME (DARK MODE)
+        // 6. GESTION DES 3 THÈMES (CYCLE)
         // ==========================================
 
         function toggleTheme() {
-            document.body.classList.toggle('dark-mode');
-            const isDark = document.body.classList.contains('dark-mode');
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            updateThemeIcon(isDark);
+            const body = document.body;
+            let newTheme = 'light';
+
+            // Cycle : Light -> Dark -> Hacker -> Light
+            if (body.classList.contains('dark-mode')) {
+                body.classList.remove('dark-mode');
+                body.classList.add('hacker-mode');
+                newTheme = 'hacker';
+            } else if (body.classList.contains('hacker-mode')) {
+                body.classList.remove('hacker-mode');
+                newTheme = 'light';
+            } else {
+                body.classList.add('dark-mode');
+                newTheme = 'dark';
+            }
+            
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
         }
 
-        function updateThemeIcon(isDark) {
+        function updateThemeIcon(theme) {
             const icon = document.getElementById('theme-icon');
             if(!icon) return;
-            if (isDark) {
-                icon.classList.remove('fa-moon');
+            icon.className = 'fas'; // Reset
+            icon.style.color = "";
+
+            if (theme === 'dark') {
                 icon.classList.add('fa-sun');
                 icon.style.color = "#f1c40f";
+            } else if (theme === 'hacker') {
+                icon.classList.add('fa-terminal');
+                icon.style.color = "#00ff00";
             } else {
-                icon.classList.remove('fa-sun');
                 icon.classList.add('fa-moon');
-                icon.style.color = "";
             }
         }
 
         function initTheme() {
             const savedTheme = localStorage.getItem('theme');
-            if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                document.body.classList.add('dark-mode');
-                updateThemeIcon(true);
-            } else {
-                updateThemeIcon(false);
-            }
+            if (savedTheme === 'dark') document.body.classList.add('dark-mode');
+            else if (savedTheme === 'hacker') document.body.classList.add('hacker-mode');
+            updateThemeIcon(savedTheme || 'light');
         }
 
         // ==========================================
