@@ -1,99 +1,80 @@
 // supabase/functions/chat-resume/index.ts
-import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 
+// 1. Headers CORS complets (Indispensable)
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+}
 
-// J'ai mis "gemini-1.5-flash" car c'est la version stable, rapide et gratuite actuelle.
-// Si tu veux absolument tester la 2.0, remplace par "gemini-2.0-flash-exp"
-const MODEL_NAME = "gemini-1.5-flash"; 
-
+// 2. Utilisation de Deno.serve (Natif, pas d'import nécessaire)
 Deno.serve(async (req) => {
-  // 1. Gérer le Preflight CORS (Navigateur)
+  
+  // === GESTION DU PREFLIGHT (CORS) ===
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    // 2. Récupérer les données du Frontend
-    const { question, context } = await req.json();
-
-    // 3. Récupérer la clé API Gemini
-    // Assure-toi d'avoir fait : supabase secrets set GEMINI_API_KEY=ta_cle
-    const apiKey = Deno.env.get('GEMINI_API_KEY');
-    if (!apiKey) {
-      throw new Error("Clé API Gemini manquante dans les secrets Supabase (GEMINI_API_KEY)");
+    // === VÉRIFICATION DU BODY ===
+    // Si le frontend n'envoie pas de JSON valide, ça plante ici
+    let body;
+    try {
+        body = await req.json();
+    } catch (e) {
+        throw new Error("Le corps de la requête (Body) est vide ou mal formé.");
     }
 
-    // 4. Préparer le prompt optimisé
-    const prompt = `
-    Rôle : Tu es l'assistant IA du portfolio d'Assami Baga.
-    Ton job : Répondre aux recruteurs.
-    Ton ton : Professionnel, enthousiaste, concis (max 3 phrases si possible).
-    
-    RÈGLES STRICTES :
-    1. Base-toi UNIQUEMENT sur le CONTEXTE JSON fourni ci-dessous.
-    2. Si l'info n'est pas dans le contexte, dis poliment : "Je ne trouve pas cette info dans le CV, mais vous pouvez contacter Assami directement."
-    3. Ne pas inventer (halluciner) de compétences.
-    4. Réponds dans la même langue que la question (Français par défaut).
+    const { question, context } = body;
 
-    CONTEXTE DU CV (JSON) :
-    ${JSON.stringify(context)}
+    // === VÉRIFICATION CLÉ API ===
+    const apiKey = Deno.env.get('GEMINI_API_KEY');
+    if (!apiKey) {
+        // On loggue l'erreur pour la voir dans le dashboard Supabase
+        console.error("ERREUR CRITIQUE: La clé GEMINI_API_KEY est introuvable.");
+        throw new Error("Configuration serveur manquante (API Key).");
+    }
 
-    QUESTION UTILISATEUR :
-    ${question}
-    `;
-
-    // 5. Appeler l'API Google Gemini
-    // Documentation : https://ai.google.dev/api/rest/v1beta/models/generateContent
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${apiKey}`;
-    
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{ text: prompt }]
-        }],
-        generationConfig: {
-            temperature: 0.3, // Bas pour éviter les hallucinations
-            maxOutputTokens: 500,
-        }
-      })
-    });
+    // === APPEL GEMINI (Google) ===
+    // Utilisation du modèle stable 1.5-flash
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{ 
+                text: `Tu es un assistant pour le portfolio d'Assami Baga. Utilise ce contexte JSON pour répondre : ${JSON.stringify(context)}. Question : ${question}` 
+            }]
+          }]
+        })
+      }
+    );
 
     const data = await response.json();
 
-    // 6. Gestion des erreurs renvoyées par Google
+    // Vérification d'erreur Google
     if (data.error) {
-        console.error("Erreur API Gemini:", data.error);
-        throw new Error(`Erreur Gemini: ${data.error.message}`);
+        console.error("Erreur Google API:", data.error);
+        throw new Error(`Erreur IA: ${data.error.message}`);
     }
 
-    // 7. Extraction de la réponse
-    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Désolé, je n'ai pas de réponse.";
 
-    if (!reply) {
-        throw new Error("Gemini a répondu mais n'a généré aucun texte.");
-    }
-
-    // 8. Succès
+    // === SUCCÈS ===
     return new Response(JSON.stringify({ reply }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200
-    });
+      status: 200,
+    })
 
   } catch (error) {
-    console.error("Erreur Backend:", error);
-    // On renvoie l'erreur au format JSON avec les bons headers CORS
-    // pour que le frontend puisse l'afficher proprement
+    // === GESTION D'ERREUR GLOBALE ===
+    // On capture TOUT pour éviter le crash serveur et renvoyer du JSON au frontend
+    console.error("Erreur dans la fonction:", error.message);
+    
     return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+      status: 500, // Erreur serveur, mais gérée proprement
+    })
   }
-});
+})
