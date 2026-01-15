@@ -120,7 +120,7 @@
         body { top: 0 !important; }
 
         /* Admin Controls */
-        .admin-controls { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 15px; z-index: 1000; align-items: flex-end; }
+        .admin-controls { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 15px; z-index: 1000; align-items: flex-start; }
         .fab-btn { background: var(--accent); color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: transform 0.2s; border: none; font-size: 1.2rem; }
         .fab-btn:hover { transform: scale(1.1); }
         #save-btn, #logout-btn, #reset-btn { display: none; }
@@ -163,10 +163,34 @@
            3. LAYOUT & SECTIONS
            ========================================= */
         .container { max-width: 1200px; margin: 0 auto; padding: 20px; display: grid; grid-template-columns: 300px 1fr; gap: 30px; padding-top: 80px; }
-        @media (max-width: 768px) { .container { grid-template-columns: 1fr; } }
         
-        /* Sidebar */
-        .sidebar { background: var(--card-bg); padding: 30px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); text-align: center; border: 1px solid var(--card-border); height: fit-content; align-self: start; position: sticky; position: -webkit-sticky; top: calc(100vh - 100% - 20px); }
+        /* Sidebar : Style de base */
+        .sidebar { 
+            background: var(--card-bg); 
+            padding: 30px; 
+            border-radius: 10px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05); 
+            text-align: center; 
+            border: 1px solid var(--card-border); 
+            /* J'ai retiré le sticky d'ici pour le mettre dans le media query ci-dessous */
+        }
+
+        /* --- LOGIQUE STICKY (Uniquement pour Desktop > 768px) --- */
+        @media (min-width: 769px) {
+            .sidebar {
+                height: fit-content; 
+                align-self: start; 
+                position: sticky; 
+                position: -webkit-sticky; 
+                top: calc(100vh - 100% - 20px);
+            }
+        }
+        
+        /* Media Query pour Mobile */
+        @media (max-width: 768px) { 
+            .container { grid-template-columns: 1fr; } 
+        }
+        
         .profile-wrapper { position: relative; display: inline-block; width: 150px; height: 150px; margin-bottom: 20px; }
         .profile-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 4px solid var(--accent); }
         .upload-btn { position: absolute; bottom: 5px; right: 5px; background: var(--primary); color: white; width: 35px; height: 35px; border-radius: 50%; display: none; align-items: center; justify-content: center; cursor: pointer; border: 2px solid white; }
@@ -903,46 +927,6 @@
                 addMessage("Désolé, je ne peux pas répondre pour l'instant (Backend non configuré ou erreur API).", 'bot');
             }
         }
-
-        // async function handleChat(e) {
-        //     e.preventDefault();
-        //     const input = document.getElementById('chat-input');
-        //     const msg = input.value.trim().toLowerCase(); // On met tout en minuscule
-        //     if (!msg) return;
-
-        //     addMessage(input.value, 'user');
-        //     input.value = '';
-
-        //     // Simulation d'attente
-        //     document.getElementById('typing-indicator').style.display = 'block';
-            
-        //     setTimeout(() => {
-        //         document.getElementById('typing-indicator').style.display = 'none';
-        //         let reply = "Je n'ai pas compris. Essayez de demander 'compétences', 'projets', 'contact' ou 'expérience'.";
-
-        //         // Logique simple de mots-clés
-        //         if (msg.includes('bonjour') || msg.includes('salut')) {
-        //             reply = "Bonjour ! Je suis l'assistant d'Assami. Comment puis-je vous aider ?";
-        //         } 
-        //         else if (msg.includes('contact') || msg.includes('email') || msg.includes('téléphone')) {
-        //             reply = `Vous pouvez contacter Assami par email (${cvData.personal.email}) ou téléphone (${cvData.personal.phone}).`;
-        //         }
-        //         else if (msg.includes('stack') || msg.includes('techno') || msg.includes('compétence')) {
-        //             const skills = cvData.techSkills.map(s => s.tools).join(', ');
-        //             reply = `Voici ses compétences techniques : ${skills}.`;
-        //         }
-        //         else if (msg.includes('projet')) {
-        //             const projects = cvData.projects.map(p => p.name).join(', ');
-        //             reply = `Assami a travaillé sur plusieurs projets intéressants : ${projects}.`;
-        //         }
-        //         else if (msg.includes('exp') || msg.includes('travail')) {
-        //             const job = cvData.experience[0];
-        //             reply = `Actuellement, il est ${job.role} chez ${job.company}.`;
-        //         }
-
-        //         addMessage(reply, 'bot');
-        //     }, 1000);
-        // }
 
         function addMessage(text, sender) {
             const body = document.getElementById('chat-body');
