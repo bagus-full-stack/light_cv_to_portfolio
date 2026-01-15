@@ -241,6 +241,30 @@
         .msg-sender { font-weight: bold; color: var(--text); }
         .msg-body { color: var(--text); white-space: pre-wrap; font-size: 0.95rem; }
 
+        /* --- CHATBOT WIDGET --- */
+        .chat-widget { position: fixed; bottom: 90px; right: 20px; z-index: 9998; display: flex; flex-direction: column; align-items: flex-end; font-family: var(--font-main); }
+        .chat-btn { width: 60px; height: 60px; border-radius: 50%; background: var(--accent); color: white; border: none; font-size: 1.5rem; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; transition: transform 0.3s; }
+        .chat-btn:hover { transform: scale(1.1); }
+
+        .chat-window { width: 350px; height: 450px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; box-shadow: 0 5px 25px rgba(0,0,0,0.15); display: none; flex-direction: column; overflow: hidden; margin-bottom: 15px; }
+        .chat-window.open { display: flex; animation: slideIn 0.3s ease-out; }
+
+        .chat-header { background: var(--accent); color: white; padding: 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .chat-close { background: none; border: none; color: white; cursor: pointer; font-size: 1.1rem; }
+
+        .chat-body { flex: 1; padding: 15px; overflow-y: auto; background: var(--bg); display: flex; flex-direction: column; gap: 10px; }
+        .chat-message { max-width: 80%; padding: 10px 15px; border-radius: 15px; font-size: 0.9rem; line-height: 1.4; word-wrap: break-word; }
+        .chat-message.bot { align-self: flex-start; background: var(--card-bg); border: 1px solid var(--card-border); color: var(--text); border-bottom-left-radius: 2px; }
+        .chat-message.user { align-self: flex-end; background: var(--accent); color: white; border-bottom-right-radius: 2px; }
+        .typing-indicator { font-style: italic; color: var(--text-muted); font-size: 0.8rem; margin-left: 10px; display: none; }
+
+        .chat-footer { padding: 10px; background: var(--card-bg); border-top: 1px solid var(--card-border); display: flex; gap: 10px; }
+        .chat-input { flex: 1; padding: 10px; border: 1px solid var(--card-border); border-radius: 20px; background: var(--input-bg); color: var(--text); outline: none; }
+        .chat-send { background: var(--accent); color: white; border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.3s; }
+        .chat-send:hover { background: var(--primary); }
+
+@keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
         /* =========================================
            5. MODE IMPRESSION (PRINT / PDF)
            ========================================= */
@@ -277,6 +301,24 @@
 
     <div class="translate-container"><div id="google_translate_element"></div></div>
     <div id="app"></div>
+
+    <div class="chat-widget">
+        <div class="chat-window" id="chat-window">
+            <div class="chat-header">
+                <span><i class="fas fa-robot"></i> Assistant IA</span>
+                <button class="chat-close" onclick="toggleChat()">✕</button>
+            </div>
+            <div class="chat-body" id="chat-body">
+                <div class="chat-message bot">Bonjour ! Je suis l'IA d'Assami. Posez-moi une question sur son parcours, ses projets ou ses technos ! 🤖</div>
+            </div>
+            <div class="typing-indicator" id="typing-indicator">L'IA écrit...</div>
+            <form class="chat-footer" onsubmit="handleChat(event)">
+                <input type="text" id="chat-input" class="chat-input" placeholder="Posez votre question..." autocomplete="off">
+                <button type="submit" class="chat-send"><i class="fas fa-paper-plane"></i></button>
+            </form>
+        </div>
+        <button class="chat-btn" onclick="toggleChat()" title="Discuter avec l'IA"><i class="fas fa-comment-dots"></i></button>
+    </div>
 
     <div class="admin-controls">
         <button id="logout-btn" class="fab-btn" onclick="logout()" title="Déconnexion"><i class="fas fa-sign-out-alt"></i></button>
@@ -754,6 +796,54 @@
             }
             const { data } = await supabaseClient.from('site_stats').select('visits').single();
             if (data && document.getElementById('visit-count')) document.getElementById('visit-count').innerText = data.visits;
+        }
+
+        function toggleChat() {
+            const w = document.getElementById('chat-window');
+            w.classList.toggle('open');
+            if(w.classList.contains('open')) document.getElementById('chat-input').focus();
+        }
+
+        async function handleChat(e) {
+            e.preventDefault();
+            const input = document.getElementById('chat-input');
+            const msg = input.value.trim();
+            if (!msg) return;
+
+            addMessage(msg, 'user');
+            input.value = '';
+            
+            const typing = document.getElementById('typing-indicator');
+            typing.style.display = 'block';
+
+            try {
+                // 3. Appel à la Supabase Edge Function
+                // On envoie la question ET le CV complet (cvData) pour donner le contexte à l'IA
+                const { data, error } = await supabaseClient.functions.invoke('chat-resume', {
+                    body: { question: msg, context: cvData }
+                });
+
+                typing.style.display = 'none';
+
+                if (error) throw error;
+                
+                // 4. Afficher réponse IA
+                addMessage(data.reply, 'bot');
+
+            } catch (err) {
+                typing.style.display = 'none';
+                console.error(err);
+                addMessage("Désolé, je ne peux pas répondre pour l'instant (Backend non configuré ou erreur API).", 'bot');
+            }
+        }
+
+        function addMessage(text, sender) {
+            const body = document.getElementById('chat-body');
+            const div = document.createElement('div');
+            div.className = `chat-message ${sender}`;
+            div.innerText = text;
+            body.appendChild(div);
+            body.scrollTop = body.scrollHeight; // Auto-scroll
         }
 
         init();
