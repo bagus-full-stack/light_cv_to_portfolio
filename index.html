@@ -120,6 +120,18 @@
         .tech-badges { display: flex; flex-wrap: wrap; gap: 8px; }
         .tech-tag { background: #f8f9fa; color: var(--dark); padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 500; border: 1px solid #e9ecef; transition: all 0.2s; }
         .tech-tag:hover { background: var(--accent); color: white; border-color: var(--accent); }
+
+        .contact-form { display: flex; flex-direction: column; gap: 15px; }
+        .form-group input, .form-group textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.95rem; }
+        .form-group textarea { resize: vertical; min-height: 120px; }
+        .btn-submit { background: var(--accent); color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-size: 1rem; transition: background 0.3s; }
+        .btn-submit:hover { background: var(--primary); }
+
+        .messages-list { margin-top: 30px; border-top: 2px dashed #ddd; padding-top: 20px; }
+        .message-card { background: #fff; border-left: 4px solid var(--warning); padding: 15px; margin-bottom: 15px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: relative; }
+        .msg-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.85rem; color: #777; }
+        .msg-sender { font-weight: bold; color: var(--dark); }
+        .msg-body { color: #333; white-space: pre-wrap; }
     </style>
 </head>
 <body>
@@ -229,6 +241,7 @@
 
         let user = null;
         let cvData = DEFAULT_DATA;
+        let messages = [];
 
         // ==========================================
         // 3. AUTHENTIFICATION & CHARGEMENT
@@ -239,6 +252,7 @@
             if (session) {
                 user = session.user;
                 enableEditMode();
+                loadMessages();
             }
 
             // Charger les données du CV
@@ -280,6 +294,7 @@
                 enableEditMode();
                 alert("✅ Connecté !");
                 loadData();
+                loadMessages();
             }
         }
 
@@ -484,6 +499,40 @@
                                 </div>`).join('')}
                             <button class="btn-action btn-add" onclick="addItem('education')"><i class="fas fa-plus"></i> Ajouter</button>
                         </section>
+
+                        <section class="section" id="contact">
+                            <h2 class="section-title">📬 Me Contacter</h2>
+                            
+                            <form class="contact-form" onsubmit="handleContactSubmit(event)">
+                                <div class="form-group">
+                                    <input type="text" name="name" placeholder="Votre nom" required>
+                                </div>
+                                <div class="form-group">
+                                    <input type="email" name="email" placeholder="Votre email" required>
+                                </div>
+                                <div class="form-group">
+                                    <textarea name="message" placeholder="Votre message..." required></textarea>
+                                </div>
+                                <button type="submit" class="btn-submit"><i class="fas fa-paper-plane"></i> Envoyer le message</button>
+                            </form>
+
+                            ${ isEditing ? `
+                                <div class="messages-list">
+                                    <h3 style="margin-bottom:15px; color:var(--warning)"><i class="fas fa-inbox"></i> Messages reçus (${messages.length})</h3>
+                                    ${messages.length === 0 ? '<p>Aucun message.</p>' : ''}
+                                    ${messages.map(msg => `
+                                        <div class="message-card">
+                                            <button class="btn-delete" onclick="deleteMessage(${msg.id})" style="top:5px; right:5px;"><i class="fas fa-trash"></i></button>
+                                            <div class="msg-header">
+                                                <span class="msg-sender"><i class="fas fa-user"></i> ${msg.name} (${msg.email})</span>
+                                                <span>${new Date(msg.created_at).toLocaleDateString()}</span>
+                                            </div>
+                                            <div class="msg-body">${msg.message}</div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
+                        </section>
                     </main>
                 </div>
             `;
@@ -573,6 +622,56 @@
                 counterElement.innerText = data.visits;
             }
         }
+
+        async function loadMessages() {
+            if (!user) return; // Sécurité : ne charge rien si pas connecté
+            
+            const { data, error } = await supabaseClient.from('messages').select('*').order('created_at', { ascending: false });
+
+            if (error) console.error("Erreur messages:", error);
+            else {
+                messages = data || [];
+                render(); // Rafraichir l'affichage
+            }
+        }
+
+        async function handleContactSubmit(e) {
+            e.preventDefault(); // Empêcher le rechargement de page
+            const form = e.target;
+            const formData = {
+                name: form.name.value,
+                email: form.email.value,
+                message: form.message.value
+            };
+
+            const btn = form.querySelector('button');
+            btn.innerText = "Envoi en cours...";
+            btn.disabled = true;
+
+            const { error } = await supabaseClient.from('messages').insert(formData);
+
+            if (error) {
+                alert("❌ Erreur : " + error.message);
+                btn.innerText = "Envoyer le message";
+                btn.disabled = false;
+            } else {
+                alert("✅ Message envoyé avec succès !");
+                form.reset();
+                btn.innerText = "Envoyer le message";
+                btn.disabled = false;
+                // Si je suis connecté et que je m'envoie un message test, je recharge la liste
+                if(user) loadMessages();
+            }
+        }
+
+        async function deleteMessage(id) {
+            if(!confirm("Supprimer ce message ?")) return;
+            
+            const { error } = await supabaseClient.from('messages').delete().eq('id', id);
+            if (error) alert("Erreur suppression");
+            else loadMessages(); // Recharger la liste
+        }
+
 
         init();
     </script>
