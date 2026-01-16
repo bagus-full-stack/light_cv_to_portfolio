@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👨‍💻</text></svg>">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="text/javascript" src="https://assets.calendly.com/assets/external/widget.js" async></script>
     
     <style>
         /* =========================================
@@ -285,7 +286,7 @@
         .tech-tag:hover { background: var(--accent); color: white; border-color: var(--accent); }
 
         /* =========================================
-           5. FORMULAIRE & MESSAGES
+           5. FORMULAIRE & MESSAGES & CALENDLY
            ========================================= */
         .contact-form { display: flex; flex-direction: column; gap: 15px; }
         .form-group input, .form-group textarea { width: 100%; padding: 12px; border: 1px solid var(--card-border); background: var(--input-bg); color: var(--text); border-radius: 6px; font-size: 0.95rem; }
@@ -293,6 +294,16 @@
         .btn-submit { background: var(--accent); color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-size: 1rem; transition: background 0.3s; }
         .btn-submit:hover { background: var(--primary); }
         .btn-submit:disabled { background: #95a5a6; cursor: not-allowed; }
+
+        /* Calendly Modal Styles */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .modal-overlay.open { display: flex; animation: fadeIn 0.3s; }
+        .modal-content { background: var(--card-bg); width: 90%; max-width: 800px; height: 80%; border-radius: 10px; position: relative; overflow: hidden; border: 1px solid var(--accent); box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        .modal-close { position: absolute; top: 10px; right: 10px; background: var(--danger); color: white; border: none; width: 30px; height: 30px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center; }
+        .btn-calendly { background: var(--success); color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-size: 1rem; width: 100%; margin-bottom: 20px; font-weight: bold; transition: transform 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .btn-calendly:hover { transform: scale(1.02); filter: brightness(1.1); }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
 
         .messages-list { margin-top: 30px; border-top: 2px dashed var(--card-border); padding-top: 20px; }
         .message-card { background: var(--card-bg); border-left: 4px solid var(--warning); padding: 15px; margin-bottom: 15px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: relative; border: 1px solid var(--card-border); }
@@ -330,7 +341,8 @@
         @media print {
             .admin-controls, .theme-toggle, .translate-container, 
             .btn-action, .btn-delete, .btn-add, .task-controls,
-            .cv-download-wrapper, .btn-submit, .form-group, .chat-widget { display: none !important; }
+            .cv-download-wrapper, .btn-submit, .form-group, .chat-widget,
+            .btn-calendly, .modal-overlay { display: none !important; }
 
             body, .section, .sidebar, .category-box, .project-card, .cert-item {
                 background: white !important;
@@ -362,6 +374,15 @@
     </button>
     
     <canvas id="matrix-canvas"></canvas>
+
+    <div id="calendly-modal" class="modal-overlay" onclick="closeCalendly()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeCalendly()">×</button>
+            <div class="calendly-container">
+                <div class="calendly-inline-widget" data-url="https://calendly.com/bagaassami09/30min" style="min-width:320px;height:700px;"></div>
+            </div>
+        </div>
+    </div>
 
     <div class="translate-container"><div id="google_translate_element"></div></div>
     <div id="app"></div>
@@ -884,6 +905,8 @@
                         <section class="section" id="contact">
                             <h2 class="section-title">📬 Me Contacter</h2>
                             
+                            <button class="btn-calendly" onclick="openCalendly()"><i class="fas fa-calendar-alt"></i> 📅 Réserver un appel (Calendly)</button>
+
                             <form class="contact-form" onsubmit="handleContactSubmit(event)">
                                 <div class="form-group">
                                     <input type="text" name="name" placeholder="Votre nom" required>
@@ -942,6 +965,10 @@
                 observer.observe(el);
             });
         }
+
+        // --- GESTION CALENDLY ---
+        function openCalendly() { document.getElementById('calendly-modal').classList.add('open'); }
+        function closeCalendly() { document.getElementById('calendly-modal').classList.remove('open'); }
 
         // ==========================================
         // 8. HELPERS & CHATBOT INTELLIGENT
