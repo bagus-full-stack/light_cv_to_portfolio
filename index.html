@@ -333,7 +333,10 @@
         <div class="chat-window" id="chat-window">
             <div class="chat-header">
                 <span><i class="fas fa-robot"></i> Assistant IA</span>
-                <button class="chat-close" onclick="toggleChat()">✕</button>
+                <div>
+                    <button class="chat-close" onclick="clearChat()" title="Effacer la discussion" style="margin-right: 10px;"><i class="fas fa-trash"></i></button>
+                    <button class="chat-close" onclick="toggleChat()">✕</button>
+                </div>
             </div>
             <div class="chat-body" id="chat-body">
                 <div class="chat-message bot">Bonjour ! Je suis l'IA d'Assami. Posez-moi une question sur son parcours, ses projets ou ses technos ! 🤖</div>
@@ -484,7 +487,7 @@
                 if (data && data.json_data) {
                     cvData = data.json_data;
                 } else if (user) {
-                     if(confirm("Initialiser la base ?")) saveDataToSupabase();
+                      if(confirm("Initialiser la base ?")) saveDataToSupabase();
                 }
                 render();
             } catch (err) { console.warn(err); render(); }
@@ -935,6 +938,11 @@
             div.innerText = text;
             body.appendChild(div);
             body.scrollTop = body.scrollHeight; // Auto-scroll
+        }
+        
+        function clearChat() {
+            const body = document.getElementById('chat-body');
+            body.innerHTML = '<div class="chat-message bot">Bonjour ! Je suis l\'IA d\'Assami. Posez-moi une question sur son parcours, ses projets ou ses technos ! 🤖</div>';
         }
 
         init();
