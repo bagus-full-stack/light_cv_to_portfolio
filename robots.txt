@@ -1,0 +1,27 @@
+# Autoriser Google et Bing (pour que les recruteurs te trouvent)
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+# Bloquer les aspirateurs de site connus (HTTrack, etc.)
+User-agent: HTTrack
+Disallow: /
+
+User-agent: Wget
+Disallow: /
+
+User-agent: Copier
+Disallow: /
+
+# Bloquer les IA qui s'entraînent sur ton code (ChatGPT, etc.)
+User-agent: GPTBot
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+# Règle par défaut pour les autres (Optionnel : Allow ou Disallow selon ta paranoïa)
+User-agent: *
+Allow: /
