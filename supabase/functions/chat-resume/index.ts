@@ -1,51 +1,57 @@
 // supabase/functions/chat-resume/index.ts
 
-// 1. Headers CORS complets (Indispensable)
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// 2. Utilisation de Deno.serve (Natif, pas d'import nécessaire)
 Deno.serve(async (req) => {
   
-  // === GESTION DU PREFLIGHT (CORS) ===
+  // 1. GESTION DU PREFLIGHT (CORS)
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    // === VÉRIFICATION DU BODY ===
-    // Si le frontend n'envoie pas de JSON valide, ça plante ici
+    // 2. RECUPERATION DONNÉES
     let body;
     try {
         body = await req.json();
     } catch (e) {
-        throw new Error("Le corps de la requête (Body) est vide ou mal formé.");
+        throw new Error("Body vide ou invalide.");
     }
-
     const { question, context } = body;
 
-    // === VÉRIFICATION CLÉ API ===
+    // 3. RECUPERATION CLÉ API
     const apiKey = Deno.env.get('GEMINI_API_KEY');
     if (!apiKey) {
-        // On loggue l'erreur pour la voir dans le dashboard Supabase
-        console.error("ERREUR CRITIQUE: La clé GEMINI_API_KEY est introuvable.");
-        throw new Error("Configuration serveur manquante (API Key).");
+        throw new Error("Clé API manquante (GEMINI_API_KEY).");
     }
 
-    // === APPEL GEMINI (Google) ===
-    // Utilisation du modèle stable 1.5-flash
+    // 4. PRÉPARATION DU PROMPT
+    const promptText = `
+      Tu es l'assistant IA du portfolio d'Assami Baga.
+      Rôle : Répondre aux questions des recruteurs de manière professionnelle, courte et dynamique.
+      
+      RÈGLES STRICTES :
+      1. Tes réponses doivent être basées UNIQUEMENT sur le contexte JSON ci-dessous.
+      2. Si l'information n'est pas dans le CV, dis poliment que tu ne sais pas.
+      
+      CONTEXTE DU CV : ${JSON.stringify(context)}
+      
+      QUESTION : ${question}
+    `;
+
+    // 5. APPEL GEMINI 2.0 FLASH
+    // Utilisation du modèle rapide et économique que tu as choisi
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{
-            parts: [{ 
-                text: `Tu es un assistant pour le portfolio d'Assami Baga. Utilise ce contexte JSON pour répondre : ${JSON.stringify(context)}. Question : ${question}` 
-            }]
+            parts: [{ text: promptText }]
           }]
         })
       }
@@ -53,28 +59,25 @@ Deno.serve(async (req) => {
 
     const data = await response.json();
 
-    // Vérification d'erreur Google
+    // 6. GESTION ERREUR GOOGLE
     if (data.error) {
-        console.error("Erreur Google API:", data.error);
-        throw new Error(`Erreur IA: ${data.error.message}`);
+        console.error("Erreur Gemini:", data.error);
+        throw new Error(`Erreur Modèle (${data.error.code}): ${data.error.message}`);
     }
 
-    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Désolé, je n'ai pas de réponse.";
+    // Extraction de la réponse
+    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Désolé, je n'ai pas pu générer de réponse.";
 
-    // === SUCCÈS ===
     return new Response(JSON.stringify({ reply }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     })
 
   } catch (error) {
-    // === GESTION D'ERREUR GLOBALE ===
-    // On capture TOUT pour éviter le crash serveur et renvoyer du JSON au frontend
-    console.error("Erreur dans la fonction:", error.message);
-    
+    console.error("Erreur Serveur:", error.message);
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 500, // Erreur serveur, mais gérée proprement
+      status: 500,
     })
   }
 })
