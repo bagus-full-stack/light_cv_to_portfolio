@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portfolio - Assami Baga</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👨‍💻</text></svg>">
+    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👨‍💻</text></svg>">
     
     <style>
         /* =========================================
@@ -137,13 +138,11 @@
             opacity: 1;
             transform: translateY(0);
         }
-        /* Effet cascade pour les grilles */
         .project-card:nth-child(1) { transition-delay: 0.1s; }
         .project-card:nth-child(2) { transition-delay: 0.2s; }
         .project-card:nth-child(3) { transition-delay: 0.3s; }
         .project-card:nth-child(4) { transition-delay: 0.4s; }
         
-        /* Variante timeline (vient de la gauche) */
         .timeline-item.reveal { transform: translateX(-20px); }
         .timeline-item.reveal.active { transform: translateX(0); }
 
@@ -192,18 +191,15 @@
         .editable { border: 1px dashed var(--accent); background: rgba(52, 152, 219, 0.1); padding: 2px; transition: background 0.2s; cursor: text; }
         .editable:focus { background: var(--input-bg); outline: 2px solid var(--accent); border: none; color: var(--text); }
         
-        /* Boutons d'action */
         .btn-action { display: none; cursor: pointer; border: none; color: white; border-radius: 5px; padding: 5px 10px; font-size: 0.8rem; margin-top: 5px; }
         .btn-delete { background-color: var(--danger); position: absolute; right: -10px; top: -10px; border-radius: 50%; width: 25px; height: 25px; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         .btn-add { background-color: var(--success); width: 100%; margin-top: 15px; padding: 10px; display: none; text-align: center; }
         .btn-add:hover { background-color: #219150; }
         
-        /* Tâches */
         .task-controls { display: none; margin-left: 10px; }
         .btn-task-del { background: var(--danger); color: white; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; cursor: pointer; vertical-align: middle; }
         .btn-task-add { background: var(--accent); color: white; border: none; border-radius: 4px; padding: 2px 8px; font-size: 12px; cursor: pointer; margin-top: 5px; display: none; }
 
-        /* Visibilité Admin */
         body.logged-in .btn-delete { display: flex; z-index: 10; }
         body.logged-in .btn-add { display: block; }
         body.logged-in .task-controls { display: inline-block; }
@@ -224,7 +220,6 @@
            ========================================= */
         .container { max-width: 1200px; margin: 0 auto; padding: 20px; display: grid; grid-template-columns: 300px 1fr; gap: 30px; padding-top: 80px; }
         
-        /* Sidebar : Style de base */
         .sidebar { 
             background: var(--card-bg); 
             padding: 30px; 
@@ -234,18 +229,16 @@
             border: 1px solid var(--card-border); 
         }
 
-        /* --- LOGIQUE STICKY (Uniquement pour Desktop > 768px) --- */
         @media (min-width: 769px) {
             .sidebar {
                 height: fit-content; 
                 align-self: start; 
                 position: sticky; 
                 position: -webkit-sticky; 
-                top: 20px; /* Ajusté pour ne pas coller en bas */
+                top: 20px; 
             }
         }
         
-        /* Media Query pour Mobile */
         @media (max-width: 768px) { 
             .container { grid-template-columns: 1fr; } 
         }
@@ -271,7 +264,6 @@
         .skill-tag { background: var(--light); color: var(--dark); padding: 5px 10px; border-radius: 15px; font-size: 0.8rem; }
         .skill-tag-wrapper { position: relative; display: inline-block; } 
         
-        /* Main Content */
         .main-content { display: flex; flex-direction: column; gap: 30px; }
         .section { background: var(--card-bg); padding: 30px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border: 1px solid var(--card-border); }
         .section-title { font-size: 1.4rem; color: var(--primary); border-bottom: 2px solid var(--light); padding-bottom: 10px; margin-bottom: 20px; }
@@ -321,7 +313,6 @@
         .btn-submit:hover { background: var(--primary); }
         .btn-submit:disabled { background: #95a5a6; cursor: not-allowed; }
 
-        /* Bouton Calendly (Style) */
         .btn-calendly { 
             background: var(--success); 
             color: white; 
@@ -338,7 +329,7 @@
             align-items: center; 
             justify-content: center; 
             gap: 10px; 
-            text-decoration: none; /* Important car c'est un lien */
+            text-decoration: none;
         }
         .btn-calendly:hover { transform: scale(1.02); filter: brightness(1.1); color: white; }
 
@@ -373,13 +364,101 @@
         @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
         /* =========================================
-           6. MODE IMPRESSION (PRINT / PDF)
+           7. VISUALISATION NEURAL (GRAPH)
+           ========================================= */
+        #neural-graph {
+            width: 100%;
+            height: 600px;
+            border: 1px solid var(--accent);
+            border-radius: 8px;
+            background: rgba(15, 23, 42, 0.6);
+            display: none; /* Caché par défaut */
+        }
+        /* En mode Neural : On cache la grille classique et on affiche le graphe */
+        body.neural-mode .tech-grid { display: none !important; }
+        body.neural-mode #neural-graph { display: block !important; animation: fadeIn 1s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* =========================================
+           8. TERMINAL HACKER (KONAMI)
+           ========================================= */
+        .terminal-trigger {
+            position: fixed;
+            top: 50%;
+            left: 20px;
+            transform: translateY(-50%);
+            z-index: 10000;
+            background: black;
+            border: 2px solid #00ff00;
+            color: #00ff00;
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: none; 
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 0 10px #00ff00;
+            transition: all 0.3s;
+        }
+        .terminal-trigger:hover { transform: translateY(-50%) scale(1.1); box-shadow: 0 0 20px #00ff00; }
+        
+        .terminal-overlay {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            max-width: 700px;
+            height: 500px;
+            background: rgba(0, 0, 0, 0.95);
+            border: 2px solid #00ff00;
+            z-index: 10001;
+            display: none;
+            flex-direction: column;
+            border-radius: 5px;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.2);
+            font-family: 'Courier New', Courier, monospace;
+        }
+        .terminal-overlay.open { display: flex; animation: terminalPop 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
+        
+        @keyframes terminalPop {
+            from { opacity: 0; transform: translate(-50%, -40%) scale(0.9); }
+            to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        .terminal-header-bar {
+            background: #003300;
+            color: #00ff00;
+            padding: 5px 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #00ff00;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+        .terminal-close { cursor: pointer; }
+        
+        .terminal-content { flex: 1; padding: 15px; overflow-y: auto; color: #00ff00; font-size: 1rem; }
+        .terminal-line { margin-bottom: 5px; word-wrap: break-word; }
+        .terminal-input-area { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+        .prompt { color: #00ff00; font-weight: bold; }
+        #term-input { background: transparent; border: none; color: #00ff00; flex: 1; font-family: 'Courier New', Courier, monospace; font-size: 1rem; outline: none; }
+
+        body.hacker-mode .terminal-trigger { display: flex; }
+
+        /* =========================================
+           9. PRINT MODE
            ========================================= */
         @media print {
             .admin-controls, .theme-toggle, .translate-container, 
             .btn-action, .btn-delete, .btn-add, .task-controls,
             .cv-download-wrapper, .btn-submit, .form-group, .chat-widget,
-            .btn-calendly { display: none !important; }
+            .btn-calendly, .terminal-trigger, .terminal-overlay, #neural-graph { display: none !important; }
+
+            .tech-grid { display: grid !important; } /* Force grid on print */
 
             body, .section, .sidebar, .category-box, .project-card, .cert-item {
                 background: white !important;
@@ -397,22 +476,20 @@
             
             a::after { content: " (" attr(href) ")"; font-size: 0.8rem; color: #666; }
             .project-link, .cert-link { background: none; color: black; padding: 0; text-decoration: underline; }
-            .project-link span, .cert-link span { display: inline; }
-            
-            /* Pas d'animations en print */
             .reveal { opacity: 1 !important; transform: none !important; }
         }
     </style>
 </head>
 <body>
 
-    <button class="theme-toggle" onclick="toggleTheme()" title="Changer de thème (Clair / Sombre / Neural / Hacker)">
+    <button class="theme-toggle" onclick="toggleTheme()" title="Changer de thème (Astuce : Essayez ↑ ↑ ↓ ↓ ← → ← → B A)">
         <i id="theme-icon" class="fas fa-moon"></i>
     </button>
     
     <canvas id="matrix-canvas"></canvas>
 
     <div class="translate-container"><div id="google_translate_element"></div></div>
+
     <div id="app"></div>
 
     <div class="chat-widget">
@@ -434,6 +511,25 @@
             </form>
         </div>
         <button class="chat-btn" onclick="toggleChat()" title="Discuter avec l'IA"><i class="fas fa-comment-dots"></i></button>
+    </div>
+
+    <button class="terminal-trigger" onclick="toggleTerminal()" title="Ouvrir le Terminal">
+        <i class="fas fa-terminal"></i>
+    </button>
+
+    <div class="terminal-overlay" id="terminal-overlay">
+        <div class="terminal-header-bar">
+            <span>root@assami-portfolio:~</span>
+            <span class="terminal-close" onclick="toggleTerminal()">[X]</span>
+        </div>
+        <div class="terminal-content" id="terminal-content">
+            <div class="terminal-line">Bienvenue dans le Terminal Interactif d'Assami v1.0.</div>
+            <div class="terminal-line">Tapez 'help' pour voir les commandes disponibles.</div>
+        </div>
+        <div class="terminal-input-area">
+            <span class="prompt">visitor@assami:~$</span>
+            <input type="text" id="term-input" autocomplete="off" spellcheck="false">
+        </div>
     </div>
 
     <div class="admin-controls">
@@ -561,8 +657,6 @@
         // ==========================================
 
         async function init() {
-            initTheme(); // Lancer le thème tout de suite
-
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) {
                 user = session.user;
@@ -571,6 +665,8 @@
             }
 
             await loadData();
+            // Une fois les données chargées, on lance le thème (qui peut lancer le graphe)
+            initTheme();
             await handleVisits();
         }
 
@@ -635,23 +731,16 @@
         
         async function resetDatabase() {
             if (!user || !confirm("⚠️ Tout effacer et remettre à zéro ?")) return;
-
             const { error: cvError } = await supabaseClient.from(DB_TABLE).upsert({ id: CV_ID, json_data: DEFAULT_DATA });
-
             if (cvError) {
                 console.error("Erreur CV:", cvError);
-                alert("Erreur lors du reset du CV checkez la console.");
                 return;
             }
-
             const { error: statsError } = await supabaseClient.from('site_stats').upsert({ id: 1, visits: 0 });
-
             if (statsError) {
                 console.error("Erreur Stats:", statsError);
-                alert("Le CV est reset, mais pas le compteur (Erreur DB).");
                 return;
             }
-
             cvData = JSON.parse(JSON.stringify(DEFAULT_DATA));
             document.getElementById('visit-count').innerText = "0";
             alert("♻️ Réinitialisé !");
@@ -659,45 +748,26 @@
         }
 
         // ==========================================
-        // 5. GESTION DES MESSAGES (CONTACT)
+        // 5. GESTION DES MESSAGES
         // ==========================================
-
         async function loadMessages() {
             if (!user) return;
-            const { data, error } = await supabaseClient
-                .from('messages')
-                .select('*')
-                .order('created_at', { ascending: false });
-
-            if (!error) {
-                messages = data || [];
-                render();
-            }
+            const { data, error } = await supabaseClient.from('messages').select('*').order('created_at', { ascending: false });
+            if (!error) { messages = data || []; render(); }
         }
 
         async function handleContactSubmit(e) {
             e.preventDefault();
             const form = e.target;
-            const formData = {
-                name: form.name.value,
-                email: form.email.value,
-                message: form.message.value
-            };
-
+            const formData = { name: form.name.value, email: form.email.value, message: form.message.value };
             const btn = form.querySelector('button');
             const originalText = btn.innerHTML;
             btn.innerHTML = "Envoi en cours...";
             btn.disabled = true;
 
             const { error } = await supabaseClient.from('messages').insert(formData);
-
-            if (error) {
-                alert("❌ Erreur (Avez-vous créé la table 'messages' ?) : " + error.message);
-            } else {
-                alert("✅ Message envoyé !");
-                form.reset();
-                if(user) loadMessages(); 
-            }
+            if (error) { alert("❌ Erreur : " + error.message); } 
+            else { alert("✅ Message envoyé !"); form.reset(); if(user) loadMessages(); }
             btn.innerHTML = originalText;
             btn.disabled = false;
         }
@@ -705,44 +775,37 @@
         async function deleteMessage(id) {
             if(!confirm("Supprimer ce message ?")) return;
             const { error } = await supabaseClient.from('messages').delete().eq('id', id);
-            if (error) alert("Erreur");
-            else loadMessages();
+            if (error) alert("Erreur"); else loadMessages();
         }
 
         // ==========================================
-        // 6. GESTION DES THÈMES & ANIMATIONS CANVAS
+        // 6. GESTION DES THÈMES, CANVAS & GRAPH
         // ==========================================
 
         const canvas = document.getElementById('matrix-canvas');
         const ctx = canvas.getContext('2d');
         let animationId; 
+        let network = null;
 
-        // --- A. EFFET MATRIX (Hacker Mode) ---
+        // --- A. MATRIX ---
         function startMatrix() {
             stopAnimation(); 
             canvas.style.display = 'block';
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            
             const chars = "01010101ABCDEFGHIJKLMNOPQRSTUVWXYZ";
             const fontSize = 14;
             const columns = canvas.width / fontSize;
             const drops = Array(Math.floor(columns)).fill(1);
-
             function drawMatrix() {
                 ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
-                
                 ctx.fillStyle = "#0F0";
                 ctx.font = fontSize + "px monospace";
-
                 for (let i = 0; i < drops.length; i++) {
                     const text = chars[Math.floor(Math.random() * chars.length)];
                     ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-
-                    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
-                        drops[i] = 0;
-                    }
+                    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
                     drops[i]++;
                 }
                 animationId = requestAnimationFrame(drawMatrix);
@@ -750,57 +813,31 @@
             drawMatrix();
         }
 
-        // --- B. EFFET NEURAL (IA Mode) ---
+        // --- B. NEURAL PARTICLES ---
         let particles = [];
         function startNeural() {
             stopAnimation();
             canvas.style.display = 'block';
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-
             const particleCount = Math.min(100, (canvas.width * canvas.height) / 9000); 
             particles = [];
             for (let i = 0; i < particleCount; i++) {
-                particles.push({
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * canvas.height,
-                    vx: (Math.random() - 0.5) * 1.5, 
-                    vy: (Math.random() - 0.5) * 1.5, 
-                    size: Math.random() * 2 + 1
-                });
+                particles.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, vx: (Math.random() - 0.5) * 1.5, vy: (Math.random() - 0.5) * 1.5, size: Math.random() * 2 + 1 });
             }
-
             function drawNeural() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                
                 ctx.fillStyle = "#00d2ff";
                 ctx.strokeStyle = "rgba(0, 210, 255, 0.15)";
                 ctx.lineWidth = 1;
-
                 for (let i = 0; i < particles.length; i++) {
-                    let p = particles[i];
-                    p.x += p.vx;
-                    p.y += p.vy;
-
+                    let p = particles[i]; p.x += p.vx; p.y += p.vy;
                     if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
                     if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
-
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                    ctx.fill();
-
+                    ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
                     for (let j = i + 1; j < particles.length; j++) {
-                        let p2 = particles[j];
-                        let dx = p.x - p2.x;
-                        let dy = p.y - p2.y;
-                        let distance = Math.sqrt(dx * dx + dy * dy);
-
-                        if (distance < 120) { 
-                            ctx.beginPath();
-                            ctx.moveTo(p.x, p.y);
-                            ctx.lineTo(p2.x, p2.y);
-                            ctx.stroke();
-                        }
+                        let p2 = particles[j]; let dx = p.x - p2.x; let dy = p.y - p2.y; let distance = Math.sqrt(dx * dx + dy * dy);
+                        if (distance < 120) { ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p2.x, p2.y); ctx.stroke(); }
                     }
                 }
                 animationId = requestAnimationFrame(drawNeural);
@@ -814,33 +851,64 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
 
-        // --- C. LOGIQUE DE BASCULEMENT DES THÈMES ---
+        // --- C. NEURAL GRAPH (VIS.JS) ---
+        function initNeuralGraph() {
+            const container = document.getElementById('neural-graph');
+            if (!container) return; // Sécurité
+
+            const nodes = []; const edges = []; let idCounter = 1;
+            // Central Node
+            nodes.push({ id: 0, label: "Assami", color: "#e74c3c", size: 40, shape: "circle", font: { color: "white", size: 20 } });
+
+            (cvData.techSkills || []).forEach((cat, i) => {
+                const catId = idCounter++;
+                nodes.push({ id: catId, label: cat.cat, color: "#3498db", size: 25, shape: "dot", font: { color: "#00d2ff", size: 16 } });
+                edges.push({ from: 0, to: catId, color: { color: "rgba(52, 152, 219, 0.4)" } });
+
+                const tools = cat.tools.split(',');
+                tools.forEach(tool => {
+                    const toolId = idCounter++;
+                    nodes.push({ id: toolId, label: tool.trim(), color: "#16222a", shape: "dot", size: 10, font: { color: "#ecf0f1", size: 14 } });
+                    edges.push({ from: catId, to: toolId, color: { color: "rgba(58, 123, 213, 0.2)" } });
+                });
+            });
+
+            const data = { nodes: new vis.DataSet(nodes), edges: new vis.DataSet(edges) };
+            const options = {
+                nodes: { borderWidth: 2, borderWidthSelected: 4, shadow: true },
+                edges: { width: 1, smooth: { type: "continuous" } },
+                physics: { stabilization: false, barnesHut: { gravitationalConstant: -3000, springConstant: 0.04, springLength: 95 } },
+                interaction: { hover: true, zoomView: false }
+            };
+
+            if(network) network.destroy();
+            network = new vis.Network(container, data, options);
+            network.once("stabilizationIterationsDone", function() { network.fit({ animation: { duration: 1000 } }); });
+        }
+
+        // --- D. THEME SWITCH ---
         function toggleTheme() {
             const body = document.body;
             let newTheme = 'light';
+            
+            if(body.classList.contains('hacker-mode')) document.getElementById('terminal-overlay').classList.remove('open');
 
-            // Cycle : Light -> Dark -> Neural -> Hacker -> Light
             if (body.classList.contains('dark-mode')) {
-                // Vers Neural
-                body.classList.remove('dark-mode');
-                body.classList.add('neural-mode');
-                newTheme = 'neural';
+                // -> Neural
+                body.classList.remove('dark-mode'); body.classList.add('neural-mode'); newTheme = 'neural';
                 startNeural();
+                setTimeout(initNeuralGraph, 100); 
             } else if (body.classList.contains('neural-mode')) {
-                // Vers Hacker
-                body.classList.remove('neural-mode');
-                body.classList.add('hacker-mode');
-                newTheme = 'hacker';
+                // -> Hacker
+                body.classList.remove('neural-mode'); body.classList.add('hacker-mode'); newTheme = 'hacker';
                 startMatrix();
             } else if (body.classList.contains('hacker-mode')) {
-                // Vers Light
-                body.classList.remove('hacker-mode');
-                newTheme = 'light';
+                // -> Light
+                body.classList.remove('hacker-mode'); newTheme = 'light';
                 stopAnimation();
             } else {
-                // Vers Dark
-                body.classList.add('dark-mode');
-                newTheme = 'dark';
+                // -> Dark
+                body.classList.add('dark-mode'); newTheme = 'dark';
                 stopAnimation();
             }
             
@@ -851,38 +919,21 @@
         function updateThemeIcon(theme) {
             const icon = document.getElementById('theme-icon');
             if(!icon) return;
-            icon.className = 'fas'; 
-            icon.style.color = "";
-
-            if (theme === 'dark') {
-                icon.classList.add('fa-sun'); 
-                icon.style.color = "#f1c40f";
-            } else if (theme === 'neural') {
-                icon.classList.add('fa-brain'); 
-                icon.style.color = "#00d2ff";
-            } else if (theme === 'hacker') {
-                icon.classList.add('fa-terminal'); 
-                icon.style.color = "#00ff00";
-            } else {
-                icon.classList.add('fa-moon'); 
-            }
+            icon.className = 'fas'; icon.style.color = "";
+            if (theme === 'dark') { icon.classList.add('fa-sun'); icon.style.color = "#f1c40f"; } 
+            else if (theme === 'neural') { icon.classList.add('fa-brain'); icon.style.color = "#00d2ff"; } 
+            else if (theme === 'hacker') { icon.classList.add('fa-terminal'); icon.style.color = "#00ff00"; } 
+            else { icon.classList.add('fa-moon'); }
         }
 
         function initTheme() {
             const savedTheme = localStorage.getItem('theme');
-            if (savedTheme === 'dark') {
-                document.body.classList.add('dark-mode');
-            } else if (savedTheme === 'neural') {
-                document.body.classList.add('neural-mode');
-                startNeural();
-            } else if (savedTheme === 'hacker') {
-                document.body.classList.add('hacker-mode');
-                startMatrix();
-            }
+            if (savedTheme === 'dark') document.body.classList.add('dark-mode');
+            else if (savedTheme === 'neural') { document.body.classList.add('neural-mode'); startNeural(); setTimeout(initNeuralGraph, 500); }
+            else if (savedTheme === 'hacker') { document.body.classList.add('hacker-mode'); startMatrix(); }
             updateThemeIcon(savedTheme || 'light');
         }
 
-        // Redimensionnement fluide
         window.addEventListener('resize', () => {
             const body = document.body;
             if (body.classList.contains('hacker-mode')) startMatrix();
@@ -890,9 +941,8 @@
         });
 
         // ==========================================
-        // 7. RENDER (AFFICHAGE) & ANIMATIONS
+        // 7. RENDER
         // ==========================================
-        
         function render() {
             const app = document.getElementById('app');
             const isEditing = !!user;
@@ -932,6 +982,14 @@
                                 <i class="fas ${isEditing ? 'fa-file-upload' : 'fa-download'}"></i> ${isEditing ? 'Uploader CV' : 'Télécharger CV'}
                             </a>
                             <input type="file" id="cv-upload" accept="application/pdf" style="display:none">
+                        </div>
+
+                        <div style="margin-top: 30px; font-size: 0.7rem; color: var(--card-border); opacity: 0.5; letter-spacing: 2px;" title="Try this sequence...">
+                            <i class="fas fa-arrow-up"></i><i class="fas fa-arrow-up"></i>
+                            <i class="fas fa-arrow-down"></i><i class="fas fa-arrow-down"></i>
+                            <i class="fas fa-arrow-left"></i><i class="fas fa-arrow-right"></i>
+                            <i class="fas fa-arrow-left"></i><i class="fas fa-arrow-right"></i>
+                            B A
                         </div>
                         
                         <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--card-border);">
@@ -987,6 +1045,9 @@
 
                         <section class="section">
                             <h2 class="section-title">💻 Compétences Techniques</h2>
+                            
+                            <div id="neural-graph"></div>
+
                             <div class="tech-grid">
                                 ${(cvData.techSkills || []).map((skill, i) => { 
                                     const contentHtml = isEditing 
@@ -1045,15 +1106,9 @@
                             </a>
 
                             <form class="contact-form" onsubmit="handleContactSubmit(event)">
-                                <div class="form-group">
-                                    <input type="text" name="name" placeholder="Votre nom" required>
-                                </div>
-                                <div class="form-group">
-                                    <input type="email" name="email" placeholder="Votre email" required>
-                                </div>
-                                <div class="form-group">
-                                    <textarea name="message" placeholder="Votre message..." required></textarea>
-                                </div>
+                                <div class="form-group"><input type="text" name="name" placeholder="Votre nom" required></div>
+                                <div class="form-group"><input type="email" name="email" placeholder="Votre email" required></div>
+                                <div class="form-group"><textarea name="message" placeholder="Votre message..." required></textarea></div>
                                 <button type="submit" class="btn-submit"><i class="fas fa-paper-plane"></i> Envoyer le message</button>
                             </form>
 
@@ -1064,10 +1119,7 @@
                                     ${messages.map(msg => `
                                         <div class="message-card">
                                             <button class="btn-delete" onclick="deleteMessage(${msg.id})" style="top:5px; right:5px; display:flex;"><i class="fas fa-trash"></i></button>
-                                            <div class="msg-header">
-                                                <span class="msg-sender"><i class="fas fa-user"></i> ${msg.name} (${msg.email})</span>
-                                                <span>${new Date(msg.created_at).toLocaleDateString()}</span>
-                                            </div>
+                                            <div class="msg-header"><span class="msg-sender"><i class="fas fa-user"></i> ${msg.name} (${msg.email})</span><span>${new Date(msg.created_at).toLocaleDateString()}</span></div>
                                             <div class="msg-body">${msg.message}</div>
                                         </div>
                                     `).join('')}
@@ -1077,180 +1129,124 @@
                     </main>
                 </div>
             `;
-            
             initScrollAnimations();
             attachListeners();
         }
 
         function initScrollAnimations() {
             const elementsToAnimate = document.querySelectorAll('.section, .timeline-item, .project-card, .category-box, .cert-item');
-            
             const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('active');
-                        observer.unobserve(entry.target); 
-                    }
-                });
-            }, {
-                threshold: 0.1, 
-                rootMargin: "0px 0px -50px 0px" 
-            });
-
-            elementsToAnimate.forEach(el => {
-                el.classList.add('reveal');
-                observer.observe(el);
-            });
+                entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('active'); observer.unobserve(entry.target); } });
+            }, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
+            elementsToAnimate.forEach(el => { el.classList.add('reveal'); observer.observe(el); });
         }
 
-        // ==========================================
-        // 8. HELPERS & CHATBOT INTELLIGENT
-        // ==========================================
         function updatePersonal(f, v) { cvData.personal[f] = v; }
         function updateArrayItem(arr, idx, f, v) { if(f) cvData[arr][idx][f] = v; else cvData[arr][idx] = v; }
         function updateTask(expIndex, taskIndex, val) { cvData.experience[expIndex].tasks[taskIndex] = val; }
-        
-        function addTask(expIndex) {
-            if(!cvData.experience[expIndex].tasks) cvData.experience[expIndex].tasks = [];
-            cvData.experience[expIndex].tasks.push("Nouvelle tâche...");
-            render();
-        }
-        function deleteTask(expIndex, taskIndex) {
-            if(confirm("Supprimer tâche ?")) {
-                cvData.experience[expIndex].tasks.splice(taskIndex, 1);
-                render();
-            }
-        }
+        function addTask(expIndex) { if(!cvData.experience[expIndex].tasks) cvData.experience[expIndex].tasks = []; cvData.experience[expIndex].tasks.push("Nouvelle tâche..."); render(); }
+        function deleteTask(expIndex, taskIndex) { if(confirm("Supprimer tâche ?")) { cvData.experience[expIndex].tasks.splice(taskIndex, 1); render(); } }
         function addItem(type) {
-            const map = { 
-                experience: { role: "Nouveau poste", company: "Entreprise", date: "Date", tasks: ["Tâche 1"] }, 
-                education: { degree: "Diplôme", school: "École", date: "Date" }, 
-                techSkills: { cat: "Catégorie", tools: "Outils" }, 
-                projects: { name: "Nouveau Projet", desc: "Description", tech: "Technos", link: "#" }, 
-                certifications: { name: "Nouvelle Certif", link: "#" }, 
-                softSkills: "Nouvel atout", languages: "Langue" 
-            };
-            if(!cvData[type]) cvData[type] = [];
-            cvData[type].unshift(map[type]);
-            render();
+            const map = { experience: { role: "Nouveau poste", company: "Entreprise", date: "Date", tasks: ["Tâche 1"] }, education: { degree: "Diplôme", school: "École", date: "Date" }, techSkills: { cat: "Catégorie", tools: "Outils" }, projects: { name: "Nouveau Projet", desc: "Description", tech: "Technos", link: "#" }, certifications: { name: "Nouvelle Certif", link: "#" }, softSkills: "Nouvel atout", languages: "Langue" };
+            if(!cvData[type]) cvData[type] = []; cvData[type].unshift(map[type]); render();
         }
         function deleteItem(t, i) { if(confirm("Supprimer élément ?")) { cvData[t].splice(i, 1); render(); } }
 
         function attachListeners() {
             const pi = document.getElementById('photo-upload');
-            if(pi) pi.onchange = async (e) => {
-                const f = e.target.files[0];
-                if(f) { const url = await uploadFileToSupabase(f); if(url) { cvData.personal.photoUrl = url; render(); } }
-            };
+            if(pi) pi.onchange = async (e) => { const f = e.target.files[0]; if(f) { const url = await uploadFileToSupabase(f); if(url) { cvData.personal.photoUrl = url; render(); } } };
             const ci = document.getElementById('cv-upload');
-            if(ci) ci.onchange = async (e) => {
-                const f = e.target.files[0];
-                if(f) { const url = await uploadFileToSupabase(f); if(url) { cvData.personal.cvUrl = url; alert("CV Uploadé !"); render(); } }
-            };
+            if(ci) ci.onchange = async (e) => { const f = e.target.files[0]; if(f) { const url = await uploadFileToSupabase(f); if(url) { cvData.personal.cvUrl = url; alert("CV Uploadé !"); render(); } } };
         }
 
         async function handleVisits() {
-            if (!sessionStorage.getItem('visited')) {
-                await supabaseClient.rpc('increment_visits');
-                sessionStorage.setItem('visited', 'true');
-            }
+            if (!sessionStorage.getItem('visited')) { await supabaseClient.rpc('increment_visits'); sessionStorage.setItem('visited', 'true'); }
             const { data } = await supabaseClient.from('site_stats').select('visits').single();
             if (data && document.getElementById('visit-count')) document.getElementById('visit-count').innerText = data.visits;
         }
 
         function toggleChat() {
-            const w = document.getElementById('chat-window');
-            w.classList.toggle('open');
+            const w = document.getElementById('chat-window'); w.classList.toggle('open');
             if(w.classList.contains('open')) document.getElementById('chat-input').focus();
         }
+        function clearChat() { document.getElementById('chat-body').innerHTML = '<div class="chat-message bot">Bonjour ! Je suis l\'IA d\'Assami. Posez-moi une question sur son parcours, ses projets ou ses technos ! 🤖</div>'; }
 
-        function clearChat() {
-            const body = document.getElementById('chat-body');
-            body.innerHTML = '<div class="chat-message bot">Bonjour ! Je suis l\'IA d\'Assami. Posez-moi une question sur son parcours, ses projets ou ses technos ! 🤖</div>';
-        }
-
-        // --- NOUVELLE LOGIQUE CHATBOT : IA D'ABORD, LOCAL ENSUITE ---
-
+        // --- CHATBOT LOGIC ---
         function findLocalResponse(input) {
-            const text = input.toLowerCase();
-            const p = cvData.personal || {};
-
-            // 1. Contact
-            if (text.match(/contact|email|mail|téléphone|tel|joindre|coordonnées/)) {
-                return `Vous pouvez me contacter par :\n- Email : ${p.email}\n- Tél : ${p.phone}\n- LinkedIn : ${p.linkedin}\n- Je vis à : ${p.location}`;
-            }
-            // 2. Disponibilité
-            if (text.match(/dispo|quand|date|début|libre/)) {
-                return `Je suis actuellement : ${p.availability}.`;
-            }
-            // 3. Stack technique
-            if (text.match(/techno|stack|langage|outil|compétence|skill/)) {
-                const skills = (cvData.techSkills || []).map(s => s.tools).join(', ').substring(0, 100) + "...";
-                return `Voici un aperçu de ma stack technique : ${skills}. Regardez la section "Compétences" pour le détail !`;
-            }
-            // 4. Projets
-            if (text.match(/projet|réalisation|portfolio|création/)) {
-                const projs = (cvData.projects || []).slice(0, 3).map(pr => `- ${pr.name} (${pr.tech})`).join('\n');
-                return `J'ai travaillé sur plusieurs projets, dont :\n${projs}\n\nTout est visible dans la section "Projets Phares".`;
-            }
-            // 5. Études
-            if (text.match(/étude|diplôme|ecole|formation|université/)) {
-                const school = (cvData.education || [])[0]; 
-                if(school) return `Ma dernière formation : ${school.degree} à ${school.school} (${school.date}).`;
-            }
+            const text = input.toLowerCase(); const p = cvData.personal || {};
+            if (text.match(/secret|hacker|console|terminal|code|admin|caché/)) return "Shhh 🤫 ! Si vous voulez accéder au système, tapez le Konami Code sur votre clavier : ↑ ↑ ↓ ↓ ← → ← → B A";
+            if (text.match(/contact|email|mail|téléphone|tel|joindre/)) return `Vous pouvez me contacter par :\n- Email : ${p.email}\n- Tél : ${p.phone}\n- LinkedIn : ${p.linkedin}`;
+            if (text.match(/dispo|quand|date|début|libre/)) return `Je suis actuellement : ${p.availability}.`;
+            if (text.match(/techno|stack|langage|outil|compétence/)) return `Voici un aperçu de ma stack : ${(cvData.techSkills || []).map(s => s.tools).join(', ').substring(0, 100)}...`;
+            if (text.match(/projet|réalisation|portfolio/)) return `J'ai travaillé sur plusieurs projets, voir la section "Projets Phares".`;
             return null;
         }
 
         async function handleChat(e) {
-            e.preventDefault();
-            const inputField = document.getElementById('chat-input');
-            const msg = inputField.value.trim();
-            if (!msg) return;
-
-            addMessage(msg, 'user');
-            inputField.value = '';
-            
-            const typing = document.getElementById('typing-indicator');
-            typing.style.display = 'block';
-
-            // 1. TENTATIVE PRIORITAIRE : APPEL IA (Supabase Edge Function)
+            e.preventDefault(); const inputField = document.getElementById('chat-input'); const msg = inputField.value.trim(); if (!msg) return;
+            addMessage(msg, 'user'); inputField.value = ''; document.getElementById('typing-indicator').style.display = 'block';
             try {
-                const { data, error } = await supabaseClient.functions.invoke('chat-resume', {
-                    body: { question: msg, context: cvData }
-                });
-
-                if (error) throw error; // Si erreur API, on saute directement au catch
-
-                // SUCCÈS IA
-                typing.style.display = 'none';
-                addMessage(data.reply, 'bot');
-
+                const { data, error } = await supabaseClient.functions.invoke('chat-resume', { body: { question: msg, context: cvData } });
+                if (error) throw error; document.getElementById('typing-indicator').style.display = 'none'; addMessage(data.reply, 'bot');
             } catch (err) {
-                // 2. FALLBACK : ÉCHEC IA -> TENTATIVE LOCALE
-                console.warn("L'IA n'a pas répondu (Timeout/Erreur), bascule sur réponse locale...", err);
-                
+                console.warn("IA Error", err); document.getElementById('typing-indicator').style.display = 'none';
                 const localReply = findLocalResponse(msg);
-                typing.style.display = 'none';
+                if (localReply) addMessage(localReply + " (Note: Réponse hors-ligne 🔌)", 'bot');
+                else addMessage("Désolé, je ne peux pas joindre l'IA. Essayez 'Contact', 'Stack' ou 'Projets'.", 'bot');
+            }
+        }
+        function addMessage(text, sender) {
+            const body = document.getElementById('chat-body'); const div = document.createElement('div'); div.className = `chat-message ${sender}`; div.innerText = text; body.appendChild(div); body.scrollTop = body.scrollHeight; 
+        }
 
-                if (localReply) {
-                    addMessage(localReply + " (Note: Réponse hors-ligne 🔌)", 'bot');
-                } else {
-                    // 3. ÉCHEC TOTAL
-                    addMessage("Désolé, je ne peux pas joindre l'IA pour le moment et je n'ai pas compris votre demande. Essayez des mots simples comme 'Contact', 'Stack' ou 'Projets'.", 'bot');
-                }
+        // --- KONAMI & TERMINAL ---
+        const konamiCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+        let konamiIndex = 0;
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === konamiCode[konamiIndex]) {
+                konamiIndex++;
+                if (konamiIndex === konamiCode.length) { activateHackerTerminal(); konamiIndex = 0; }
+            } else { konamiIndex = 0; }
+        });
+
+        function activateHackerTerminal() {
+            document.body.classList.remove('dark-mode', 'neural-mode'); document.body.classList.add('hacker-mode'); localStorage.setItem('theme', 'hacker'); updateThemeIcon('hacker'); startMatrix();
+            toggleTerminal(); writeToTerminal(">> ACCESS GRANTED. WELCOME, USER.");
+        }
+
+        function toggleTerminal() {
+            const term = document.getElementById('terminal-overlay'); const input = document.getElementById('term-input');
+            term.classList.toggle('open'); if(term.classList.contains('open')) input.focus();
+        }
+        function writeToTerminal(text) {
+            const content = document.getElementById('terminal-content'); const div = document.createElement('div'); div.className = 'terminal-line'; div.innerText = text; content.appendChild(div); content.scrollTop = content.scrollHeight;
+        }
+
+        document.getElementById('term-input').addEventListener('keydown', function(e) {
+            if(e.key === 'Enter') { const cmd = this.value.trim().toLowerCase(); if(cmd) { writeToTerminal(`visitor@assami:~$ ${cmd}`); processCommand(cmd); } this.value = ''; }
+        });
+
+        function processCommand(cmd) {
+            const p = cvData.personal || {};
+            switch(cmd) {
+                case 'help': writeToTerminal("Available: whoami, skills, projects, contact, clear, exit"); break;
+                case 'whoami': writeToTerminal(`USER: ${p.name}\nROLE: ${p.title}\nSTATUS: ${p.availability}`); break;
+                case 'contact': writeToTerminal(`EMAIL: ${p.email}\nPHONE: ${p.phone}`); break;
+                case 'skills': (cvData.techSkills || []).forEach(c => writeToTerminal(`[${c.cat}]: ${c.tools.substring(0, 50)}...`)); break;
+                case 'projects': (cvData.projects || []).slice(0, 5).forEach(proj => writeToTerminal(`* ${proj.name} - ${proj.tech}`)); break;
+                case 'clear': document.getElementById('terminal-content').innerHTML = ''; break;
+                case 'exit': toggleTerminal(); break;
+                default: writeToTerminal(`Command not found: ${cmd}`);
             }
         }
 
-        function addMessage(text, sender) {
-            const body = document.getElementById('chat-body');
-            const div = document.createElement('div');
-            div.className = `chat-message ${sender}`;
-            div.innerText = text;
-            body.appendChild(div);
-            body.scrollTop = body.scrollHeight; 
-        }
-
+        // INIT
         init();
+        
+        // SECRET CONSOLE MSG
+        console.log("%c🕵️ Vous inspectez le code ?","color: #3498db; font-size: 16px; font-weight: bold;");
+        console.log("%cEssayez le Konami Code : ↑ ↑ ↓ ↓ ← → ← → B A","color: #e74c3c; font-size: 12px;");
     </script>
     
     <script>function googleTranslateElementInit() { new google.translate.TranslateElement({pageLanguage: 'fr', layout: google.translate.TranslateElement.InlineLayout.SIMPLE}, 'google_translate_element'); }</script>
