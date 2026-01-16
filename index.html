@@ -635,8 +635,23 @@
         
         async function resetDatabase() {
             if (!user || !confirm("⚠️ Tout effacer et remettre à zéro ?")) return;
-            await supabaseClient.from(DB_TABLE).upsert({ id: CV_ID, json_data: DEFAULT_DATA });
-            await supabaseClient.from('site_stats').upsert({ visits: 0 }).eq('id', 1);
+
+            const { error: cvError } = await supabaseClient.from(DB_TABLE).upsert({ id: CV_ID, json_data: DEFAULT_DATA });
+
+            if (cvError) {
+                console.error("Erreur CV:", cvError);
+                alert("Erreur lors du reset du CV checkez la console.");
+                return;
+            }
+
+            const { error: statsError } = await supabaseClient.from('site_stats').update({ visits: 0 }).eq('id', 1);
+
+            if (statsError) {
+                console.error("Erreur Stats:", statsError);
+                alert("Le CV est reset, mais pas le compteur (Erreur DB).");
+                return;
+            }
+
             cvData = JSON.parse(JSON.stringify(DEFAULT_DATA));
             document.getElementById('visit-count').innerText = "0";
             alert("♻️ Réinitialisé !");
