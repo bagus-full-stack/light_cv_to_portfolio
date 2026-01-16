@@ -1,80 +1,147 @@
 // supabase/functions/chat-resume/index.ts
+import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 
+// 1. Headers CORS complets
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// 2. Liste de priorité des modèles (Copiée de ta demande)
+// Le script essaiera le premier, puis le second si le premier échoue, etc.
+const MODELS = [
+  "gemini-2.5-flash",
+  "gemini-2.5-pro",
+  "gemini-2.0-flash-exp",
+  "gemini-2.0-flash",
+  "gemini-2.0-flash-001",
+  "gemini-2.0-flash-lite-001",
+  "gemini-2.0-flash-lite",
+  "gemini-2.0-flash-lite-preview-02-05",
+  "gemini-2.0-flash-lite-preview",
+  "gemini-exp-1206",
+  "gemini-2.5-flash-preview-tts",
+  "gemini-2.5-pro-preview-tts",
+  "gemma-3-1b-it",
+  "gemma-3-4b-it",
+  "gemma-3-12b-it",
+  "gemma-3-27b-it",
+  "gemma-3n-e4b-it",
+  "gemma-3n-e2b-it",
+  "gemini-flash-latest",
+  "gemini-flash-lite-latest",
+  "gemini-pro-latest",
+  "gemini-2.5-flash-lite",
+  "gemini-2.5-flash-image-preview",
+  "gemini-2.5-flash-image",
+  "gemini-2.5-flash-preview-09-2025",
+  "gemini-2.5-flash-lite-preview-09-2025",
+  "gemini-3-pro-preview",
+  "gemini-3-flash-preview",
+  "gemini-3-pro-image-preview",
+  "nano-banana-pro-preview",
+  // Sécurité ultime : le modèle standard stable si tout le reste échoue
+  "gemini-1.5-flash" 
+];
+
 Deno.serve(async (req) => {
   
-  // 1. GESTION DU PREFLIGHT (CORS)
+  // === GESTION DU PREFLIGHT (CORS) ===
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    // 2. RECUPERATION DONNÉES
+    // === 1. RECUPERATION DU BODY ===
     let body;
     try {
         body = await req.json();
     } catch (e) {
-        throw new Error("Body vide ou invalide.");
+        throw new Error("Le corps de la requête (Body) est vide ou mal formé.");
     }
+
     const { question, context } = body;
 
-    // 3. RECUPERATION CLÉ API
+    // === 2. VÉRIFICATION CLÉ API ===
     const apiKey = Deno.env.get('GEMINI_API_KEY');
     if (!apiKey) {
-        throw new Error("Clé API manquante (GEMINI_API_KEY).");
+        console.error("ERREUR CRITIQUE: Clé GEMINI_API_KEY introuvable.");
+        throw new Error("Configuration serveur manquante (API Key).");
     }
 
-    // 4. PRÉPARATION DU PROMPT
+    // === 3. PRÉPARATION DU PROMPT ===
     const promptText = `
-      Tu es l'assistant IA du portfolio d'Assami Baga.
-      Rôle : Répondre aux questions des recruteurs de manière professionnelle, courte et dynamique.
-      
-      RÈGLES STRICTES :
-      1. Tes réponses doivent être basées UNIQUEMENT sur le contexte JSON ci-dessous.
-      2. Si l'information n'est pas dans le CV, dis poliment que tu ne sais pas.
-      
-      CONTEXTE DU CV : ${JSON.stringify(context)}
-      
+      Tu es un assistant pour le portfolio d'Assami Baga.
+      Utilise ce contexte JSON pour répondre de façon courte et professionnelle.
+      CONTEXTE : ${JSON.stringify(context)}
       QUESTION : ${question}
     `;
 
-    // 5. APPEL GEMINI 1.5 FLASH (Version stable et gratuite garantie)
-    // Changement ici : on passe de 2.0 à 1.5 pour éviter l'erreur de quota "limit: 0"
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{ text: promptText }]
-          }]
-        })
-      }
-    );
+    // === 4. BOUCLE DE TENTATIVES (FALLBACK) ===
+    let lastError = null;
+    let successData = null;
+    let usedModel = "";
 
-    const data = await response.json();
+    // On boucle sur chaque modèle de la liste
+    for (const modelName of MODELS) {
+        try {
+            console.log(`Tentative avec le modèle : ${modelName}...`);
 
-    // 6. GESTION ERREUR GOOGLE
-    if (data.error) {
-        console.error("Erreur Gemini:", data.error);
-        throw new Error(`Erreur Modèle (${data.error.code}): ${data.error.message}`);
+            const response = await fetch(
+              `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`,
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  contents: [{
+                    parts: [{ text: promptText }]
+                  }]
+                })
+              }
+            );
+
+            const data = await response.json();
+
+            // Si Google renvoie une erreur explicite (ex: 404 Not Found, 429 Quota)
+            if (data.error) {
+                console.warn(`Échec ${modelName} : ${data.error.message}`);
+                lastError = data.error.message;
+                // On continue à la prochaine itération de la boucle (modèle suivant)
+                continue; 
+            }
+
+            // Si on arrive ici, c'est que ça a marché !
+            successData = data;
+            usedModel = modelName;
+            break; // On sort de la boucle, pas besoin de tester les autres
+
+        } catch (err) {
+            console.warn(`Erreur réseau avec ${modelName} : ${err.message}`);
+            lastError = err.message;
+            continue; // On essaie le suivant
+        }
     }
 
-    // Extraction de la réponse
-    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Désolé, je n'ai pas pu générer de réponse.";
+    // === 5. RÉSULTAT FINAL ===
+    
+    // Si après avoir tout testé, on n'a rien
+    if (!successData) {
+        throw new Error(`Tous les modèles ont échoué. Dernière erreur : ${lastError}`);
+    }
 
-    return new Response(JSON.stringify({ reply }), {
+    const reply = successData.candidates?.[0]?.content?.parts?.[0]?.text || "Désolé, aucune réponse générée.";
+    
+    // On ajoute un petit log console pour savoir quel modèle a sauvé la mise
+    console.log(`SUCCÈS : Réponse générée avec ${usedModel}`);
+
+    return new Response(JSON.stringify({ reply, model: usedModel }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     })
 
   } catch (error) {
-    console.error("Erreur Serveur:", error.message);
+    console.error("Erreur fatale Edge Function:", error.message);
+    
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
