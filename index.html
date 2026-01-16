@@ -159,6 +159,8 @@
         body.logged-in .chat-widget { bottom: 300px !important;  transition: bottom 0.3s ease; }
         body.logged-in .chat-window { margin-bottom: 0; }
 
+        .reveal { opacity: 0; transform: translateY(30px); transition: all 0.6s ease-out; }
+        .reveal.active { opacity: 1; transform: translateY(0); }
         /* =========================================
            3. LAYOUT & SECTIONS
            ========================================= */
@@ -946,6 +948,9 @@
         }
 
         init();
+
+        const observer = new IntersectionObserver((entries) => { entries.forEach(entry => { if(entry.isIntersecting) entry.target.classList.add('active'); }); });
+        document.querySelectorAll('.section, .project-card, .timeline-item').forEach(el => { el.classList.add('reveal'); observer.observe(el); });
     </script>
     
     <script>function googleTranslateElementInit() { new google.translate.TranslateElement({pageLanguage: 'fr', layout: google.translate.TranslateElement.InlineLayout.SIMPLE}, 'google_translate_element'); }</script>
