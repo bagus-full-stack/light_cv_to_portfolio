@@ -636,7 +636,7 @@
         async function resetDatabase() {
             if (!user || !confirm("⚠️ Tout effacer et remettre à zéro ?")) return;
             await supabaseClient.from(DB_TABLE).upsert({ id: CV_ID, json_data: DEFAULT_DATA });
-            await supabaseClient.from('site_stats').update({ visits: 0 }).eq('id', 1);
+            await supabaseClient.from('site_stats').upsert({ visits: 0 }).eq('id', 1);
             cvData = JSON.parse(JSON.stringify(DEFAULT_DATA));
             document.getElementById('visit-count').innerText = "0";
             alert("♻️ Réinitialisé !");
