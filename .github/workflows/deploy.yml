@@ -6,6 +6,7 @@ on:
       - master
     paths:
       - 'supabase/functions/**'
+  workflow_dispatch:
 
 jobs:
   deploy:
