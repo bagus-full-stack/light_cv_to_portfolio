@@ -42,10 +42,10 @@ Deno.serve(async (req) => {
       QUESTION : ${question}
     `;
 
-    // 5. APPEL GEMINI 2.0 FLASH
-    // Utilisation du modèle rapide et économique que tu as choisi
+    // 5. APPEL GEMINI 1.5 FLASH (Version stable et gratuite garantie)
+    // Changement ici : on passe de 2.0 à 1.5 pour éviter l'erreur de quota "limit: 0"
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
