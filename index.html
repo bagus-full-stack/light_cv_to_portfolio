@@ -644,7 +644,7 @@
                 return;
             }
 
-            const { error: statsError } = await supabaseClient.from('site_stats').update({ visits: 0 }).eq('id', 1);
+            const { error: statsError } = await supabaseClient.from('site_stats').upsert({ id: 1, visits: 0 });
 
             if (statsError) {
                 console.error("Erreur Stats:", statsError);
