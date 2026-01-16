@@ -51,6 +51,33 @@
             --input-bg: #2c2c2c;
         }
 
+        /* --- MODE NEURAL (IA) --- */
+        body.neural-mode {
+            --primary: #00d2ff;
+            --accent: #3a7bd5;
+            --light: #16222a;
+            --dark: #00d2ff;
+            --text: #e0e6ed;
+            --text-muted: #8ca0b3;
+            --danger: #ff6b6b;
+            --success: #00ffcc;
+            --warning: #f1c40f;
+            
+            --bg: #0f172a; /* Bleu nuit très sombre */
+            --card-bg: rgba(30, 41, 59, 0.85); /* Semi-transparent */
+            --card-border: #3a7bd5;
+            --card-hover: #1e293b;
+            --input-bg: #0f172a;
+            
+            --font-main: 'Segoe UI', sans-serif;
+            --glow: 0 0 10px rgba(58, 123, 213, 0.3);
+        }
+        /* Petit effet de verre pour le mode Neural */
+        body.neural-mode .sidebar, body.neural-mode .section {
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(58, 123, 213, 0.3);
+        }
+
         /* --- MODE HACKER (TERMINAL) --- */
         body.hacker-mode {
             --primary: #00ff00;
@@ -87,7 +114,7 @@
         body.hacker-mode * { text-shadow: var(--glow); box-shadow: none; }
         body.hacker-mode .btn-action, body.hacker-mode input, body.hacker-mode textarea { border: 1px solid #00ff00; }
 
-        /* Canvas Matrix Rain */
+        /* Canvas Background (Neural & Matrix) */
         #matrix-canvas {
             position: fixed;
             top: 0;
@@ -379,7 +406,7 @@
 </head>
 <body>
 
-    <button class="theme-toggle" onclick="toggleTheme()" title="Changer de thème (Clair / Sombre / Hacker)">
+    <button class="theme-toggle" onclick="toggleTheme()" title="Changer de thème (Clair / Sombre / Neural / Hacker)">
         <i id="theme-icon" class="fas fa-moon"></i>
     </button>
     
@@ -661,14 +688,16 @@
         }
 
         // ==========================================
-        // 6. GESTION DES 3 THÈMES & MATRIX
+        // 6. GESTION DES THÈMES & ANIMATIONS CANVAS
         // ==========================================
 
         const canvas = document.getElementById('matrix-canvas');
         const ctx = canvas.getContext('2d');
-        let matrixInterval;
+        let animationId; 
 
+        // --- A. EFFET MATRIX (Hacker Mode) ---
         function startMatrix() {
+            stopAnimation(); 
             canvas.style.display = 'block';
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
@@ -678,11 +707,11 @@
             const columns = canvas.width / fontSize;
             const drops = Array(Math.floor(columns)).fill(1);
 
-            function draw() {
-                ctx.fillStyle = "rgba(0, 0, 0, 0.05)"; // Trail effect
+            function drawMatrix() {
+                ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 
-                ctx.fillStyle = "#0F0"; // Green text
+                ctx.fillStyle = "#0F0";
                 ctx.font = fontSize + "px monospace";
 
                 for (let i = 0; i < drops.length; i++) {
@@ -694,33 +723,103 @@
                     }
                     drops[i]++;
                 }
+                animationId = requestAnimationFrame(drawMatrix);
             }
-            matrixInterval = setInterval(draw, 33);
+            drawMatrix();
         }
 
-        function stopMatrix() {
-            clearInterval(matrixInterval);
+        // --- B. EFFET NEURAL (IA Mode) ---
+        let particles = [];
+        function startNeural() {
+            stopAnimation();
+            canvas.style.display = 'block';
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const particleCount = Math.min(100, (canvas.width * canvas.height) / 9000); 
+            particles = [];
+            for (let i = 0; i < particleCount; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    vx: (Math.random() - 0.5) * 1.5, 
+                    vy: (Math.random() - 0.5) * 1.5, 
+                    size: Math.random() * 2 + 1
+                });
+            }
+
+            function drawNeural() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                ctx.fillStyle = "#00d2ff";
+                ctx.strokeStyle = "rgba(0, 210, 255, 0.15)";
+                ctx.lineWidth = 1;
+
+                for (let i = 0; i < particles.length; i++) {
+                    let p = particles[i];
+                    p.x += p.vx;
+                    p.y += p.vy;
+
+                    if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                    if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    for (let j = i + 1; j < particles.length; j++) {
+                        let p2 = particles[j];
+                        let dx = p.x - p2.x;
+                        let dy = p.y - p2.y;
+                        let distance = Math.sqrt(dx * dx + dy * dy);
+
+                        if (distance < 120) { 
+                            ctx.beginPath();
+                            ctx.moveTo(p.x, p.y);
+                            ctx.lineTo(p2.x, p2.y);
+                            ctx.stroke();
+                        }
+                    }
+                }
+                animationId = requestAnimationFrame(drawNeural);
+            }
+            drawNeural();
+        }
+
+        function stopAnimation() {
+            if (animationId) cancelAnimationFrame(animationId);
             canvas.style.display = 'none';
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
 
+        // --- C. LOGIQUE DE BASCULEMENT DES THÈMES ---
         function toggleTheme() {
             const body = document.body;
             let newTheme = 'light';
 
-            // Cycle : Light -> Dark -> Hacker -> Light
+            // Cycle : Light -> Dark -> Neural -> Hacker -> Light
             if (body.classList.contains('dark-mode')) {
+                // Vers Neural
                 body.classList.remove('dark-mode');
+                body.classList.add('neural-mode');
+                newTheme = 'neural';
+                startNeural();
+            } else if (body.classList.contains('neural-mode')) {
+                // Vers Hacker
+                body.classList.remove('neural-mode');
                 body.classList.add('hacker-mode');
                 newTheme = 'hacker';
                 startMatrix();
             } else if (body.classList.contains('hacker-mode')) {
+                // Vers Light
                 body.classList.remove('hacker-mode');
                 newTheme = 'light';
-                stopMatrix();
+                stopAnimation();
             } else {
+                // Vers Dark
                 body.classList.add('dark-mode');
                 newTheme = 'dark';
-                stopMatrix();
+                stopAnimation();
             }
             
             localStorage.setItem('theme', newTheme);
@@ -730,17 +829,20 @@
         function updateThemeIcon(theme) {
             const icon = document.getElementById('theme-icon');
             if(!icon) return;
-            icon.className = 'fas'; // Reset
+            icon.className = 'fas'; 
             icon.style.color = "";
 
             if (theme === 'dark') {
-                icon.classList.add('fa-sun');
+                icon.classList.add('fa-sun'); 
                 icon.style.color = "#f1c40f";
+            } else if (theme === 'neural') {
+                icon.classList.add('fa-brain'); 
+                icon.style.color = "#00d2ff";
             } else if (theme === 'hacker') {
-                icon.classList.add('fa-terminal');
+                icon.classList.add('fa-terminal'); 
                 icon.style.color = "#00ff00";
             } else {
-                icon.classList.add('fa-moon');
+                icon.classList.add('fa-moon'); 
             }
         }
 
@@ -748,12 +850,22 @@
             const savedTheme = localStorage.getItem('theme');
             if (savedTheme === 'dark') {
                 document.body.classList.add('dark-mode');
+            } else if (savedTheme === 'neural') {
+                document.body.classList.add('neural-mode');
+                startNeural();
             } else if (savedTheme === 'hacker') {
                 document.body.classList.add('hacker-mode');
                 startMatrix();
             }
             updateThemeIcon(savedTheme || 'light');
         }
+
+        // Redimensionnement fluide
+        window.addEventListener('resize', () => {
+            const body = document.body;
+            if (body.classList.contains('hacker-mode')) startMatrix();
+            if (body.classList.contains('neural-mode')) startNeural();
+        });
 
         // ==========================================
         // 7. RENDER (AFFICHAGE) & ANIMATIONS
@@ -906,7 +1018,7 @@
                         <section class="section" id="contact">
                             <h2 class="section-title">📬 Me Contacter</h2>
                             
-                            <a href="https://calendly.com/bagaassami09/30min" target="_blank" class="btn-calendly">
+                            <a href="https://calendly.com/" target="_blank" class="btn-calendly">
                                 <i class="fas fa-calendar-alt"></i> 📅 Réserver un appel (Calendly)
                             </a>
 
