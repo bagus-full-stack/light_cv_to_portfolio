@@ -87,8 +87,41 @@
         body.hacker-mode * { text-shadow: var(--glow); box-shadow: none; }
         body.hacker-mode .btn-action, body.hacker-mode input, body.hacker-mode textarea { border: 1px solid #00ff00; }
 
+        /* Canvas Matrix Rain */
+        #matrix-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            display: none; /* Caché par défaut */
+            pointer-events: none;
+        }
+
         /* =========================================
-           2. COMPOSANTS UI
+           2. ANIMATIONS SCROLL (Reveal)
+           ========================================= */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s cubic-bezier(0.5, 0, 0, 1);
+            will-change: opacity, transform;
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        /* Effet cascade pour les grilles */
+        .project-card:nth-child(1) { transition-delay: 0.1s; }
+        .project-card:nth-child(2) { transition-delay: 0.2s; }
+        .project-card:nth-child(3) { transition-delay: 0.3s; }
+        .project-card:nth-child(4) { transition-delay: 0.4s; }
+        
+        /* Variante timeline (vient de la gauche) */
+        .timeline-item.reveal { transform: translateX(-20px); }
+        .timeline-item.reveal.active { transform: translateX(0); }
+
+        /* =========================================
+           3. COMPOSANTS UI
            ========================================= */
         
         /* Bouton Thème */
@@ -159,10 +192,8 @@
         body.logged-in .chat-widget { bottom: 300px !important;  transition: bottom 0.3s ease; }
         body.logged-in .chat-window { margin-bottom: 0; }
 
-        .reveal { opacity: 0; transform: translateY(30px); transition: all 0.6s ease-out; }
-        .reveal.active { opacity: 1; transform: translateY(0); }
         /* =========================================
-           3. LAYOUT & SECTIONS
+           4. LAYOUT & SECTIONS
            ========================================= */
         .container { max-width: 1200px; margin: 0 auto; padding: 20px; display: grid; grid-template-columns: 300px 1fr; gap: 30px; padding-top: 80px; }
         
@@ -174,7 +205,6 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.05); 
             text-align: center; 
             border: 1px solid var(--card-border); 
-            /* J'ai retiré le sticky d'ici pour le mettre dans le media query ci-dessous */
         }
 
         /* --- LOGIQUE STICKY (Uniquement pour Desktop > 768px) --- */
@@ -184,7 +214,7 @@
                 align-self: start; 
                 position: sticky; 
                 position: -webkit-sticky; 
-                top: calc(100vh - 100% - 20px);
+                top: 20px; /* Ajusté pour ne pas coller en bas */
             }
         }
         
@@ -255,7 +285,7 @@
         .tech-tag:hover { background: var(--accent); color: white; border-color: var(--accent); }
 
         /* =========================================
-           4. FORMULAIRE & MESSAGES
+           5. FORMULAIRE & MESSAGES
            ========================================= */
         .contact-form { display: flex; flex-direction: column; gap: 15px; }
         .form-group input, .form-group textarea { width: 100%; padding: 12px; border: 1px solid var(--card-border); background: var(--input-bg); color: var(--text); border-radius: 6px; font-size: 0.95rem; }
@@ -292,15 +322,15 @@
         .chat-send { background: var(--accent); color: white; border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.3s; }
         .chat-send:hover { background: var(--primary); }
 
-@keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
         /* =========================================
-           5. MODE IMPRESSION (PRINT / PDF)
+           6. MODE IMPRESSION (PRINT / PDF)
            ========================================= */
         @media print {
             .admin-controls, .theme-toggle, .translate-container, 
             .btn-action, .btn-delete, .btn-add, .task-controls,
-            .cv-download-wrapper, .btn-submit, .form-group { display: none !important; }
+            .cv-download-wrapper, .btn-submit, .form-group, .chat-widget { display: none !important; }
 
             body, .section, .sidebar, .category-box, .project-card, .cert-item {
                 background: white !important;
@@ -311,7 +341,7 @@
             }
 
             .container { display: block; padding-top: 0; }
-            .sidebar { margin-bottom: 20px; border: none; padding: 0; text-align: left; }
+            .sidebar { margin-bottom: 20px; border: none; padding: 0; text-align: left; position: static; }
             .profile-wrapper { width: 100px; height: 100px; float: right; margin: 0; }
             .main-content { gap: 15px; }
             .section { padding: 10px 0; border: none; border-bottom: 1px solid #eee; break-inside: avoid; }
@@ -319,6 +349,9 @@
             a::after { content: " (" attr(href) ")"; font-size: 0.8rem; color: #666; }
             .project-link, .cert-link { background: none; color: black; padding: 0; text-decoration: underline; }
             .project-link span, .cert-link span { display: inline; }
+            
+            /* Pas d'animations en print */
+            .reveal { opacity: 1 !important; transform: none !important; }
         }
     </style>
 </head>
@@ -327,6 +360,8 @@
     <button class="theme-toggle" onclick="toggleTheme()" title="Changer de thème (Clair / Sombre / Hacker)">
         <i id="theme-icon" class="fas fa-moon"></i>
     </button>
+    
+    <canvas id="matrix-canvas"></canvas>
 
     <div class="translate-container"><div id="google_translate_element"></div></div>
     <div id="app"></div>
@@ -604,8 +639,47 @@
         }
 
         // ==========================================
-        // 6. GESTION DES 3 THÈMES (CYCLE)
+        // 6. GESTION DES 3 THÈMES & MATRIX
         // ==========================================
+
+        const canvas = document.getElementById('matrix-canvas');
+        const ctx = canvas.getContext('2d');
+        let matrixInterval;
+
+        function startMatrix() {
+            canvas.style.display = 'block';
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            const chars = "01010101ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            const fontSize = 14;
+            const columns = canvas.width / fontSize;
+            const drops = Array(Math.floor(columns)).fill(1);
+
+            function draw() {
+                ctx.fillStyle = "rgba(0, 0, 0, 0.05)"; // Trail effect
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                ctx.fillStyle = "#0F0"; // Green text
+                ctx.font = fontSize + "px monospace";
+
+                for (let i = 0; i < drops.length; i++) {
+                    const text = chars[Math.floor(Math.random() * chars.length)];
+                    ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+                    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                        drops[i] = 0;
+                    }
+                    drops[i]++;
+                }
+            }
+            matrixInterval = setInterval(draw, 33);
+        }
+
+        function stopMatrix() {
+            clearInterval(matrixInterval);
+            canvas.style.display = 'none';
+        }
 
         function toggleTheme() {
             const body = document.body;
@@ -616,12 +690,15 @@
                 body.classList.remove('dark-mode');
                 body.classList.add('hacker-mode');
                 newTheme = 'hacker';
+                startMatrix();
             } else if (body.classList.contains('hacker-mode')) {
                 body.classList.remove('hacker-mode');
                 newTheme = 'light';
+                stopMatrix();
             } else {
                 body.classList.add('dark-mode');
                 newTheme = 'dark';
+                stopMatrix();
             }
             
             localStorage.setItem('theme', newTheme);
@@ -647,13 +724,17 @@
 
         function initTheme() {
             const savedTheme = localStorage.getItem('theme');
-            if (savedTheme === 'dark') document.body.classList.add('dark-mode');
-            else if (savedTheme === 'hacker') document.body.classList.add('hacker-mode');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+            } else if (savedTheme === 'hacker') {
+                document.body.classList.add('hacker-mode');
+                startMatrix();
+            }
             updateThemeIcon(savedTheme || 'light');
         }
 
         // ==========================================
-        // 7. RENDER (AFFICHAGE)
+        // 7. RENDER (AFFICHAGE) & ANIMATIONS
         // ==========================================
         
         function render() {
@@ -836,11 +917,34 @@
                     </main>
                 </div>
             `;
+            
+            initScrollAnimations();
             attachListeners();
         }
 
+        function initScrollAnimations() {
+            const elementsToAnimate = document.querySelectorAll('.section, .timeline-item, .project-card, .category-box, .cert-item');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('active');
+                        observer.unobserve(entry.target); 
+                    }
+                });
+            }, {
+                threshold: 0.1, 
+                rootMargin: "0px 0px -50px 0px" 
+            });
+
+            elementsToAnimate.forEach(el => {
+                el.classList.add('reveal');
+                observer.observe(el);
+            });
+        }
+
         // ==========================================
-        // 8. HELPERS (LOGIQUE METIER)
+        // 8. HELPERS & CHATBOT INTELLIGENT
         // ==========================================
         function updatePersonal(f, v) { cvData.personal[f] = v; }
         function updateArrayItem(arr, idx, f, v) { if(f) cvData[arr][idx][f] = v; else cvData[arr][idx] = v; }
@@ -900,36 +1004,80 @@
             if(w.classList.contains('open')) document.getElementById('chat-input').focus();
         }
 
+        function clearChat() {
+            const body = document.getElementById('chat-body');
+            body.innerHTML = '<div class="chat-message bot">Bonjour ! Je suis l\'IA d\'Assami. Posez-moi une question sur son parcours, ses projets ou ses technos ! 🤖</div>';
+        }
+
+        // --- NOUVELLE LOGIQUE CHATBOT : IA D'ABORD, LOCAL ENSUITE ---
+
+        function findLocalResponse(input) {
+            const text = input.toLowerCase();
+            const p = cvData.personal || {};
+
+            // 1. Contact
+            if (text.match(/contact|email|mail|téléphone|tel|joindre|coordonnées/)) {
+                return `Vous pouvez me contacter par :\n- Email : ${p.email}\n- Tél : ${p.phone}\n- LinkedIn : ${p.linkedin}\n- Je vis à : ${p.location}`;
+            }
+            // 2. Disponibilité
+            if (text.match(/dispo|quand|date|début|libre/)) {
+                return `Je suis actuellement : ${p.availability}.`;
+            }
+            // 3. Stack technique
+            if (text.match(/techno|stack|langage|outil|compétence|skill/)) {
+                const skills = (cvData.techSkills || []).map(s => s.tools).join(', ').substring(0, 100) + "...";
+                return `Voici un aperçu de ma stack technique : ${skills}. Regardez la section "Compétences" pour le détail !`;
+            }
+            // 4. Projets
+            if (text.match(/projet|réalisation|portfolio|création/)) {
+                const projs = (cvData.projects || []).slice(0, 3).map(pr => `- ${pr.name} (${pr.tech})`).join('\n');
+                return `J'ai travaillé sur plusieurs projets, dont :\n${projs}\n\nTout est visible dans la section "Projets Phares".`;
+            }
+            // 5. Études
+            if (text.match(/étude|diplôme|ecole|formation|université/)) {
+                const school = (cvData.education || [])[0]; 
+                if(school) return `Ma dernière formation : ${school.degree} à ${school.school} (${school.date}).`;
+            }
+            return null;
+        }
+
         async function handleChat(e) {
             e.preventDefault();
-            const input = document.getElementById('chat-input');
-            const msg = input.value.trim();
+            const inputField = document.getElementById('chat-input');
+            const msg = inputField.value.trim();
             if (!msg) return;
 
             addMessage(msg, 'user');
-            input.value = '';
+            inputField.value = '';
             
             const typing = document.getElementById('typing-indicator');
             typing.style.display = 'block';
 
+            // 1. TENTATIVE PRIORITAIRE : APPEL IA (Supabase Edge Function)
             try {
-                // 3. Appel à la Supabase Edge Function
-                // On envoie la question ET le CV complet (cvData) pour donner le contexte à l'IA
                 const { data, error } = await supabaseClient.functions.invoke('chat-resume', {
                     body: { question: msg, context: cvData }
                 });
 
-                typing.style.display = 'none';
+                if (error) throw error; // Si erreur API, on saute directement au catch
 
-                if (error) throw error;
-                
-                // 4. Afficher réponse IA
+                // SUCCÈS IA
+                typing.style.display = 'none';
                 addMessage(data.reply, 'bot');
 
             } catch (err) {
+                // 2. FALLBACK : ÉCHEC IA -> TENTATIVE LOCALE
+                console.warn("L'IA n'a pas répondu (Timeout/Erreur), bascule sur réponse locale...", err);
+                
+                const localReply = findLocalResponse(msg);
                 typing.style.display = 'none';
-                console.error(err);
-                addMessage("Désolé, je ne peux pas répondre pour l'instant (Backend non configuré ou erreur API).", 'bot');
+
+                if (localReply) {
+                    addMessage(localReply + " (Note: Réponse hors-ligne 🔌)", 'bot');
+                } else {
+                    // 3. ÉCHEC TOTAL
+                    addMessage("Désolé, je ne peux pas joindre l'IA pour le moment et je n'ai pas compris votre demande. Essayez des mots simples comme 'Contact', 'Stack' ou 'Projets'.", 'bot');
+                }
             }
         }
 
@@ -939,18 +1087,10 @@
             div.className = `chat-message ${sender}`;
             div.innerText = text;
             body.appendChild(div);
-            body.scrollTop = body.scrollHeight; // Auto-scroll
-        }
-        
-        function clearChat() {
-            const body = document.getElementById('chat-body');
-            body.innerHTML = '<div class="chat-message bot">Bonjour ! Je suis l\'IA d\'Assami. Posez-moi une question sur son parcours, ses projets ou ses technos ! 🤖</div>';
+            body.scrollTop = body.scrollHeight; 
         }
 
         init();
-
-        const observer = new IntersectionObserver((entries) => { entries.forEach(entry => { if(entry.isIntersecting) entry.target.classList.add('active'); }); });
-        document.querySelectorAll('.section, .project-card, .timeline-item').forEach(el => { el.classList.add('reveal'); observer.observe(el); });
     </script>
     
     <script>function googleTranslateElementInit() { new google.translate.TranslateElement({pageLanguage: 'fr', layout: google.translate.TranslateElement.InlineLayout.SIMPLE}, 'google_translate_element'); }</script>
