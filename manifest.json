@@ -1,4 +1,5 @@
 {
+  "id": "/index.html",
   "name": "Portfolio Assami Baga",
   "short_name": "Assami",
   "start_url": "./index.html",
@@ -9,15 +10,15 @@
   "icons": [
     {
       "src": "https://cdn-icons-png.flaticon.com/512/3048/3048122.png",
-      "sizes": "192x192",
+      "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "https://cdn-icons-png.flaticon.com/512/3048/3048122.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "maskable"
     }
   ]
 }
