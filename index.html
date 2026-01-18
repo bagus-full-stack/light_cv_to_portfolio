@@ -64,8 +64,8 @@
             --success: #00ffcc;
             --warning: #f1c40f;
             
-            --bg: #0f172a; /* Bleu nuit très sombre */
-            --card-bg: rgba(30, 41, 59, 0.85); /* Semi-transparent */
+            --bg: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.85);
             --card-border: #3a7bd5;
             --card-hover: #1e293b;
             --input-bg: #0f172a;
@@ -73,7 +73,6 @@
             --font-main: 'Segoe UI', sans-serif;
             --glow: 0 0 10px rgba(58, 123, 213, 0.3);
         }
-        /* Petit effet de verre pour le mode Neural */
         body.neural-mode .sidebar, body.neural-mode .section {
             backdrop-filter: blur(5px);
             border: 1px solid rgba(58, 123, 213, 0.3);
@@ -111,17 +110,15 @@
             transition: background 0.3s, color 0.3s;
         }
         
-        /* Effet Glow pour le mode Hacker */
         body.hacker-mode * { text-shadow: var(--glow); box-shadow: none; }
         body.hacker-mode .btn-action, body.hacker-mode input, body.hacker-mode textarea { border: 1px solid #00ff00; }
 
-        /* Canvas Background (Neural & Matrix) */
         #matrix-canvas {
             position: fixed;
             top: 0;
             left: 0;
             z-index: -1;
-            display: none; /* Caché par défaut */
+            display: none;
             pointer-events: none;
         }
 
@@ -149,36 +146,20 @@
         /* =========================================
            3. COMPOSANTS UI
            ========================================= */
-        
-        /* Bouton Thème */
         .theme-toggle {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 9999;
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            color: var(--text);
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            transition: all 0.3s;
+            position: fixed; top: 20px; left: 20px; z-index: 9999;
+            background: var(--card-bg); border: 1px solid var(--card-border); color: var(--text);
+            width: 45px; height: 45px; border-radius: 50%;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: all 0.3s;
         }
         .theme-toggle:hover { transform: scale(1.1); border-color: var(--accent); }
 
-        /* Traduction */
         .translate-container { position: fixed; top: 20px; right: 20px; z-index: 9999; background: var(--card-bg); padding: 8px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid var(--card-border); }
         .goog-te-gadget-simple { background: transparent !important; border: none !important; padding: 0 !important; font-size: 14px !important; color: var(--text) !important; }
         .goog-te-banner-frame { display: none !important; }
         body { top: 0 !important; }
 
-        /* Admin Controls */
         .admin-controls { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 15px; z-index: 1000; align-items: flex-start; }
         .fab-btn { background: var(--accent); color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: transform 0.2s; border: none; font-size: 1.2rem; }
         .fab-btn:hover { transform: scale(1.1); }
@@ -187,7 +168,6 @@
         #logout-btn { background: var(--dark); }
         #reset-btn { background: var(--danger); }
 
-        /* Mode Édition */
         .editable { border: 1px dashed var(--accent); background: rgba(52, 152, 219, 0.1); padding: 2px; transition: background 0.2s; cursor: text; }
         .editable:focus { background: var(--input-bg); outline: 2px solid var(--accent); border: none; color: var(--text); }
         
@@ -200,48 +180,24 @@
         .btn-task-del { background: var(--danger); color: white; border: none; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; cursor: pointer; vertical-align: middle; }
         .btn-task-add { background: var(--accent); color: white; border: none; border-radius: 4px; padding: 2px 8px; font-size: 12px; cursor: pointer; margin-top: 5px; display: none; }
 
+        body.logged-in .btn-delete, body.logged-in .btn-add, body.logged-in .task-controls, body.logged-in .btn-task-add { display: inline-block; }
         body.logged-in .btn-delete { display: flex; z-index: 10; }
         body.logged-in .btn-add { display: block; }
-        body.logged-in .task-controls { display: inline-block; }
-        body.logged-in .btn-task-add { display: inline-block; }
         body.logged-in .timeline-item, body.logged-in .category-box, body.logged-in .skill-tag-wrapper, body.logged-in .project-card, body.logged-in .cert-item { border: 1px solid var(--accent); padding: 10px; margin-bottom: 20px; border-radius: 8px; }
-        body.logged-in #save-btn { display: flex; }
-        body.logged-in #logout-btn { display: flex; }
+        body.logged-in #save-btn, body.logged-in #logout-btn, body.logged-in #reset-btn { display: flex; }
         body.logged-in #login-btn { display: none; }
-        body.logged-in #reset-btn { display: flex; }
         body.logged-in .upload-btn { display: flex; }
         body.logged-in .timeline-item { border-left: none; }
-
-        body.logged-in .chat-widget { bottom: 300px !important;  transition: bottom 0.3s ease; }
-        body.logged-in .chat-window { margin-bottom: 0; }
+        body.logged-in .chat-widget { bottom: 300px !important; transition: bottom 0.3s ease; }
 
         /* =========================================
            4. LAYOUT & SECTIONS
            ========================================= */
         .container { max-width: 1200px; margin: 0 auto; padding: 20px; display: grid; grid-template-columns: 300px 1fr; gap: 30px; padding-top: 80px; }
         
-        .sidebar { 
-            background: var(--card-bg); 
-            padding: 30px; 
-            border-radius: 10px; 
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05); 
-            text-align: center; 
-            border: 1px solid var(--card-border); 
-        }
-
-        @media (min-width: 769px) {
-            .sidebar {
-                height: fit-content; 
-                align-self: start; 
-                position: sticky; 
-                position: -webkit-sticky; 
-                top: 20px; 
-            }
-        }
-        
-        @media (max-width: 768px) { 
-            .container { grid-template-columns: 1fr; } 
-        }
+        .sidebar { background: var(--card-bg); padding: 30px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); text-align: center; border: 1px solid var(--card-border); }
+        @media (min-width: 769px) { .sidebar { height: fit-content; align-self: start; position: sticky; top: 20px; } }
+        @media (max-width: 768px) { .container { grid-template-columns: 1fr; } }
         
         .profile-wrapper { position: relative; display: inline-block; width: 150px; height: 150px; margin-bottom: 20px; }
         .profile-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 4px solid var(--accent); }
@@ -258,7 +214,6 @@
         .btn-cv { display: inline-flex; align-items: center; gap: 10px; background: var(--primary); color: white; padding: 10px 20px; border-radius: 30px; text-decoration: none; font-weight: bold; transition: all 0.3s; border: 2px solid var(--primary); cursor: pointer; }
         .btn-cv:hover { background: transparent; color: var(--primary); }
         .btn-cv.upload-mode { background: var(--warning); border-color: var(--warning); }
-        .btn-cv.upload-mode:hover { background: transparent; color: var(--warning); }
         
         .skills-list { text-align: left; margin-top: 30px; display: flex; flex-wrap: wrap; gap: 5px; }
         .skill-tag { background: var(--light); color: var(--dark); padding: 5px 10px; border-radius: 15px; font-size: 0.8rem; }
@@ -273,13 +228,11 @@
         .company { color: var(--text-muted); font-style: italic; font-size: 0.95rem; margin-bottom: 5px; }
         .date { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px; display: block; }
         .description ul { list-style-position: inside; margin-top: 5px; color: var(--text); }
-        .description li { margin-bottom: 5px; }
         
         .category-box { border-left: 4px solid var(--accent); background-color: var(--card-bg); padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; border: 1px solid var(--card-border); }
         .category-title { font-weight: bold; font-size: 1.1rem; margin-bottom: 10px; color: var(--text); }
         .category-content { font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; }
         .category-content.editable { background: var(--input-bg); padding: 10px; border-radius: 5px; line-height: 1.8; width: 100%; display: block; }
-
         .status-badge { background: #27ae60; color: white; padding: 5px 10px; border-radius: 4px; font-size: 0.8rem; display: inline-block; margin-bottom: 15px;}
         
         .project-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
@@ -296,7 +249,6 @@
         .cert-item:hover { background: var(--card-hover); }
         .cert-name { font-weight: 600; font-size: 0.95rem; color: var(--text); }
         .cert-link { font-size: 0.8rem; color: var(--accent); text-decoration: none; display: flex; align-items: center; gap: 5px; }
-        .cert-link:hover { text-decoration: underline; }
         
         .tech-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; }
         .tech-badges { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -311,26 +263,8 @@
         .form-group textarea { resize: vertical; min-height: 120px; }
         .btn-submit { background: var(--accent); color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-size: 1rem; transition: background 0.3s; }
         .btn-submit:hover { background: var(--primary); }
-        .btn-submit:disabled { background: #95a5a6; cursor: not-allowed; }
-
-        .btn-calendly { 
-            background: var(--success); 
-            color: white; 
-            border: none; 
-            padding: 12px 20px; 
-            border-radius: 6px; 
-            cursor: pointer; 
-            font-size: 1rem; 
-            width: 100%; 
-            margin-bottom: 20px; 
-            font-weight: bold; 
-            transition: transform 0.2s; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            gap: 10px; 
-            text-decoration: none;
-        }
+        
+        .btn-calendly { background: var(--success); color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-size: 1rem; width: 100%; margin-bottom: 20px; font-weight: bold; transition: transform 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; text-decoration: none; }
         .btn-calendly:hover { transform: scale(1.02); filter: brightness(1.1); color: white; }
 
         .messages-list { margin-top: 30px; border-top: 2px dashed var(--card-border); padding-top: 20px; }
@@ -356,126 +290,71 @@
         .chat-message.user { align-self: flex-end; background: var(--accent); color: white; border-bottom-right-radius: 2px; }
         .typing-indicator { font-style: italic; color: var(--text-muted); font-size: 0.8rem; margin-left: 10px; display: none; }
 
-        .chat-footer { padding: 10px; background: var(--card-bg); border-top: 1px solid var(--card-border); display: flex; gap: 10px; }
+        .chat-footer { padding: 10px; background: var(--card-bg); border-top: 1px solid var(--card-border); display: flex; gap: 10px; align-items: center; }
         .chat-input { flex: 1; padding: 10px; border: 1px solid var(--card-border); border-radius: 20px; background: var(--input-bg); color: var(--text); outline: none; }
         .chat-send { background: var(--accent); color: white; border: none; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.3s; }
-        .chat-send:hover { background: var(--primary); }
+        .chat-mic { background: var(--light); color: var(--text); border: 1px solid var(--card-border); width: 35px; height: 35px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s; }
+        .chat-mic.listening { background: var(--danger); color: white; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
 
         @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
         /* =========================================
            7. VISUALISATION NEURAL (GRAPH)
            ========================================= */
-        #neural-graph {
-            width: 100%;
-            height: 600px;
-            border: 1px solid var(--accent);
-            border-radius: 8px;
-            background: rgba(15, 23, 42, 0.6);
-            display: none; /* Caché par défaut */
-        }
-        /* En mode Neural : On cache la grille classique et on affiche le graphe */
+        #neural-graph { width: 100%; height: 600px; border: 1px solid var(--accent); border-radius: 8px; background: rgba(15, 23, 42, 0.6); display: none; }
         body.neural-mode .tech-grid { display: none !important; }
         body.neural-mode #neural-graph { display: block !important; animation: fadeIn 1s ease-in; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         /* =========================================
-           8. TERMINAL HACKER (KONAMI)
+           8. TERMINAL HACKER (KONAMI & GAME)
            ========================================= */
         .terminal-trigger {
-            position: fixed;
-            top: 50%;
-            left: 20px;
-            transform: translateY(-50%);
-            z-index: 10000;
-            background: black;
-            border: 2px solid #00ff00;
-            color: #00ff00;
-            width: 50px;
-            height: 50px;
-            border-radius: 8px;
-            cursor: pointer;
-            display: none; 
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            box-shadow: 0 0 10px #00ff00;
-            transition: all 0.3s;
+            position: fixed; top: 50%; left: 20px; transform: translateY(-50%); z-index: 10000;
+            background: black; border: 2px solid #00ff00; color: #00ff00; width: 50px; height: 50px; border-radius: 8px;
+            cursor: pointer; display: none; align-items: center; justify-content: center; font-size: 1.5rem;
+            box-shadow: 0 0 10px #00ff00; transition: all 0.3s;
         }
         .terminal-trigger:hover { transform: translateY(-50%) scale(1.1); box-shadow: 0 0 20px #00ff00; }
         
         .terminal-overlay {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 80%;
-            max-width: 700px;
-            height: 500px;
-            background: rgba(0, 0, 0, 0.95);
-            border: 2px solid #00ff00;
-            z-index: 10001;
-            display: none;
-            flex-direction: column;
-            border-radius: 5px;
-            box-shadow: 0 0 30px rgba(0, 255, 0, 0.2);
-            font-family: 'Courier New', Courier, monospace;
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80%; max-width: 700px; height: 500px;
+            background: rgba(0, 0, 0, 0.95); border: 2px solid #00ff00; z-index: 10001; display: none; flex-direction: column;
+            border-radius: 5px; box-shadow: 0 0 30px rgba(0, 255, 0, 0.2); font-family: 'Courier New', Courier, monospace;
         }
         .terminal-overlay.open { display: flex; animation: terminalPop 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28); }
         
-        @keyframes terminalPop {
-            from { opacity: 0; transform: translate(-50%, -40%) scale(0.9); }
-            to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-        }
+        @keyframes terminalPop { from { opacity: 0; transform: translate(-50%, -40%) scale(0.9); } to { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
 
-        .terminal-header-bar {
-            background: #003300;
-            color: #00ff00;
-            padding: 5px 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #00ff00;
-            font-size: 0.9rem;
-            font-weight: bold;
-        }
+        .terminal-header-bar { background: #003300; color: #00ff00; padding: 5px 10px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #00ff00; font-size: 0.9rem; font-weight: bold; }
         .terminal-close { cursor: pointer; }
-        
-        .terminal-content { flex: 1; padding: 15px; overflow-y: auto; color: #00ff00; font-size: 1rem; }
+        .terminal-content { flex: 1; padding: 15px; overflow-y: auto; color: #00ff00; font-size: 1rem; position: relative; }
         .terminal-line { margin-bottom: 5px; word-wrap: break-word; }
-        .terminal-input-area { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+        .terminal-input-area { display: flex; align-items: center; gap: 10px; margin-top: 10px; padding: 10px; }
         .prompt { color: #00ff00; font-weight: bold; }
         #term-input { background: transparent; border: none; color: #00ff00; flex: 1; font-family: 'Courier New', Courier, monospace; font-size: 1rem; outline: none; }
-
         body.hacker-mode .terminal-trigger { display: flex; }
+
+        /* SNAKE GAME CANVAS */
+        #snake-canvas {
+            display: none;
+            background: #001100;
+            border: 1px solid #00ff00;
+            margin: 10px auto;
+            image-rendering: pixelated;
+        }
 
         /* =========================================
            9. PRINT MODE
            ========================================= */
         @media print {
-            .admin-controls, .theme-toggle, .translate-container, 
-            .btn-action, .btn-delete, .btn-add, .task-controls,
-            .cv-download-wrapper, .btn-submit, .form-group, .chat-widget,
-            .btn-calendly, .terminal-trigger, .terminal-overlay, #neural-graph { display: none !important; }
-
-            .tech-grid { display: grid !important; } /* Force grid on print */
-
-            body, .section, .sidebar, .category-box, .project-card, .cert-item {
-                background: white !important;
-                color: black !important;
-                box-shadow: none !important;
-                border: 1px solid #ddd !important;
-                text-shadow: none !important;
-            }
-
+            .admin-controls, .theme-toggle, .translate-container, .btn-action, .btn-delete, .btn-add, .task-controls,
+            .cv-download-wrapper, .btn-submit, .form-group, .chat-widget, .btn-calendly, .terminal-trigger, .terminal-overlay, #neural-graph { display: none !important; }
+            .tech-grid { display: grid !important; }
+            body, .section, .sidebar, .category-box, .project-card, .cert-item { background: white !important; color: black !important; box-shadow: none !important; border: 1px solid #ddd !important; text-shadow: none !important; }
             .container { display: block; padding-top: 0; }
             .sidebar { margin-bottom: 20px; border: none; padding: 0; text-align: left; position: static; }
-            .profile-wrapper { width: 100px; height: 100px; float: right; margin: 0; }
-            .main-content { gap: 15px; }
-            .section { padding: 10px 0; border: none; border-bottom: 1px solid #eee; break-inside: avoid; }
-            
-            a::after { content: " (" attr(href) ")"; font-size: 0.8rem; color: #666; }
-            .project-link, .cert-link { background: none; color: black; padding: 0; text-decoration: underline; }
             .reveal { opacity: 1 !important; transform: none !important; }
         }
     </style>
@@ -506,6 +385,7 @@
             </div>
             <div class="typing-indicator" id="typing-indicator">L'IA écrit...</div>
             <form class="chat-footer" onsubmit="handleChat(event)">
+                <button type="button" class="chat-mic" onclick="toggleVoice()" title="Parler"><i class="fas fa-microphone"></i></button>
                 <input type="text" id="chat-input" class="chat-input" placeholder="Posez votre question..." autocomplete="off">
                 <button type="submit" class="chat-send"><i class="fas fa-paper-plane"></i></button>
             </form>
@@ -525,8 +405,10 @@
         <div class="terminal-content" id="terminal-content">
             <div class="terminal-line">Bienvenue dans le Terminal Interactif d'Assami v1.0.</div>
             <div class="terminal-line">Tapez 'help' pour voir les commandes disponibles.</div>
+            <div class="terminal-line">Tapez 'game' pour jouer au Snake 🐍.</div>
+            <canvas id="snake-canvas" width="400" height="300"></canvas>
         </div>
-        <div class="terminal-input-area">
+        <div class="terminal-input-area" id="terminal-input-bar">
             <span class="prompt">visitor@assami:~$</span>
             <input type="text" id="term-input" autocomplete="off" spellcheck="false">
         </div>
@@ -665,7 +547,6 @@
             }
 
             await loadData();
-            // Une fois les données chargées, on lance le thème (qui peut lancer le graphe)
             initTheme();
             await handleVisits();
         }
@@ -675,8 +556,6 @@
                 const { data, error } = await supabaseClient.from(DB_TABLE).select('json_data').eq('id', CV_ID).single();
                 if (data && data.json_data) {
                     cvData = data.json_data;
-                } else if (user) {
-                      if(confirm("Initialiser la base ?")) saveDataToSupabase();
                 }
                 render();
             } catch (err) { console.warn(err); render(); }
@@ -731,16 +610,8 @@
         
         async function resetDatabase() {
             if (!user || !confirm("⚠️ Tout effacer et remettre à zéro ?")) return;
-            const { error: cvError } = await supabaseClient.from(DB_TABLE).upsert({ id: CV_ID, json_data: DEFAULT_DATA });
-            if (cvError) {
-                console.error("Erreur CV:", cvError);
-                return;
-            }
-            const { error: statsError } = await supabaseClient.from('site_stats').upsert({ id: 1, visits: 0 });
-            if (statsError) {
-                console.error("Erreur Stats:", statsError);
-                return;
-            }
+            await supabaseClient.from(DB_TABLE).upsert({ id: CV_ID, json_data: DEFAULT_DATA });
+            await supabaseClient.from('site_stats').upsert({ id: 1, visits: 0 });
             cvData = JSON.parse(JSON.stringify(DEFAULT_DATA));
             document.getElementById('visit-count').innerText = "0";
             alert("♻️ Réinitialisé !");
@@ -851,20 +722,17 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
 
-        // --- C. NEURAL GRAPH (VIS.JS) ---
         function initNeuralGraph() {
             const container = document.getElementById('neural-graph');
-            if (!container) return; // Sécurité
+            if (!container) return;
 
             const nodes = []; const edges = []; let idCounter = 1;
-            // Central Node
             nodes.push({ id: 0, label: "Assami", color: "#e74c3c", size: 40, shape: "circle", font: { color: "white", size: 20 } });
 
             (cvData.techSkills || []).forEach((cat, i) => {
                 const catId = idCounter++;
                 nodes.push({ id: catId, label: cat.cat, color: "#3498db", size: 25, shape: "dot", font: { color: "#00d2ff", size: 16 } });
                 edges.push({ from: 0, to: catId, color: { color: "rgba(52, 152, 219, 0.4)" } });
-
                 const tools = cat.tools.split(',');
                 tools.forEach(tool => {
                     const toolId = idCounter++;
@@ -886,32 +754,27 @@
             network.once("stabilizationIterationsDone", function() { network.fit({ animation: { duration: 1000 } }); });
         }
 
-        // --- D. THEME SWITCH ---
         function toggleTheme() {
             const body = document.body;
             let newTheme = 'light';
-            
-            if(body.classList.contains('hacker-mode')) document.getElementById('terminal-overlay').classList.remove('open');
+            if(body.classList.contains('hacker-mode')) {
+                document.getElementById('terminal-overlay').classList.remove('open');
+                stopSnakeGame();
+            }
 
             if (body.classList.contains('dark-mode')) {
-                // -> Neural
                 body.classList.remove('dark-mode'); body.classList.add('neural-mode'); newTheme = 'neural';
-                startNeural();
-                setTimeout(initNeuralGraph, 100); 
+                startNeural(); setTimeout(initNeuralGraph, 100); 
             } else if (body.classList.contains('neural-mode')) {
-                // -> Hacker
                 body.classList.remove('neural-mode'); body.classList.add('hacker-mode'); newTheme = 'hacker';
                 startMatrix();
             } else if (body.classList.contains('hacker-mode')) {
-                // -> Light
                 body.classList.remove('hacker-mode'); newTheme = 'light';
                 stopAnimation();
             } else {
-                // -> Dark
                 body.classList.add('dark-mode'); newTheme = 'dark';
                 stopAnimation();
             }
-            
             localStorage.setItem('theme', newTheme);
             updateThemeIcon(newTheme);
         }
@@ -983,14 +846,6 @@
                             </a>
                             <input type="file" id="cv-upload" accept="application/pdf" style="display:none">
                         </div>
-
-                        <div style="margin-top: 30px; font-size: 0.7rem; color: var(--card-border); opacity: 0.5; letter-spacing: 2px;" title="Try this sequence...">
-                            <i class="fas fa-arrow-up"></i><i class="fas fa-arrow-up"></i>
-                            <i class="fas fa-arrow-down"></i><i class="fas fa-arrow-down"></i>
-                            <i class="fas fa-arrow-left"></i><i class="fas fa-arrow-right"></i>
-                            <i class="fas fa-arrow-left"></i><i class="fas fa-arrow-right"></i>
-                            B A
-                        </div>
                         
                         <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--card-border);">
                         
@@ -1022,32 +877,8 @@
                         </section>
 
                         <section class="section">
-                            <h2 class="section-title">💼 Expériences Professionnelles</h2>
-                            ${(cvData.experience || []).map((exp, i) => `
-                                <div class="timeline-item">
-                                    ${delBtn('experience', i)}
-                                    <div class="job-title ${editClass}" ${contentEditable} oninput="updateArrayItem('experience', ${i}, 'role', this.innerText)">${exp.role}</div>
-                                    <div class="company ${editClass}" ${contentEditable} oninput="updateArrayItem('experience', ${i}, 'company', this.innerText)">${exp.company}</div>
-                                    <span class="date ${editClass}" ${contentEditable} oninput="updateArrayItem('experience', ${i}, 'date', this.innerText)">${exp.date}</span>
-                                    <div class="description">
-                                        <ul>
-                                            ${(exp.tasks || []).map((t, ti) => `
-                                                <li>
-                                                    <span class="${editClass}" ${contentEditable} oninput="updateTask(${i}, ${ti}, this.innerText)">${t}</span>
-                                                    <span class="task-controls"><button class="btn-task-del" onclick="deleteTask(${i}, ${ti})">x</button></span>
-                                                </li>`).join('')}
-                                        </ul>
-                                        <button class="btn-task-add" onclick="addTask(${i})">+ Tâche</button>
-                                    </div>
-                                </div>`).join('')}
-                            <button class="btn-action btn-add" onclick="addItem('experience')"><i class="fas fa-plus"></i> Ajouter</button>
-                        </section>
-
-                        <section class="section">
                             <h2 class="section-title">💻 Compétences Techniques</h2>
-                            
                             <div id="neural-graph"></div>
-
                             <div class="tech-grid">
                                 ${(cvData.techSkills || []).map((skill, i) => { 
                                     const contentHtml = isEditing 
@@ -1065,19 +896,33 @@
                         </section>
                         
                         <section class="section">
+                            <h2 class="section-title">💼 Expériences Professionnelles</h2>
+                            ${(cvData.experience || []).map((exp, i) => `
+                                <div class="timeline-item">
+                                    ${delBtn('experience', i)}
+                                    <div class="job-title ${editClass}" ${contentEditable} oninput="updateArrayItem('experience', ${i}, 'role', this.innerText)">${exp.role}</div>
+                                    <div class="company ${editClass}" ${contentEditable} oninput="updateArrayItem('experience', ${i}, 'company', this.innerText)">${exp.company}</div>
+                                    <span class="date ${editClass}" ${contentEditable} oninput="updateArrayItem('experience', ${i}, 'date', this.innerText)">${exp.date}</span>
+                                    <div class="description">
+                                        <ul>
+                                            ${(exp.tasks || []).map((t, ti) => `<li><span class="${editClass}" ${contentEditable} oninput="updateTask(${i}, ${ti}, this.innerText)">${t}</span><span class="task-controls"><button class="btn-task-del" onclick="deleteTask(${i}, ${ti})">x</button></span></li>`).join('')}
+                                        </ul>
+                                        <button class="btn-task-add" onclick="addTask(${i})">+ Tâche</button>
+                                    </div>
+                                </div>`).join('')}
+                            <button class="btn-action btn-add" onclick="addItem('experience')"><i class="fas fa-plus"></i> Ajouter</button>
+                        </section>
+
+                        <section class="section">
                             <h2 class="section-title">🏆 Projets Phares</h2>
                             <div class="project-grid">
                                 ${(cvData.projects || []).map((proj, i) => `
                                     <div class="project-card">
                                         ${delBtn('projects', i)}
-                                        <div class="project-header">
-                                            <h3 class="${editClass}" ${contentEditable} oninput="updateArrayItem('projects', ${i}, 'name', this.innerText)"><i class="fas fa-robot"></i> ${proj.name}</h3>
-                                        </div>
+                                        <div class="project-header"><h3 class="${editClass}" ${contentEditable} oninput="updateArrayItem('projects', ${i}, 'name', this.innerText)"><i class="fas fa-robot"></i> ${proj.name}</h3></div>
                                         <p class="project-desc ${editClass}" ${contentEditable} oninput="updateArrayItem('projects', ${i}, 'desc', this.innerText)">${proj.desc}</p>
                                         <div class="project-tech ${editClass}" ${contentEditable} oninput="updateArrayItem('projects', ${i}, 'tech', this.innerText)">${proj.tech}</div>
-                                        <a href="${isEditing ? '#' : proj.link}" target="${isEditing ? '_self' : '_blank'}" class="project-link" ${isEditing ? 'onclick="event.preventDefault();"' : ''}>
-                                            <span class="${editClass}" ${contentEditable} oninput="updateArrayItem('projects', ${i}, 'link', this.innerText)">${isEditing ? proj.link : 'Voir le projet'}</span>
-                                        </a>
+                                        <a href="${isEditing ? '#' : proj.link}" target="${isEditing ? '_self' : '_blank'}" class="project-link" ${isEditing ? 'onclick="event.preventDefault();"' : ''}><span class="${editClass}" ${contentEditable} oninput="updateArrayItem('projects', ${i}, 'link', this.innerText)">${isEditing ? proj.link : 'Voir le projet'}</span></a>
                                     </div>`).join('')}
                             </div>
                             <button class="btn-action btn-add" onclick="addItem('projects')"><i class="fas fa-plus"></i> Ajouter un projet</button>
@@ -1090,9 +935,7 @@
                                     <div class="cert-item">
                                         ${delBtn('certifications', i)}
                                         <div class="cert-name ${editClass}" ${contentEditable} oninput="updateArrayItem('certifications', ${i}, 'name', this.innerText)">${cert.name}</div>
-                                        <a href="${isEditing ? '#' : cert.link}" target="${isEditing ? '_self' : '_blank'}" class="cert-link" ${isEditing ? 'onclick="event.preventDefault();"' : ''}>
-                                            <i class="fas fa-external-link-alt"></i><span class="${editClass}" ${contentEditable} oninput="updateArrayItem('certifications', ${i}, 'link', this.innerText)">${isEditing ? cert.link : 'Voir'}</span>
-                                        </a>
+                                        <a href="${isEditing ? '#' : cert.link}" target="${isEditing ? '_self' : '_blank'}" class="cert-link" ${isEditing ? 'onclick="event.preventDefault();"' : ''}><i class="fas fa-external-link-alt"></i><span class="${editClass}" ${contentEditable} oninput="updateArrayItem('certifications', ${i}, 'link', this.innerText)">${isEditing ? cert.link : 'Voir'}</span></a>
                                     </div>`).join('')}
                             </div>
                             <button class="btn-action btn-add" onclick="addItem('certifications')"><i class="fas fa-plus"></i> Ajouter</button>
@@ -1100,31 +943,18 @@
 
                         <section class="section" id="contact">
                             <h2 class="section-title">📬 Me Contacter</h2>
-                            
-                            <a href="https://calendly.com/bagaassami09/30min" target="_blank" class="btn-calendly">
-                                <i class="fas fa-calendar-alt"></i> 📅 Réserver un appel (Calendly)
-                            </a>
-
+                            <a href="https://calendly.com/bagaassami09/30min" target="_blank" class="btn-calendly"><i class="fas fa-calendar-alt"></i> 📅 Réserver un appel (Calendly)</a>
                             <form class="contact-form" onsubmit="handleContactSubmit(event)">
                                 <div class="form-group"><input type="text" name="name" placeholder="Votre nom" required></div>
                                 <div class="form-group"><input type="email" name="email" placeholder="Votre email" required></div>
                                 <div class="form-group"><textarea name="message" placeholder="Votre message..." required></textarea></div>
                                 <button type="submit" class="btn-submit"><i class="fas fa-paper-plane"></i> Envoyer le message</button>
                             </form>
-
                             ${isEditing ? `
                                 <div class="messages-list">
                                     <h3 style="margin-bottom:15px; color:var(--warning)"><i class="fas fa-inbox"></i> Messages reçus (${messages.length})</h3>
-                                    ${messages.length === 0 ? '<p style="color:var(--text-muted)">Aucun message.</p>' : ''}
-                                    ${messages.map(msg => `
-                                        <div class="message-card">
-                                            <button class="btn-delete" onclick="deleteMessage(${msg.id})" style="top:5px; right:5px; display:flex;"><i class="fas fa-trash"></i></button>
-                                            <div class="msg-header"><span class="msg-sender"><i class="fas fa-user"></i> ${msg.name} (${msg.email})</span><span>${new Date(msg.created_at).toLocaleDateString()}</span></div>
-                                            <div class="msg-body">${msg.message}</div>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            ` : ''}
+                                    ${messages.map(msg => `<div class="message-card"><button class="btn-delete" onclick="deleteMessage(${msg.id})" style="top:5px; right:5px; display:flex;"><i class="fas fa-trash"></i></button><div class="msg-header"><span class="msg-sender"><i class="fas fa-user"></i> ${msg.name} (${msg.email})</span><span>${new Date(msg.created_at).toLocaleDateString()}</span></div><div class="msg-body">${msg.message}</div></div>`).join('')}
+                                </div>` : ''}
                         </section>
                     </main>
                 </div>
@@ -1165,16 +995,18 @@
             if (data && document.getElementById('visit-count')) document.getElementById('visit-count').innerText = data.visits;
         }
 
+        // ==========================================
+        // 8. CHATBOT & VOICE
+        // ==========================================
         function toggleChat() {
             const w = document.getElementById('chat-window'); w.classList.toggle('open');
             if(w.classList.contains('open')) document.getElementById('chat-input').focus();
         }
         function clearChat() { document.getElementById('chat-body').innerHTML = '<div class="chat-message bot">Bonjour ! Je suis l\'IA d\'Assami. Posez-moi une question sur son parcours, ses projets ou ses technos ! 🤖</div>'; }
 
-        // --- CHATBOT LOGIC ---
         function findLocalResponse(input) {
             const text = input.toLowerCase(); const p = cvData.personal || {};
-            if (text.match(/secret|hacker|console|terminal|code|admin|caché/)) return "Shhh 🤫 ! Si vous voulez accéder au système, tapez le Konami Code sur votre clavier : ↑ ↑ ↓ ↓ ← → ← → B A";
+            if (text.match(/secret|hacker|console|terminal|code|admin|caché/)) return "Shhh 🤫 ! Si vous voulez accéder au système, tapez le Konami Code : ↑ ↑ ↓ ↓ ← → ← → B A";
             if (text.match(/contact|email|mail|téléphone|tel|joindre/)) return `Vous pouvez me contacter par :\n- Email : ${p.email}\n- Tél : ${p.phone}\n- LinkedIn : ${p.linkedin}`;
             if (text.match(/dispo|quand|date|début|libre/)) return `Je suis actuellement : ${p.availability}.`;
             if (text.match(/techno|stack|langage|outil|compétence/)) return `Voici un aperçu de ma stack : ${(cvData.techSkills || []).map(s => s.tools).join(', ').substring(0, 100)}...`;
@@ -1199,11 +1031,51 @@
             const body = document.getElementById('chat-body'); const div = document.createElement('div'); div.className = `chat-message ${sender}`; div.innerText = text; body.appendChild(div); body.scrollTop = body.scrollHeight; 
         }
 
-        // --- KONAMI & TERMINAL ---
+        // VOICE DICTATION
+        function toggleVoice() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) { alert("Votre navigateur ne supporte pas la reconnaissance vocale."); return; }
+            const micBtn = document.querySelector('.chat-mic');
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'fr-FR'; recognition.interimResults = false; recognition.maxAlternatives = 1;
+
+            micBtn.classList.add('listening');
+            recognition.start();
+
+            recognition.onresult = (event) => {
+                const text = event.results[0][0].transcript;
+                document.getElementById('chat-input').value = text;
+                micBtn.classList.remove('listening');
+                // Auto submit ? Optionnel: handleChat({ preventDefault: ()=>{} });
+            };
+            recognition.onspeechend = () => { recognition.stop(); micBtn.classList.remove('listening'); };
+            recognition.onerror = () => { micBtn.classList.remove('listening'); alert("Erreur vocale."); };
+        }
+
+        // ==========================================
+        // 9. KONAMI, TERMINAL & SNAKE GAME
+        // ==========================================
         const konamiCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
         let konamiIndex = 0;
+        let isSnakePlaying = false;
+        let snakeGameInterval;
+        let snake = [];
+        let food = {};
+        let snakeDir = 'RIGHT';
+        let snakeScore = 0;
 
         document.addEventListener('keydown', (e) => {
+            // Si le Snake tourne, on empêche le scroll et on gère le jeu
+            if (isSnakePlaying) {
+                if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key)) e.preventDefault();
+                if(e.key === 'ArrowUp' && snakeDir !== 'DOWN') snakeDir = 'UP';
+                else if(e.key === 'ArrowDown' && snakeDir !== 'UP') snakeDir = 'DOWN';
+                else if(e.key === 'ArrowLeft' && snakeDir !== 'RIGHT') snakeDir = 'LEFT';
+                else if(e.key === 'ArrowRight' && snakeDir !== 'LEFT') snakeDir = 'RIGHT';
+                else if(e.key === 'Escape' || e.key.toLowerCase() === 'q') stopSnakeGame();
+                return;
+            }
+            // Sinon logique Konami
             if (e.key === konamiCode[konamiIndex]) {
                 konamiIndex++;
                 if (konamiIndex === konamiCode.length) { activateHackerTerminal(); konamiIndex = 0; }
@@ -1216,9 +1088,13 @@
         }
 
         function toggleTerminal() {
-            const term = document.getElementById('terminal-overlay'); const input = document.getElementById('term-input');
-            term.classList.toggle('open'); if(term.classList.contains('open')) input.focus();
+            const term = document.getElementById('terminal-overlay'); 
+            const input = document.getElementById('term-input');
+            term.classList.toggle('open'); 
+            if(term.classList.contains('open')) input.focus();
+            else stopSnakeGame();
         }
+
         function writeToTerminal(text) {
             const content = document.getElementById('terminal-content'); const div = document.createElement('div'); div.className = 'terminal-line'; div.innerText = text; content.appendChild(div); content.scrollTop = content.scrollHeight;
         }
@@ -1230,21 +1106,108 @@
         function processCommand(cmd) {
             const p = cvData.personal || {};
             switch(cmd) {
-                case 'help': writeToTerminal("Available: whoami, skills, projects, contact, clear, exit"); break;
+                case 'help': writeToTerminal("Available: whoami, skills, projects, contact, game, clear, exit"); break;
                 case 'whoami': writeToTerminal(`USER: ${p.name}\nROLE: ${p.title}\nSTATUS: ${p.availability}`); break;
                 case 'contact': writeToTerminal(`EMAIL: ${p.email}\nPHONE: ${p.phone}`); break;
                 case 'skills': (cvData.techSkills || []).forEach(c => writeToTerminal(`[${c.cat}]: ${c.tools.substring(0, 50)}...`)); break;
                 case 'projects': (cvData.projects || []).slice(0, 5).forEach(proj => writeToTerminal(`* ${proj.name} - ${proj.tech}`)); break;
                 case 'clear': document.getElementById('terminal-content').innerHTML = ''; break;
                 case 'exit': toggleTerminal(); break;
+                case 'game': case 'snake': startSnakeGame(); break;
                 default: writeToTerminal(`Command not found: ${cmd}`);
             }
         }
 
+        // --- SNAKE GAME LOGIC ---
+        function startSnakeGame() {
+            isSnakePlaying = true;
+            document.getElementById('snake-canvas').style.display = 'block';
+            document.getElementById('terminal-input-bar').style.display = 'none'; // Cache l'input pendant le jeu
+            writeToTerminal(">> LAUNCHING SNAKE... (Use Arrows to move, ESC to quit)");
+            
+            const canvas = document.getElementById('snake-canvas');
+            const ctx = canvas.getContext('2d');
+            const box = 20; 
+            snake = []; snake[0] = { x: 10 * box, y: 10 * box };
+            food = { x: Math.floor(Math.random() * (canvas.width/box)) * box, y: Math.floor(Math.random() * (canvas.height/box)) * box };
+            snakeDir = 'RIGHT';
+            snakeScore = 0;
+
+            if(snakeGameInterval) clearInterval(snakeGameInterval);
+            snakeGameInterval = setInterval(drawSnakeGame, 100);
+        }
+
+        function stopSnakeGame() {
+            isSnakePlaying = false;
+            if(snakeGameInterval) clearInterval(snakeGameInterval);
+            document.getElementById('snake-canvas').style.display = 'none';
+            document.getElementById('terminal-input-bar').style.display = 'flex';
+            document.getElementById('term-input').focus();
+            writeToTerminal(">> GAME OVER. Score: " + snakeScore);
+        }
+
+        function drawSnakeGame() {
+            const canvas = document.getElementById('snake-canvas');
+            const ctx = canvas.getContext('2d');
+            const box = 20;
+
+            // Fond
+            ctx.fillStyle = "#001100";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Snake
+            for(let i = 0; i < snake.length; i++) {
+                ctx.fillStyle = (i === 0) ? "#00FF00" : "#00AA00";
+                ctx.fillRect(snake[i].x, snake[i].y, box, box);
+                ctx.strokeStyle = "#000";
+                ctx.strokeRect(snake[i].x, snake[i].y, box, box);
+            }
+
+            // Food
+            ctx.fillStyle = "red";
+            ctx.fillRect(food.x, food.y, box, box);
+
+            // Logic Position
+            let snakeX = snake[0].x;
+            let snakeY = snake[0].y;
+
+            if(snakeDir == "LEFT") snakeX -= box;
+            if(snakeDir == "UP") snakeY -= box;
+            if(snakeDir == "RIGHT") snakeX += box;
+            if(snakeDir == "DOWN") snakeY += box;
+
+            // Manger
+            if(snakeX == food.x && snakeY == food.y) {
+                snakeScore++;
+                food = { x: Math.floor(Math.random() * (canvas.width/box)) * box, y: Math.floor(Math.random() * (canvas.height/box)) * box };
+            } else {
+                snake.pop();
+            }
+
+            // Game Over Rules
+            if(snakeX < 0 || snakeX >= canvas.width || snakeY < 0 || snakeY >= canvas.height || collision(snakeX, snakeY, snake)) {
+                stopSnakeGame();
+                return;
+            }
+
+            let newHead = { x: snakeX, y: snakeY };
+            snake.unshift(newHead);
+
+            // Score Draw
+            ctx.fillStyle = "white";
+            ctx.font = "16px Courier New";
+            ctx.fillText("Score: " + snakeScore, 10, 20);
+        }
+
+        function collision(x, y, array) {
+            for(let i = 0; i < array.length; i++) {
+                if(x == array[i].x && y == array[i].y) return true;
+            }
+            return false;
+        }
+
         // INIT
         init();
-        
-        // SECRET CONSOLE MSG
         console.log("%c🕵️ Vous inspectez le code ?","color: #3498db; font-size: 16px; font-weight: bold;");
         console.log("%cEssayez le Konami Code : ↑ ↑ ↓ ↓ ← → ← → B A","color: #e74c3c; font-size: 12px;");
     </script>
