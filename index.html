@@ -907,17 +907,6 @@
                         </section>
 
                         <section class="section">
-                            <h2 class="section-title">🎯 Recruteurs : Testez le Match !</h2>
-                            <p>Collez votre offre d'emploi ci-dessous pour voir si mon profil correspond via une analyse sémantique avancée.</p>
-                            <div class="form-group" style="margin-top:15px;">
-                                <textarea id="jd-input" placeholder="Collez la description du poste ici..." style="min-height:100px; resize:vertical;"></textarea>
-                            </div>
-                            <button class="btn-submit" onclick="calculateMatch()" style="margin-top:10px; width:100%;">Analyser la compatibilité</button>
-                            
-                            <div id="match-result" class="category-box" style="display:none; margin-top:20px; border-left-color: var(--success);"></div>
-                        </section>
-
-                        <section class="section">
                             <h2 class="section-title">💻 Compétences Techniques</h2>
                             <div id="neural-graph"></div>
                             <div class="tech-grid">
@@ -980,6 +969,17 @@
                                     </div>`).join('')}
                             </div>
                             <button class="btn-action btn-add" onclick="addItem('certifications')"><i class="fas fa-plus"></i> Ajouter</button>
+                        </section>
+
+                        <section class="section">
+                            <h2 class="section-title">🎯 Recruteurs : Testez le Match !</h2>
+                            <p>Collez votre offre d'emploi ci-dessous pour voir si mon profil correspond via une analyse sémantique avancée.</p>
+                            <div class="form-group" style="margin-top:15px;">
+                                <textarea id="jd-input" placeholder="Collez la description du poste ici..." style="min-height:100px; resize:vertical;"></textarea>
+                            </div>
+                            <button class="btn-submit" onclick="calculateMatch()" style="margin-top:10px; width:100%;">Analyser la compatibilité</button>
+                            
+                            <div id="match-result" class="category-box" style="display:none; margin-top:20px; border-left-color: var(--success);"></div>
                         </section>
 
                         <section class="section" id="contact">
