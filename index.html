@@ -297,13 +297,13 @@
             network: null
         };
 
-        const supabase = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey);
+        const supabaseClient = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey);
 
         // ==========================================
         // CORE FUNCTIONS
         // ==========================================
         async function init() {
-            const { data: { session } } = await supabase.auth.getSession();
+            const { data: { session } } = await supabaseClient.auth.getSession();
             if (session) {
                 state.user = session.user;
                 document.body.classList.add('logged-in');
@@ -317,7 +317,7 @@
 
         async function loadData() {
             try {
-                const { data } = await supabase.from(CONFIG.table).select('json_data').eq('id', CONFIG.cvId).single();
+                const { data } = await supabaseClient.from(CONFIG.table).select('json_data').eq('id', CONFIG.cvId).single();
                 if (data?.json_data) state.cvData = data.json_data;
             } catch (e) { console.error("Load Error", e); }
             render();
@@ -483,20 +483,20 @@
         window.login = async () => {
             const email = prompt("Email:"); const pass = prompt("Pass:");
             if(!email || !pass) return;
-            const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
             if (!error) location.reload(); else alert(error.message);
         };
-        window.logout = async () => { await supabase.auth.signOut(); location.reload(); };
+        window.logout = async () => { await supabaseClient.auth.signOut(); location.reload(); };
         window.saveDataToSupabase = async () => {
-            const { error } = await supabase.from(CONFIG.table).upsert({ id: CONFIG.cvId, json_data: state.cvData });
+            const { error } = await supabaseClient.from(CONFIG.table).upsert({ id: CONFIG.cvId, json_data: state.cvData });
             alert(error ? "Erreur: " + error.message : "Sauvegardé !");
         };
         window.handleUpload = async (input, field) => {
             const file = input.files[0]; if(!file) return;
             const name = Date.now() + '_' + file.name.replace(/\s/g, '');
-            const { error } = await supabase.storage.from(CONFIG.bucket).upload(name, file);
+            const { error } = await supabaseClient.storage.from(CONFIG.bucket).upload(name, file);
             if(!error) {
-                const { data } = supabase.storage.from(CONFIG.bucket).getPublicUrl(name);
+                const { data } = supabaseClient.storage.from(CONFIG.bucket).getPublicUrl(name);
                 state.cvData.personal[field] = data.publicUrl;
                 render();
             } else alert(error.message);
@@ -505,7 +505,7 @@
             e.preventDefault();
             const btn = e.target.querySelector('button'); btn.innerText = 'Envoi...'; btn.disabled = true;
             const form = Object.fromEntries(new FormData(e.target));
-            const { error } = await supabase.from('messages').insert(form);
+            const { error } = await supabaseClient.from('messages').insert(form);
             alert(error ? "Erreur" : "Message envoyé !");
             e.target.reset(); btn.innerText = 'Envoyer'; btn.disabled = false;
         };
@@ -713,7 +713,7 @@
             
             try {
                 // Appel Edge Function (ou fallback local)
-                const { data, error } = await supabase.functions.invoke('chat-resume', { body: { question: txt, context: state.cvData } });
+                const { data, error } = await supabaseClient.functions.invoke('chat-resume', { body: { question: txt, context: state.cvData } });
                 const reply = error ? localBot(txt) : data.reply;
                 addMsg(reply, 'bot');
             } catch { addMsg(localBot(txt), 'bot'); }
@@ -741,10 +741,10 @@
 
         async function handleVisits() {
             if (!sessionStorage.getItem('visited')) { 
-                await supabase.rpc('increment_visits'); 
+                await supabaseClient.rpc('increment_visits'); 
                 sessionStorage.setItem('visited', 'true'); 
             }
-            const { data } = await supabase.from('site_stats').select('visits').single();
+            const { data } = await supabaseClient.from('site_stats').select('visits').single();
             if (data) document.getElementById('visit-count').innerText = data.visits;
         }
 
