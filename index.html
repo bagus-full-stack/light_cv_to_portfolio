@@ -101,6 +101,30 @@
             --glow: 0 0 4px rgba(0, 255, 0, 0.4);
         }
 
+        /* --- MODE SYSTEM CRASH (Animation rm -rf) --- */
+        body.system-crash {
+            background-color: #000 !important;
+            overflow: hidden !important;
+        }
+        body.system-crash * {
+            display: none !important;
+        }
+        body.system-crash::after {
+            content: "CRITICAL ERROR: SYSTEM DELETED.\00000a REBOOTING KERNEL...";
+            white-space: pre;
+            color: #ff0000;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1.5rem;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            display: block !important;
+            animation: blink 0.5s infinite;
+        }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
+
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: var(--font-main); }
         
         body { 
@@ -404,9 +428,9 @@
             <span class="terminal-close" onclick="toggleTerminal()">[X]</span>
         </div>
         <div class="terminal-content" id="terminal-content">
-            <div class="terminal-line">Bienvenue dans le Terminal Interactif d'Assami v1.0.</div>
+            <div class="terminal-line">Bienvenue dans le Terminal Interactif d'Assami v2.0.</div>
             <div class="terminal-line">Tapez 'help' pour voir les commandes disponibles.</div>
-            <div class="terminal-line">Tapez 'game' pour jouer au Snake 🐍.</div>
+            <div class="terminal-line">Nouveau : Système de fichiers activé. Essayez 'ls'.</div>
             <canvas id="snake-canvas" width="400" height="300"></canvas>
         </div>
         <div class="terminal-input-area" id="terminal-input-bar">
@@ -1047,14 +1071,13 @@
                 const text = event.results[0][0].transcript;
                 document.getElementById('chat-input').value = text;
                 micBtn.classList.remove('listening');
-                // Auto submit ? Optionnel: handleChat({ preventDefault: ()=>{} });
             };
             recognition.onspeechend = () => { recognition.stop(); micBtn.classList.remove('listening'); };
             recognition.onerror = () => { micBtn.classList.remove('listening'); alert("Erreur vocale."); };
         }
 
         // ==========================================
-        // 9. KONAMI, TERMINAL & SNAKE GAME
+        // 9. KONAMI, TERMINAL & SNAKE GAME (NAV SIMULATION)
         // ==========================================
         const konamiCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
         let konamiIndex = 0;
@@ -1066,7 +1089,6 @@
         let snakeScore = 0;
 
         document.addEventListener('keydown', (e) => {
-            // Si le Snake tourne, on empêche le scroll et on gère le jeu
             if (isSnakePlaying) {
                 if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key)) e.preventDefault();
                 if(e.key === 'ArrowUp' && snakeDir !== 'DOWN') snakeDir = 'UP';
@@ -1076,7 +1098,6 @@
                 else if(e.key === 'Escape' || e.key.toLowerCase() === 'q') stopSnakeGame();
                 return;
             }
-            // Sinon logique Konami
             if (e.key === konamiCode[konamiIndex]) {
                 konamiIndex++;
                 if (konamiIndex === konamiCode.length) { activateHackerTerminal(); konamiIndex = 0; }
@@ -1101,17 +1122,66 @@
         }
 
         document.getElementById('term-input').addEventListener('keydown', function(e) {
-            if(e.key === 'Enter') { const cmd = this.value.trim().toLowerCase(); if(cmd) { writeToTerminal(`visitor@assami:~$ ${cmd}`); processCommand(cmd); } this.value = ''; }
+            if(e.key === 'Enter') { const cmd = this.value.trim(); if(cmd) { writeToTerminal(`visitor@assami:~$ ${cmd}`); processCommand(cmd); } this.value = ''; }
         });
 
-        function processCommand(cmd) {
-            const p = cvData.personal || {};
+        // ------------------------------------
+        // LOGIQUE DE FICHIERS ET COMMANDES
+        // ------------------------------------
+        
+        function getFileSystem() {
+            return {
+                "cv.pdf": "Binary file: please use the GUI to download.",
+                "skills.json": JSON.stringify(cvData.techSkills, null, 2),
+                "passwords.txt": "Nice try! 🕵️‍♂️ But security is my priority.",
+                "about.me": cvData.personal.summary,
+                "contact.txt": `Email: ${cvData.personal.email}\nPhone: ${cvData.personal.phone}`,
+                "projects.log": cvData.projects.map(p => `[${p.name}] - ${p.tech}`).join('\n')
+            };
+        }
+
+        function processCommand(cmdString) {
+            const parts = cmdString.split(' ');
+            const cmd = parts[0].toLowerCase();
+            const arg = parts[1];
+            
+            const fileSystem = getFileSystem();
+
             switch(cmd) {
-                case 'help': writeToTerminal("Available: whoami, skills, projects, contact, game, clear, exit"); break;
-                case 'whoami': writeToTerminal(`USER: ${p.name}\nROLE: ${p.title}\nSTATUS: ${p.availability}`); break;
-                case 'contact': writeToTerminal(`EMAIL: ${p.email}\nPHONE: ${p.phone}`); break;
-                case 'skills': (cvData.techSkills || []).forEach(c => writeToTerminal(`[${c.cat}]: ${c.tools.substring(0, 50)}...`)); break;
-                case 'projects': (cvData.projects || []).slice(0, 5).forEach(proj => writeToTerminal(`* ${proj.name} - ${proj.tech}`)); break;
+                case 'help': 
+                    writeToTerminal("Available: ls, cat [file], whoami, projects, contact, game, clear, exit, sudo, rm"); 
+                    break;
+                
+                case 'ls':
+                    writeToTerminal(Object.keys(fileSystem).join('   '));
+                    break;
+                    
+                case 'cat':
+                    if(!arg) {
+                        writeToTerminal("Usage: cat [filename]");
+                    } else if (fileSystem[arg]) {
+                        writeToTerminal(fileSystem[arg]);
+                    } else {
+                        writeToTerminal(`cat: ${arg}: No such file or directory`);
+                    }
+                    break;
+
+                case 'sudo':
+                    writeToTerminal("Tu n'as pas les droits, petit curieux. 🚫");
+                    break;
+                    
+                case 'rm':
+                    // Check for rm -rf / or similar variations
+                    if (cmdString.includes('-rf') && cmdString.includes('/')) {
+                        triggerCrash();
+                    } else {
+                        writeToTerminal("Permission denied: cannot remove files.");
+                    }
+                    break;
+
+                case 'whoami': writeToTerminal(`USER: ${cvData.personal.name}\nROLE: ${cvData.personal.title}`); break;
+                case 'contact': writeToTerminal(`EMAIL: ${cvData.personal.email}`); break;
+                case 'projects': writeToTerminal("Use 'cat projects.log' or 'ls' to see details."); break;
                 case 'clear': document.getElementById('terminal-content').innerHTML = ''; break;
                 case 'exit': toggleTerminal(); break;
                 case 'game': case 'snake': startSnakeGame(); break;
@@ -1119,11 +1189,25 @@
             }
         }
 
+        function triggerCrash() {
+            writeToTerminal("WARNING: DELETING ROOT DIRECTORY...");
+            setTimeout(() => {
+                writeToTerminal("CRITICAL ERROR...");
+                setTimeout(() => {
+                    document.body.classList.add('system-crash');
+                    // Reload page after 4 seconds
+                    setTimeout(() => {
+                        location.reload();
+                    }, 4000);
+                }, 1000);
+            }, 1000);
+        }
+
         // --- SNAKE GAME LOGIC ---
         function startSnakeGame() {
             isSnakePlaying = true;
             document.getElementById('snake-canvas').style.display = 'block';
-            document.getElementById('terminal-input-bar').style.display = 'none'; // Cache l'input pendant le jeu
+            document.getElementById('terminal-input-bar').style.display = 'none'; 
             writeToTerminal(">> LAUNCHING SNAKE... (Use Arrows to move, ESC to quit)");
             
             const canvas = document.getElementById('snake-canvas');
