@@ -908,7 +908,7 @@
 
                         <section class="section">
                             <h2 class="section-title">🎯 Recruteurs : Testez le Match !</h2>
-                            <p>Collez votre offre d'emploi ci-dessous pour voir si mon profil correspond via une analyse par mots-clés.</p>
+                            <p>Collez votre offre d'emploi ci-dessous pour voir si mon profil correspond via une analyse sémantique avancée.</p>
                             <div class="form-group" style="margin-top:15px;">
                                 <textarea id="jd-input" placeholder="Collez la description du poste ici..." style="min-height:100px; resize:vertical;"></textarea>
                             </div>
@@ -1005,56 +1005,110 @@
         }
 
         // ==========================================
-        // 7b. FONCTION JOB MATCHER
+        // 7b. FONCTION JOB MATCHER (AMÉLIORÉE)
         // ==========================================
         function calculateMatch() {
-            const jobDescription = document.getElementById('jd-input').value.toLowerCase();
-            if(!jobDescription) { alert("Veuillez coller une description."); return; }
+            const rawJD = document.getElementById('jd-input').value;
+            if(!rawJD) { alert("Veuillez coller une description."); return; }
+            
+            // Nettoyage: minuscules, et normalisation des espaces pour faciliter la regex
+            const jobDescription = rawJD.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g," ");
 
             const resultDiv = document.getElementById('match-result');
             resultDiv.style.display = 'block';
-            resultDiv.innerHTML = 'Analyse en cours...';
+            resultDiv.innerHTML = '<div style="text-align:center; padding:10px;"><i class="fas fa-spinner fa-spin"></i> Analyse IA en cours...</div>';
 
-            // Collect all skills from CV
+            // Dictionnaire de synonymes pour augmenter le recall
+            const skillAliases = {
+                "js": ["javascript", "js", "es6", "typescript", "ts"],
+                "react": ["react", "reactjs", "react.js"],
+                "node": ["node", "nodejs", "node.js", "express", "nest"],
+                "python": ["python", "py", "pandas", "numpy", "django", "flask"],
+                "java": ["java", "j2ee", "jakarta", "spring", "springboot"],
+                "c": ["c", "embedded c"], // Attention aux faux positifs
+                "sql": ["sql", "mysql", "postgresql", "postgres", "database", "bdd"],
+                "ai": ["ai", "ia", "artificial intelligence", "machine learning", "deep learning", "nlp", "cnn", "rnn"],
+                "html": ["html", "html5"],
+                "css": ["css", "css3", "sass", "scss", "tailwind", "bootstrap"],
+                "php": ["php", "laravel", "symfony"],
+                "git": ["git", "github", "gitlab", "bitbucket"],
+                "docker": ["docker", "kubernetes", "k8s", "container"],
+                "anglais": ["english", "anglais", "bilingue"]
+            };
+
+            // Récupérer toutes les compétences du CV
             let mySkills = [];
+            
+            // 1. Tech Skills
             (cvData.techSkills || []).forEach(cat => {
                 mySkills = mySkills.concat(cat.tools.split(',').map(s => s.trim()));
             });
+            // 2. Soft Skills & Langues
             if(cvData.softSkills) mySkills = mySkills.concat(cvData.softSkills);
             if(cvData.languages) mySkills = mySkills.concat(cvData.languages);
 
-            // Find matches
-            const foundSkills = mySkills.filter(skill => {
-                const s = skill.toLowerCase();
-                // Avoid false positives for short acronyms like "C" or "R" by using word boundaries
-                if (s.length < 3) {
-                    const regex = new RegExp(`\\b${s}\\b`, 'i');
-                    return regex.test(jobDescription);
+            // Recherche Intelligente
+            let uniqueFound = new Set();
+
+            mySkills.forEach(skill => {
+                const sLower = skill.toLowerCase();
+                
+                // Vérifier s'il y a des alias connus pour ce skill
+                let searchTerms = [sLower];
+                
+                // Chercher dans le dictionnaire si ce skill a des alias
+                for (const [key, aliases] of Object.entries(skillAliases)) {
+                    // Si le skill actuel match une clé ou un des alias
+                    if (key === sLower || aliases.includes(sLower)) {
+                        searchTerms = aliases;
+                        break;
+                    }
                 }
-                return jobDescription.includes(s);
+
+                // Tester chaque terme (skill original + alias)
+                for (const term of searchTerms) {
+                    // Création d'une Regex avec "Word Boundary" (\b) pour éviter les faux positifs
+                    // ex: éviter de trouver "Java" dans "Javascript" ou "C" dans "CSS"
+                    // On échappe les caractères spéciaux comme + (C++) ou # (C#)
+                    const escapedTerm = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    
+                    // Regex : (début ou espace) + terme + (fin ou espace)
+                    const regex = new RegExp(`(?:^|\\s)${escapedTerm}(?:$|\\s)`, 'i');
+                    
+                    if (regex.test(jobDescription)) {
+                        uniqueFound.add(skill); // On ajoute le nom "officiel" du skill
+                        break; // Trouvé une fois, on passe au skill suivant
+                    }
+                }
             });
             
-            const uniqueFound = [...new Set(foundSkills)];
+            const foundArray = Array.from(uniqueFound);
             
-            // Score calculation (density-based: 1 skill = 5%, capped at 100%)
-            let score = Math.min(100, Math.round(uniqueFound.length * 5));
-            if(uniqueFound.length === 0) score = 0;
+            // Calcul du score (Pondéré : plus on trouve de skills, plus le score monte, max 100)
+            // On considère qu'un match de 15 skills est un "perfect match"
+            let score = Math.min(100, Math.round((foundArray.length / 15) * 100));
+            if(foundArray.length > 0 && score < 20) score = 20; // Score min d'encouragement
             
-            // Generate Result HTML
             setTimeout(() => {
-                resultDiv.innerHTML = `
-                    <div class="match-score-text">Compatibilité : ${score}%</div>
-                    <div class="match-bar-container">
-                        <div class="match-bar-fill" style="width: ${score}%">${score}%</div>
-                    </div>
-                    ${uniqueFound.length > 0 ? `<p>J'ai repéré ces <strong>${uniqueFound.length}</strong> compétences dans votre offre :</p>
-                    <div class="skills-list" style="margin-top:10px;">
-                        ${uniqueFound.map(s => `<span class="skill-tag" style="background:var(--success); color:white; border:none;">${s}</span>`).join('')}
-                    </div>` : `<p>Aucune correspondance exacte trouvée pour l'instant. Mais mon profil est adaptable !</p>`}
-                `;
-            }, 500); // Fake delay for UX
-        }
+                let msg = "";
+                if(score > 80) msg = "🔥 C'est un match parfait !";
+                else if(score > 50) msg = "✅ Très bon profil pour ce poste.";
+                else if(score > 0) msg = "⚠️ Quelques correspondances, mais des écarts.";
+                else msg = "❌ Aucune compétence détectée (ou description trop vague).";
 
+                resultDiv.innerHTML = `
+                    <div class="match-score-text">${score}%</div>
+                    <div style="text-align:center; font-size:0.9rem; color:var(--text-muted); margin-bottom:5px;">${msg}</div>
+                    <div class="match-bar-container">
+                        <div class="match-bar-fill" style="width: ${score}%; background: ${score < 50 ? 'var(--warning)' : 'var(--success)'};"></div>
+                    </div>
+                    ${foundArray.length > 0 ? `<p>Compétences détectées (${foundArray.length}) :</p>
+                    <div class="skills-list" style="margin-top:10px;">
+                        ${foundArray.map(s => `<span class="skill-tag" style="background:var(--success); color:white; border:none;"><i class="fas fa-check"></i> ${s}</span>`).join('')}
+                    </div>` : ''}
+                `;
+            }, 600);
+        }
 
         function initScrollAnimations() {
             const elementsToAnimate = document.querySelectorAll('.section, .timeline-item, .project-card, .category-box, .cert-item');
