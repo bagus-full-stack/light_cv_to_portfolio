@@ -3,39 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Portfolio interactif d'Assami Baga - Ingénieur IA & Full Stack">
     <title>Portfolio - Assami Baga</title>
-    <meta name="description" content="Portfolio interactif d'Assami Baga, Ingénieur IA & Full Stack.">
     <link rel="manifest" href="./manifest.json">
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" defer></script>
 
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👨‍💻</text></svg>">
     
     <style>
         /* =========================================
-           1. CORE VARIABLES & RESET
+           OPTIMISATION CSS (Variables & Performance)
            ========================================= */
         :root {
-            /* Palette Principale */
+            /* Palette optimisée */
             --primary: #2c3e50; --accent: #3498db; --light: #ecf0f1; --dark: #1a252f;
-            --text: #333; --text-muted: #666;
+            --text: #333; --text-muted: #666; 
             --danger: #e74c3c; --success: #27ae60; --warning: #f39c12;
             
-            /* UI Elements */
             --bg: #f4f7f6; --card-bg: #ffffff; --card-border: #ddd; --card-hover: #f9f9f9; --input-bg: #fff;
-            
-            /* FX */
             --font-main: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             --glow: none;
-            --radius: 8px;
-            --shadow: 0 5px 15px rgba(0,0,0,0.05);
+            --transition-speed: 0.3s;
         }
 
-        /* --- THEMES --- */
+        /* Thèmes via classes sur body */
         body.dark-mode {
             --primary: #ecf0f1; --accent: #5dade2; --light: #2c3e50; --dark: #ecf0f1;
             --text: #e0e0e0; --text-muted: #aaa; --danger: #ff6b6b;
@@ -44,12 +40,11 @@
 
         body.neural-mode {
             --primary: #00d2ff; --accent: #3a7bd5; --light: #16222a; --dark: #00d2ff;
-            --text: #e0e6ed; --text-muted: #8ca0b3; --success: #00ffcc; --warning: #f1c40f;
+            --text: #e0e6ed; --text-muted: #8ca0b3; --danger: #ff6b6b; --success: #00ffcc; --warning: #f1c40f;
             --bg: #0f172a; --card-bg: rgba(30, 41, 59, 0.85); --card-border: #3a7bd5; --card-hover: #1e293b; --input-bg: #0f172a;
             --font-main: 'Segoe UI', sans-serif;
             --glow: 0 0 10px rgba(58, 123, 213, 0.3);
         }
-        body.neural-mode .section { backdrop-filter: blur(5px); border: 1px solid rgba(58, 123, 213, 0.3); }
 
         body.hacker-mode {
             --primary: #00ff00; --accent: #00ff00; --light: #003300; --dark: #00ff00;
@@ -58,688 +53,711 @@
             --font-main: 'Courier New', Courier, monospace;
             --glow: 0 0 4px rgba(0, 255, 0, 0.4);
         }
-        body.hacker-mode * { text-shadow: var(--glow); box-shadow: none !important; }
 
-        /* System Crash FX */
-        body.system-crash { background-color: #000 !important; overflow: hidden !important; }
-        body.system-crash > * { display: none !important; }
-        body.system-crash::after {
-            content: "KERNEL PANIC: CRITICAL ERROR.\00000a SYSTEM HALTED."; white-space: pre; color: #ff0000;
-            font-family: monospace; font-size: 1.5rem; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            animation: blink 0.5s infinite;
-        }
-
-        /* --- GLOBAL STYLES --- */
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: var(--font-main); }
-        body { background-color: var(--bg); color: var(--text); line-height: 1.6; min-height: 100vh; transition: background 0.3s, color 0.3s; }
+        /* Performance hacks */
+        .project-card, .theme-toggle, .btn-submit, .chat-btn { will-change: transform; }
         
-        /* Optimisation rendu */
-        .section { content-visibility: auto; contain-intrinsic-size: 500px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: var(--font-main); }
+        
+        body { 
+            background-color: var(--bg); color: var(--text); line-height: 1.6; min-height: 100vh;
+            transition: background var(--transition-speed), color var(--transition-speed);
+        }
+        
+        body.hacker-mode * { text-shadow: var(--glow); box-shadow: none !important; }
+        body.hacker-mode .btn-action, body.hacker-mode input, body.hacker-mode textarea { border: 1px solid #00ff00; }
+        body.neural-mode .sidebar, body.neural-mode .section { backdrop-filter: blur(5px); border: 1px solid rgba(58, 123, 213, 0.3); }
 
-        /* --- ANIMATIONS --- */
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .reveal { opacity: 0; transform: translateY(30px); transition: all 0.6s cubic-bezier(0.5, 0, 0, 1); }
+        #matrix-canvas { position: fixed; top: 0; left: 0; z-index: -1; display: none; pointer-events: none; }
+
+        /* Animations */
+        .reveal { opacity: 0; transform: translateY(30px); transition: all 0.6s cubic-bezier(0.5, 0, 0, 1); will-change: opacity, transform; }
         .reveal.active { opacity: 1; transform: translateY(0); }
+        .timeline-item.reveal { transform: translateX(-20px); }
+        .timeline-item.reveal.active { transform: translateX(0); }
 
-        /* --- COMPONENTS --- */
-        #matrix-canvas, #neural-graph { position: fixed; top: 0; left: 0; z-index: -1; display: none; }
-        body.neural-mode #neural-graph { display: block !important; position: static; width: 100%; height: 500px; background: rgba(15, 23, 42, 0.6); border: 1px solid var(--accent); border-radius: var(--radius); margin-bottom: 20px;}
-        body.neural-mode .tech-grid { display: none !important; }
+        /* UI Components */
+        .theme-toggle {
+            position: fixed; top: 20px; left: 20px; z-index: 9999;
+            background: var(--card-bg); border: 1px solid var(--card-border); color: var(--text);
+            width: 45px; height: 45px; border-radius: 50%; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: all 0.3s;
+        }
+        .theme-toggle:hover { transform: scale(1.1); border-color: var(--accent); }
 
+        .translate-container { position: fixed; top: 20px; right: 20px; z-index: 9999; background: var(--card-bg); padding: 8px; border-radius: 8px; border: 1px solid var(--card-border); }
+        .goog-te-gadget-simple { background: transparent !important; border: none !important; padding: 0 !important; font-size: 14px !important; color: var(--text) !important; }
+        .goog-te-banner-frame { display: none !important; }
+        body { top: 0 !important; }
+
+        /* Admin & Edit Mode */
+        .admin-controls { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 15px; z-index: 1000; }
+        .fab-btn { background: var(--accent); color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: transform 0.2s; border: none; font-size: 1.2rem; }
+        .fab-btn:hover { transform: scale(1.1); }
+        
+        #save-btn, #logout-btn, #reset-btn, .btn-delete, .btn-add, .task-controls, .upload-btn { display: none; }
+        body.logged-in #save-btn, body.logged-in #logout-btn, body.logged-in #reset-btn { display: flex; }
+        body.logged-in #login-btn { display: none; }
+        body.logged-in .btn-delete, body.logged-in .btn-add, body.logged-in .task-controls, body.logged-in .upload-btn { display: inline-block; }
+        body.logged-in .btn-delete { display: flex; z-index: 10; position: absolute; right: -10px; top: -10px; width: 25px; height: 25px; border-radius: 50%; background: var(--danger); color: white; border: none; align-items: center; justify-content: center; cursor: pointer; }
+        body.logged-in .btn-add { display: block; width: 100%; margin-top: 15px; padding: 10px; background: var(--success); color: white; border: none; border-radius: 5px; cursor: pointer; }
+        body.logged-in .editable { border: 1px dashed var(--accent); background: rgba(52, 152, 219, 0.1); padding: 2px; cursor: text; }
+        body.logged-in .editable:focus { background: var(--input-bg); outline: 2px solid var(--accent); color: var(--text); }
+        body.logged-in .section, body.logged-in .category-box, body.logged-in .timeline-item { border: 1px solid var(--accent); }
+
+        /* Layout */
         .container { max-width: 1200px; margin: 0 auto; padding: 20px; display: grid; grid-template-columns: 300px 1fr; gap: 30px; padding-top: 80px; }
+        .sidebar { background: var(--card-bg); padding: 30px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); text-align: center; border: 1px solid var(--card-border); }
+        @media (min-width: 769px) { .sidebar { height: fit-content; align-self: start; position: sticky; top: 20px; } }
         @media (max-width: 768px) { .container { grid-template-columns: 1fr; } }
 
-        /* Sidebar & Cards */
-        .sidebar, .section, .chat-window { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius); box-shadow: var(--shadow); }
-        .sidebar { padding: 30px; text-align: center; position: sticky; top: 20px; height: fit-content; }
-        .section { padding: 30px; margin-bottom: 30px; }
+        .profile-img { width: 150px; height: 150px; border-radius: 50%; object-fit: cover; border: 4px solid var(--accent); margin-bottom: 20px; }
+        .name { font-size: 1.8rem; color: var(--primary); font-weight: 700; margin-bottom: 5px; }
+        .title { font-size: 1rem; color: var(--accent); font-weight: 600; margin-bottom: 20px; }
         
-        /* Typography & Elements */
-        .name { font-size: 1.8rem; font-weight: 700; color: var(--primary); }
-        .profile-img { width: 150px; height: 150px; border-radius: 50%; border: 4px solid var(--accent); object-fit: cover; }
-        .skill-tag { background: var(--light); padding: 5px 12px; border-radius: 15px; font-size: 0.8rem; display: inline-block; margin: 2px; color: var(--dark); }
-        
-        /* Buttons & Interactions */
-        button { cursor: pointer; transition: transform 0.2s; }
-        button:active { transform: scale(0.95); }
-        .theme-toggle { position: fixed; top: 20px; left: 20px; width: 45px; height: 45px; border-radius: 50%; background: var(--card-bg); border: 1px solid var(--card-border); z-index: 9999; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
-        
-        /* Admin & Edit Mode */
-        .admin-controls { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 1000; }
-        .fab-btn { width: 50px; height: 50px; border-radius: 50%; border: none; background: var(--accent); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        .editable { border: 1px dashed transparent; transition: border 0.3s; }
-        .editable:focus { outline: none; border-color: var(--accent); background: rgba(52, 152, 219, 0.1); }
-        .btn-action { display: none; } 
-        body.logged-in .btn-action { display: inline-block; }
-        body.logged-in .editable:hover { border-color: var(--card-border); cursor: text; }
+        .contact-info { text-align: left; margin-top: 20px; font-size: 0.9rem; }
+        .contact-item { margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+        .contact-item i { color: var(--accent); width: 20px; text-align: center; }
 
-        /* Specific Modules */
-        .project-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .project-card { padding: 20px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius); position: relative; }
+        .btn-cv { display: inline-flex; align-items: center; gap: 10px; background: var(--primary); color: white; padding: 10px 20px; border-radius: 30px; text-decoration: none; font-weight: bold; transition: all 0.3s; margin: 20px 0; border: 2px solid var(--primary); }
+        .btn-cv:hover { background: transparent; color: var(--primary); }
+
+        .skills-list { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 30px; justify-content: flex-start; }
+        .skill-tag { background: var(--light); color: var(--dark); padding: 5px 10px; border-radius: 15px; font-size: 0.8rem; }
+        .skill-tag-wrapper { position: relative; }
+
+        /* Main Content */
+        .main-content { display: flex; flex-direction: column; gap: 30px; }
+        .section { background: var(--card-bg); padding: 30px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border: 1px solid var(--card-border); }
+        .section-title { font-size: 1.4rem; color: var(--primary); border-bottom: 2px solid var(--light); padding-bottom: 10px; margin-bottom: 20px; }
+
+        .timeline-item { border-left: 3px solid var(--accent); padding-left: 20px; margin-bottom: 25px; position: relative; }
+        .job-title { font-weight: bold; font-size: 1.1rem; }
+        .company { color: var(--text-muted); font-style: italic; font-size: 0.95rem; }
+        .date { font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 5px; }
+
+        .project-grid, .tech-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .project-card { background: var(--card-bg); padding: 20px; border-radius: 8px; border: 1px solid var(--card-border); display: flex; flex-direction: column; justify-content: space-between; transition: background 0.3s; }
+        .project-card:hover { background: var(--card-hover); }
+        .project-link { text-decoration: none; background: var(--accent); color: white; padding: 5px 15px; border-radius: 5px; font-size: 0.85rem; display: inline-block; width: fit-content; margin-top: 10px; }
+
+        .cert-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
+        .cert-item { background: var(--card-bg); padding: 15px; border-radius: 8px; border-left: 4px solid var(--accent); border: 1px solid var(--card-border); display: flex; flex-direction: column; gap: 5px; position: relative; }
+        .cert-link { font-size: 0.8rem; color: var(--accent); text-decoration: none; display: flex; align-items: center; gap: 5px; }
+
+        .category-box { border-left: 4px solid var(--accent); background: var(--card-bg); padding: 20px; border-radius: 8px; border: 1px solid var(--card-border); position: relative; }
+        .tech-badges { display: flex; flex-wrap: wrap; gap: 8px; }
+        .tech-tag { background: var(--bg); color: var(--text); padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; border: 1px solid var(--card-border); }
+
+        /* Form & Matcher */
+        .form-group input, .form-group textarea { width: 100%; padding: 12px; border: 1px solid var(--card-border); background: var(--input-bg); color: var(--text); border-radius: 6px; margin-bottom: 15px; }
+        .btn-submit, .btn-calendly { width: 100%; padding: 12px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; color: white; transition: transform 0.2s; display: flex; justify-content: center; align-items: center; gap: 10px; text-decoration: none; }
+        .btn-submit { background: var(--accent); } .btn-calendly { background: var(--success); margin-bottom: 20px; }
+        .btn-submit:hover, .btn-calendly:hover { transform: scale(1.02); filter: brightness(1.1); }
+
+        .match-bar-container { height: 20px; background: var(--card-border); border-radius: 10px; overflow: hidden; margin: 15px 0; }
+        .match-bar-fill { height: 100%; transition: width 1s ease; display: flex; align-items: center; justify-content: center; font-size: 10px; color: white; font-weight: bold; }
         
-        /* Chatbot */
+        /* Chat & Terminal */
         .chat-widget { position: fixed; bottom: 90px; right: 20px; z-index: 9998; display: flex; flex-direction: column; align-items: flex-end; }
-        .chat-window { width: 350px; height: 450px; display: none; flex-direction: column; overflow: hidden; margin-bottom: 10px; }
-        .chat-window.open { display: flex; animation: slideIn 0.3s; }
-        .chat-body { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; background: var(--bg); }
-        .chat-message { max-width: 85%; padding: 8px 12px; border-radius: 12px; font-size: 0.9rem; }
-        .chat-message.bot { background: var(--card-bg); border: 1px solid var(--card-border); align-self: flex-start; }
-        .chat-message.user { background: var(--accent); color: white; align-self: flex-end; }
+        .chat-btn { width: 60px; height: 60px; border-radius: 50%; background: var(--accent); color: white; border: none; font-size: 1.5rem; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .chat-window { width: 350px; height: 450px; background: var(--card-bg); border-radius: 12px; display: none; flex-direction: column; overflow: hidden; margin-bottom: 15px; box-shadow: 0 5px 25px rgba(0,0,0,0.2); border: 1px solid var(--card-border); }
+        .chat-window.open { display: flex; }
+        .chat-body { flex: 1; padding: 15px; overflow-y: auto; background: var(--bg); display: flex; flex-direction: column; gap: 10px; }
+        .chat-message { max-width: 80%; padding: 10px 15px; border-radius: 15px; font-size: 0.9rem; }
+        .chat-message.bot { align-self: flex-start; background: var(--card-bg); border: 1px solid var(--card-border); }
+        .chat-message.user { align-self: flex-end; background: var(--accent); color: white; }
+        .chat-footer { padding: 10px; background: var(--card-bg); display: flex; gap: 10px; }
+        .chat-input { flex: 1; padding: 10px; border-radius: 20px; border: 1px solid var(--card-border); background: var(--input-bg); color: var(--text); }
 
         /* Terminal Overlay */
-        .terminal-overlay { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80%; max-width: 700px; height: 500px; background: rgba(0,0,0,0.95); border: 2px solid #00ff00; z-index: 10001; display: none; flex-direction: column; font-family: monospace; color: #00ff00; }
+        .terminal-trigger { position: fixed; top: 50%; left: 20px; transform: translateY(-50%); z-index: 10000; background: black; border: 2px solid #00ff00; color: #00ff00; width: 50px; height: 50px; border-radius: 8px; cursor: pointer; display: none; align-items: center; justify-content: center; font-size: 1.5rem; }
+        body.hacker-mode .terminal-trigger { display: flex; }
+        .terminal-overlay { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80%; max-width: 700px; height: 500px; background: rgba(0, 0, 0, 0.95); border: 2px solid #00ff00; z-index: 10001; display: none; flex-direction: column; font-family: 'Courier New', monospace; box-shadow: 0 0 30px rgba(0,255,0,0.2); }
         .terminal-overlay.open { display: flex; }
-        .terminal-content { flex: 1; padding: 15px; overflow-y: auto; }
-        .terminal-input-area { padding: 10px; display: flex; gap: 10px; border-top: 1px solid #00ff00; }
-        #term-input { background: transparent; border: none; color: #00ff00; flex: 1; font-family: monospace; outline: none; }
-        #snake-canvas { display: none; border: 1px solid #00ff00; margin: 10px auto; background: #001100; image-rendering: pixelated; }
+        .terminal-content { flex: 1; padding: 15px; overflow-y: auto; color: #00ff00; }
+        .terminal-input-area { display: flex; padding: 10px; gap: 10px; }
+        #term-input { background: transparent; border: none; color: #00ff00; flex: 1; font-family: inherit; outline: none; }
+        
+        /* Crash FX */
+        body.system-crash { background: black !important; overflow: hidden; }
+        body.system-crash * { display: none !important; }
+        body.system-crash::after { content: "FATAL ERROR: SYSTEM HALTED.\00000a REBOOTING..."; white-space: pre; color: red; font-family: monospace; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; display: block !important; }
 
-        /* Job Matcher */
-        .match-bar-container { height: 10px; background: var(--card-border); border-radius: 5px; overflow: hidden; margin-top: 5px; }
-        .match-bar-fill { height: 100%; transition: width 1s; }
+        /* Neural Graph */
+        #neural-graph { width: 100%; height: 600px; border: 1px solid var(--accent); border-radius: 8px; background: rgba(15, 23, 42, 0.6); display: none; }
+        body.neural-mode .tech-grid { display: none !important; }
+        body.neural-mode #neural-graph { display: block !important; animation: fadeIn 1s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Print */
+        @media print {
+            .admin-controls, .theme-toggle, .translate-container, .chat-widget, .terminal-trigger, .terminal-overlay, .btn-cv, #neural-graph, .btn-submit, .form-group { display: none !important; }
+            .container { display: block; padding-top: 0; }
+            body { background: white; color: black; }
+            .tech-grid { display: grid !important; }
+            .sidebar { position: static; text-align: left; padding: 0; border: none; }
+        }
     </style>
 </head>
 <body>
 
-    <button class="theme-toggle" onclick="UI.toggleTheme()" title="Thème (↑↑↓↓←→←→BA)">
+    <button class="theme-toggle" onclick="toggleTheme()" title="Changer de thème (Astuce : Konami Code)">
         <i id="theme-icon" class="fas fa-moon"></i>
     </button>
     
-    <div class="translate-container" style="position:fixed; top:20px; right:20px; z-index:9999;">
-        <div id="google_translate_element"></div>
-    </div>
-
     <canvas id="matrix-canvas"></canvas>
+
+    <div class="translate-container"><div id="google_translate_element"></div></div>
 
     <div id="app"></div>
 
-    <button class="terminal-trigger theme-toggle" style="top:50%; transform:translateY(-50%); display:none;" onclick="HackerMode.toggleTerminal()">
-        <i class="fas fa-terminal"></i>
-    </button>
-    <div class="terminal-overlay" id="terminal-overlay">
-        <div style="background:#003300; padding:5px 10px; display:flex; justify-content:space-between; border-bottom:1px solid #00ff00;">
-            <span>root@assami:~</span><span style="cursor:pointer" onclick="HackerMode.toggleTerminal()">[X]</span>
-        </div>
-        <div class="terminal-content" id="terminal-content">
-            <div>Bienvenue v2.0. Tapez 'help'.</div>
-            <canvas id="snake-canvas" width="400" height="300"></canvas>
-        </div>
-        <div class="terminal-input-area" id="terminal-input-bar">
-            <span>visitor@assami:~$</span><input type="text" id="term-input" autocomplete="off">
-        </div>
-    </div>
-
     <div class="chat-widget">
         <div class="chat-window" id="chat-window">
-            <div style="background:var(--accent); color:white; padding:10px; font-weight:bold; display:flex; justify-content:space-between;">
-                <span>IA Assistant</span><button onclick="UI.toggleChat()" style="background:none; border:none; color:white;">✕</button>
+            <div class="chat-header">
+                <span><i class="fas fa-robot"></i> Assistant IA</span>
+                <div>
+                    <button class="chat-close" onclick="clearChat()" title="Effacer"><i class="fas fa-trash"></i></button>
+                    <button class="chat-close" onclick="toggleChat()">✕</button>
+                </div>
             </div>
             <div class="chat-body" id="chat-body">
-                <div class="chat-message bot">Bonjour ! Je peux analyser le parcours d'Assami pour vous.</div>
+                <div class="chat-message bot">Bonjour ! Je suis l'IA d'Assami. Posez-moi une question sur son parcours ou ses projets ! 🤖</div>
             </div>
-            <div id="typing-indicator" style="display:none; padding:5px 15px; font-style:italic; font-size:0.8rem;">L'IA écrit...</div>
-            <form class="chat-footer" onsubmit="Chatbot.handleSend(event)" style="padding:10px; display:flex; gap:5px; background:var(--card-bg); border-top:1px solid var(--card-border);">
-                <input type="text" id="chat-input" style="flex:1; padding:8px; border-radius:15px; border:1px solid #ddd;" placeholder="Question..." autocomplete="off">
-                <button type="submit" class="fab-btn" style="width:35px; height:35px; font-size:0.9rem;"><i class="fas fa-paper-plane"></i></button>
+            <div class="typing-indicator" id="typing-indicator">L'IA écrit...</div>
+            <form class="chat-footer" onsubmit="handleChat(event)">
+                <button type="button" class="chat-mic" onclick="toggleVoice()"><i class="fas fa-microphone"></i></button>
+                <input type="text" id="chat-input" class="chat-input" placeholder="Posez votre question..." autocomplete="off">
+                <button type="submit" class="chat-send"><i class="fas fa-paper-plane"></i></button>
             </form>
         </div>
-        <button class="fab-btn" onclick="UI.toggleChat()"><i class="fas fa-comment-dots"></i></button>
+        <button class="chat-btn" onclick="toggleChat()"><i class="fas fa-comment-dots"></i></button>
+    </div>
+
+    <button class="terminal-trigger" onclick="toggleTerminal()"><i class="fas fa-terminal"></i></button>
+    <div class="terminal-overlay" id="terminal-overlay">
+        <div class="terminal-header-bar">
+            <span>root@assami-portfolio:~</span>
+            <span class="terminal-close" onclick="toggleTerminal()">[X]</span>
+        </div>
+        <div class="terminal-content" id="terminal-content">
+            <div class="terminal-line">Bienvenue dans le Terminal Interactif v2.1. Tapez 'help'.</div>
+            <canvas id="snake-canvas" width="400" height="300" style="display:none; border:1px solid #0f0; margin:10px auto;"></canvas>
+        </div>
+        <div class="terminal-input-area" id="terminal-input-bar">
+            <span class="prompt">visitor@assami:~$</span>
+            <input type="text" id="term-input" autocomplete="off" spellcheck="false">
+        </div>
     </div>
 
     <div class="admin-controls">
-        <button id="logout-btn" class="fab-btn" onclick="Auth.logout()" style="display:none; background:var(--dark);" title="Déconnexion"><i class="fas fa-sign-out-alt"></i></button>
-        <button id="save-btn" class="fab-btn" onclick="DataManager.save()" style="display:none; background:var(--success);" title="Sauvegarder"><i class="fas fa-save"></i></button>
-        <button id="login-btn" class="fab-btn" onclick="Auth.login()" title="Admin"><i class="fas fa-pen"></i></button>
+        <button id="logout-btn" class="fab-btn" onclick="logout()" title="Déconnexion"><i class="fas fa-sign-out-alt"></i></button>
+        <button id="reset-btn" class="fab-btn" onclick="resetDatabase()" title="Reset"><i class="fas fa-trash-restore"></i></button>
+        <button id="save-btn" class="fab-btn" onclick="saveDataToSupabase()" title="Sauvegarder"><i class="fas fa-save"></i></button>
+        <button id="login-btn" class="fab-btn" onclick="login()" title="Admin"><i class="fas fa-pen"></i></button>
     </div>
 
     <script>
         // ==========================================
-        // 1. CONFIGURATION & CONSTANTES (Centralisées)
+        // CONFIG & STATE
         // ==========================================
         const CONFIG = {
             supabaseUrl: "https://ofjbztpsifilkptuhhit.supabase.co",
+            // NOTE DE SÉCURITÉ: Cette clé est publique (anon). Configurez RLS sur Supabase pour sécuriser les écritures.
             supabaseKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9mamJ6dHBzaWZpbGtwdHVoaGl0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzNjY4NzQsImV4cCI6MjA4Mzk0Mjg3NH0.NQDJYOPHYtQsP-XH3FVa_yYzenSzKfkO7iBu1q8dy8M",
             table: 'portfolio',
             bucket: 'uploads',
             cvId: 1
         };
 
-        const SKILL_ALIASES = {
-            "js": ["javascript", "js", "typescript", "ts", "es6"],
-            "react": ["react", "reactjs"],
-            "node": ["node", "nodejs", "express", "nest"],
-            "python": ["python", "py", "pandas", "numpy", "django", "flask"],
-            "java": ["java", "spring", "springboot", "j2ee"],
-            "sql": ["sql", "mysql", "postgresql", "postgres", "bdd", "database"],
-            "ia": ["ia", "ai", "machine learning", "deep learning", "nlp", "tensorflow", "pytorch"],
-            "devops": ["docker", "kubernetes", "ci/cd", "git"],
-            "web": ["html", "css", "sass", "web design"]
-        };
-
         const DEFAULT_DATA = {
-            personal: { name: "Assami BAGA", title: "Ingénieur IA & Full Stack", availability: "Octobre 2026", email: "bagaassami09@gmail.com", phone: "07 53 49 67 71", location: "Thiais (94320)", linkedin: "assami-baga", summary: "Étudiant ingénieur EILCO..." },
-            softSkills: ["Polyvalence", "Autonomie", "Curiosité"], languages: ["Français", "Anglais"],
-            education: [], experience: [], techSkills: [], projects: [], certifications: []
+            personal: { name: "Assami BAGA", title: "Ingénieur IA & Full Stack", availability: "Disponible dès octobre 2026", email: "bagaassami09@gmail.com", phone: "07 53 49 67 71", location: "Thiais (94320), Ile de france", linkedin: "assami-baga", social: "bagus_full_stack", summary: "Étudiant en dernière année du cycle d'ingénieur en informatique à l'EILCO, je suis à la recherche active d'un CDI. Mon objectif est d'exploiter ma passion pour la technologie en participant à la conception et au développement d'applications de haute qualité." },
+            softSkills: ["Polyvalence", "Efficacité", "Créativité", "Adaptabilité", "Collaboration", "Autonomie", "Curiosité"],
+            languages: ["Français", "Anglais"],
+            education: [ { degree: "Diplôme d'ingénieur Logiciel & IA", school: "EILCO, Calais", date: "Depuis sept 2023" }, { degree: "PUPA, LCB-FT, HDS, ISO 27001", school: "CDC Informatique", date: "2025" }, { degree: "Licence en Systèmes d'Information", school: "ESI, Burkina Faso", date: "2019 - 2023" } ],
+            experience: [ { role: "Ingénieur Exploitation", company: "CDC Informatique", date: "Depuis sept 2024", tasks: ["Travail collaboratif", "Réalisation de PYMQCOPY", "Référentiel Services Flux"] }, { role: "Software Engineer", company: "Orange & Smile", date: "2022 - 2023", tasks: ["Système Intelligent Conception Produits", "Frontend MySpace", "Backend BourseFondation"] } ],
+            techSkills: [ 
+                { cat: "Dev Multiplateforme", tools: "HTML, CSS, JS, TS, React, Angular, Java, Python, Docker" },
+                { cat: "API & Backend", tools: "NodeJS, Spring, FastAPI, Laravel, PostgreSQL, SQL Server" },
+                { cat: "IA & Data", tools: "TensorFlow, PyTorch, NLP, Scikit-learn, Pandas, Power BI" }
+            ],
+            projects: [ { name: "Blue Attendance", desc: "App Mobile Bluetooth.", tech: "Java, FastAPI", link: "#" }, { name: "PNP+", desc: "Système Conception Produits.", tech: "Angular, Spring", link: "#" }, { name: "Myspace", desc: "Plateforme SaaS.", tech: "React, Node.js", link: "#" } ],
+            certifications: [ { name: "Java", link: "#" }, { name: "Python", link: "#" }, { name: "SQL", link: "#" } ]
         };
 
-        // ==========================================
-        // 2. STATE MANAGEMENT & UTILS
-        // ==========================================
-        const State = {
+        let state = {
             user: null,
-            data: DEFAULT_DATA,
+            cvData: DEFAULT_DATA,
             messages: [],
-            theme: localStorage.getItem('theme') || 'light'
+            theme: localStorage.getItem('theme') || 'light',
+            snake: { active: false, interval: null, score: 0, body: [], dir: 'RIGHT', food: {} },
+            matrixId: null,
+            neuralId: null,
+            network: null
         };
 
-        // Utilitaire pour éviter les injections XSS
-        const escapeHtml = (unsafe) => {
-            if (typeof unsafe !== 'string') return unsafe;
-            return unsafe.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
-        };
+        const supabase = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey);
 
-        // Debounce pour optimiser le rendu lors de la frappe
-        function debounce(func, wait) {
-            let timeout;
-            return function(...args) {
-                clearTimeout(timeout);
-                timeout = setTimeout(() => func.apply(this, args), wait);
-            };
+        // ==========================================
+        // CORE FUNCTIONS
+        // ==========================================
+        async function init() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+                state.user = session.user;
+                document.body.classList.add('logged-in');
+                loadMessages();
+            }
+            await loadData();
+            applyTheme(state.theme);
+            handleVisits();
+            setupGlobalListeners();
         }
 
-        // ==========================================
-        // 3. SERVICES (Supabase, Data)
-        // ==========================================
-        let supabase;
-        
-        const DataManager = {
-            init: async () => {
-                // Attendre que le script Supabase soit chargé (defer)
-                if(window.supabase) {
-                    supabase = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey);
-                    
-                    const { data: { session } } = await supabase.auth.getSession();
-                    if (session) { State.user = session.user; Auth.toggleUI(true); DataManager.loadMessages(); }
-                    
-                    await DataManager.load();
-                    await DataManager.trackVisit();
-                } else {
-                    // Fallback si script pas encore chargé
-                    setTimeout(DataManager.init, 100);
-                }
-            },
+        async function loadData() {
+            try {
+                const { data } = await supabase.from(CONFIG.table).select('json_data').eq('id', CONFIG.cvId).single();
+                if (data?.json_data) state.cvData = data.json_data;
+            } catch (e) { console.error("Load Error", e); }
+            render();
+        }
+
+        function render() {
+            const app = document.getElementById('app');
+            const isEdit = !!state.user;
+            const editAttr = isEdit ? 'contenteditable="true" class="editable"' : '';
+            const p = state.cvData.personal;
+            const photo = p.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=3498db&color=fff&size=150`;
             
-            load: async () => {
-                try {
-                    const { data } = await supabase.from(CONFIG.table).select('json_data').eq('id', CONFIG.cvId).single();
-                    if (data?.json_data) State.data = data.json_data;
-                    UI.render();
-                } catch (e) { console.error("Load Error", e); UI.render(); }
-            },
+            // Helper pour les boutons
+            const delBtn = (type, i) => `<button class="btn-delete" onclick="deleteItem('${type}', ${i})"><i class="fas fa-trash"></i></button>`;
+            const inputEvent = (fn) => isEdit ? `oninput="${fn}"` : '';
 
-            save: async () => {
-                if (!State.user) return;
-                const { error } = await supabase.from(CONFIG.table).upsert({ id: CONFIG.cvId, json_data: State.data });
-                alert(error ? "❌ Erreur sauvegarde" : "✅ Sauvegardé !");
-            },
-
-            loadMessages: async () => {
-                if (!State.user) return;
-                const { data } = await supabase.from('messages').select('*').order('created_at', { ascending: false });
-                State.messages = data || [];
-                UI.render();
-            },
-
-            trackVisit: async () => {
-                if (!sessionStorage.getItem('visited')) {
-                    await supabase.rpc('increment_visits');
-                    sessionStorage.setItem('visited', 'true');
-                }
-                const { data } = await supabase.from('site_stats').select('visits').single();
-                const counter = document.getElementById('visit-count');
-                if (counter && data) counter.innerText = data.visits;
-            }
-        };
-
-        const Auth = {
-            login: async () => {
-                const email = prompt("Email:"); const password = prompt("Password:");
-                if(!email || !password) return;
-                const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-                if (error) alert(error.message);
-                else { 
-                    State.user = data.user; 
-                    Auth.toggleUI(true); 
-                    DataManager.load(); 
-                    DataManager.loadMessages(); 
-                }
-            },
-            logout: async () => {
-                await supabase.auth.signOut();
-                State.user = null;
-                Auth.toggleUI(false);
-            },
-            toggleUI: (isLogged) => {
-                document.body.classList.toggle('logged-in', isLogged);
-                document.getElementById('login-btn').style.display = isLogged ? 'none' : 'flex';
-                document.getElementById('logout-btn').style.display = isLogged ? 'flex' : 'none';
-                document.getElementById('save-btn').style.display = isLogged ? 'flex' : 'none';
-                UI.render();
-            }
-        };
-
-        // ==========================================
-        // 4. UI RENDERER (Optimisé)
-        // ==========================================
-        const UI = {
-            // Utilisation d'un render complet mais debouncé pour éviter les lags
-            render: debounce(() => {
-                const app = document.getElementById('app');
-                const d = State.data;
-                const p = d.personal || {};
-                const isEdit = !!State.user;
-                const editAttr = isEdit ? 'contenteditable="true"' : '';
-                const editClass = isEdit ? 'editable' : '';
-                
-                // Helpers pour le HTML
-                const delBtn = (t, i) => isEdit ? `<button class="btn-delete" onclick="UI.deleteItem('${t}', ${i})"><i class="fas fa-trash"></i></button>` : '';
-                const addBtn = (t) => isEdit ? `<button class="btn-add" onclick="UI.addItem('${t}')"><i class="fas fa-plus"></i> Ajouter</button>` : '';
-
-                app.innerHTML = `
-                    <div class="container">
-                        <aside class="sidebar reveal">
-                            <div class="profile-wrapper">
-                                <img src="${p.photoUrl || `https://ui-avatars.com/api/?name=${p.name}`}" class="profile-img">
-                                ${isEdit ? `<label for="p-up" class="upload-btn" style="display:flex"><i class="fas fa-camera"></i></label><input type="file" id="p-up" onchange="UI.upload(this, 'photoUrl')" hidden>` : ''}
-                            </div>
-                            <h1 class="name ${editClass}" ${editAttr} oninput="UI.update(this, 'personal', 'name')">${escapeHtml(p.name)}</h1>
-                            <p class="title ${editClass}" ${editAttr} oninput="UI.update(this, 'personal', 'title')">${escapeHtml(p.title)}</p>
-                            <div class="status-badge ${editClass}" ${editAttr} oninput="UI.update(this, 'personal', 'availability')">${escapeHtml(p.availability)}</div>
-                            
-                            <div class="contact-info">
-                                <div><i class="fas fa-envelope"></i> ${p.email}</div>
-                                <div><i class="fas fa-phone"></i> ${p.phone}</div>
-                                <div><i class="fab fa-linkedin"></i> ${p.linkedin}</div>
-                            </div>
-                            <div style="margin-top:10px; font-size:0.8rem; color:var(--text-muted)">Vues: <b id="visit-count">...</b></div>
-
-                            <div class="cv-download-wrapper">
-                                <a href="${p.cvUrl || '#'}" class="btn-cv" target="_blank"><i class="fas fa-download"></i> CV</a>
-                                ${isEdit ? `<input type="file" onchange="UI.upload(this, 'cvUrl')">` : ''}
-                            </div>
-                            <hr style="margin:20px 0; border-top:1px solid var(--card-border)">
-                            
-                            <h3>Atouts</h3>
-                            <div class="skills-list">
-                                ${(d.softSkills||[]).map((s,i) => `<div class="skill-tag-wrapper"><span class="skill-tag ${editClass}" ${editAttr} oninput="UI.updateArr(this, 'softSkills', ${i})">${s}</span>${delBtn('softSkills', i)}</div>`).join('')}
-                            </div>
-                            ${addBtn('softSkills')}
-                        </aside>
-
-                        <main class="main-content">
-                            <section class="section reveal">
-                                <h2 class="section-title">ℹ️ À propos</h2>
-                                <p class="${editClass}" ${editAttr} oninput="UI.update(this, 'personal', 'summary')">${p.summary}</p>
-                            </section>
-
-                            <section class="section reveal">
-                                <h2 class="section-title">💻 Tech Skills</h2>
-                                <div id="neural-graph"></div>
-                                <div class="tech-grid">
-                                    ${(d.techSkills||[]).map((s,i) => `
-                                        <div class="category-box">
-                                            ${delBtn('techSkills', i)}
-                                            <div class="category-title ${editClass}" ${editAttr} oninput="UI.updateArrObj(this, 'techSkills', ${i}, 'cat')">${s.cat}</div>
-                                            <div class="category-content ${editClass}" ${editAttr} oninput="UI.updateArrObj(this, 'techSkills', ${i}, 'tools')">${s.tools}</div>
-                                        </div>`).join('')}
-                                </div>
-                                ${addBtn('techSkills')}
-                            </section>
-
-                            <section class="section reveal">
-                                <h2 class="section-title">🎯 Job Matcher AI</h2>
-                                <p>Collez une offre pour voir la compatibilité.</p>
-                                <textarea id="jd-input" style="width:100%; padding:10px; margin:10px 0; border-radius:5px;" placeholder="Description du poste..."></textarea>
-                                <button class="btn-submit" onclick="JobMatcher.analyze()" style="width:100%; background:var(--accent); color:white; padding:10px; border:none; border-radius:5px;">Analyser</button>
-                                <div id="match-result" style="display:none; margin-top:15px; padding:10px; background:var(--card-bg); border-left:4px solid var(--success);"></div>
-                            </section>
-
-                            <section class="section reveal" id="contact">
-                                <h2 class="section-title">📬 Contact</h2>
-                                <form class="contact-form" onsubmit="UI.sendMessage(event)">
-                                    <input type="text" name="name" placeholder="Nom" required style="width:100%; padding:10px; margin-bottom:10px;">
-                                    <input type="email" name="email" placeholder="Email" required style="width:100%; padding:10px; margin-bottom:10px;">
-                                    <textarea name="message" placeholder="Message..." required style="width:100%; padding:10px; margin-bottom:10px; min-height:100px;"></textarea>
-                                    <button type="submit" class="btn-submit" style="background:var(--accent); color:white; padding:10px 20px; border:none; border-radius:5px;">Envoyer</button>
-                                </form>
-                                ${isEdit && State.messages.length ? `<div class="messages-list" style="margin-top:20px;"><h3>Messages (${State.messages.length})</h3>${State.messages.map(m => `<div class="message-card" style="border:1px solid #ddd; padding:10px; margin-top:5px;"><b>${escapeHtml(m.name)}</b>: ${escapeHtml(m.message)} <button onclick="UI.delMsg(${m.id})">x</button></div>`).join('')}</div>` : ''}
-                            </section>
-                        </main>
+            // Construction HTML optimisée (Template String)
+            app.innerHTML = `
+            <div class="container">
+                <aside class="sidebar">
+                    <div class="profile-wrapper">
+                        <img src="${photo}" class="profile-img" alt="Avatar">
+                        <label for="photo-upload" class="upload-btn"><i class="fas fa-camera"></i></label>
+                        <input type="file" id="photo-upload" accept="image/*" style="display:none" onchange="handleUpload(this, 'photoUrl')">
                     </div>
-                `;
-                
-                UI.initObservers();
-                if(State.theme === 'neural') NeuralFX.initGraph();
-            }, 50), // Debounce de 50ms
+                    <h1 class="name" ${editAttr} ${inputEvent("upd('personal', 'name', this.innerText)")}>${p.name}</h1>
+                    <p class="title" ${editAttr} ${inputEvent("upd('personal', 'title', this.innerText)")}>${p.title}</p>
+                    <div class="status-badge" ${editAttr} ${inputEvent("upd('personal', 'availability', this.innerText)")}>${p.availability}</div>
+                    
+                    <div class="contact-info">
+                        ${contactLine('envelope', 'email', p.email, isEdit)}
+                        ${contactLine('phone', 'phone', p.phone, isEdit)}
+                        ${contactLine('map-marker-alt', 'location', p.location, isEdit)}
+                        ${contactLine('brands fa-linkedin', 'linkedin', p.linkedin, isEdit)}
+                    </div>
+                    <div style="margin-top:10px; font-size:0.8rem; color:var(--text-muted)">
+                         <i class="fas fa-eye"></i> Vues: <b id="visit-count">...</b>
+                    </div>
 
-            update: (el, cat, field) => { State.data[cat][field] = el.innerText; },
-            updateArr: (el, arr, idx) => { State.data[arr][idx] = el.innerText; },
-            updateArrObj: (el, arr, idx, field) => { State.data[arr][idx][field] = el.innerText; },
+                    <div class="cv-download-wrapper">
+                        <a href="${p.cvUrl||'#'}" class="btn-cv ${isEdit?'upload-mode':''}" ${isEdit?'onclick="document.getElementById(\'cv-upload\').click(); return false;"':'target="_blank"'}>
+                            <i class="fas ${isEdit?'fa-upload':'fa-download'}"></i> ${isEdit?'Upload CV':'Télécharger CV'}
+                        </a>
+                        <input type="file" id="cv-upload" accept="application/pdf" style="display:none" onchange="handleUpload(this, 'cvUrl')">
+                    </div>
+
+                    <hr style="margin:20px 0; border-top:1px solid var(--card-border)">
+                    
+                    <h3>Atouts</h3>
+                    <div class="skills-list">
+                        ${state.cvData.softSkills.map((s,i) => `<div class="skill-tag-wrapper"><span class="skill-tag" ${editAttr} ${inputEvent(`updArr('softSkills',${i},null,this.innerText)`)}>${s}</span>${delBtn('softSkills',i)}</div>`).join('')}
+                    </div>
+                    <button class="btn-add" onclick="addItem('softSkills')"><i class="fas fa-plus"></i></button>
+                </aside>
+
+                <main class="main-content">
+                    <section class="section">
+                        <h2 class="section-title">ℹ️ À propos</h2>
+                        <p ${editAttr} ${inputEvent("upd('personal', 'summary', this.innerText)")}>${p.summary}</p>
+                    </section>
+
+                    <section class="section">
+                        <h2 class="section-title">🎯 Recruteurs : Job Matcher</h2>
+                        <p>Analysez la compatibilité de votre offre avec mon profil via l'IA sémantique.</p>
+                        <div class="form-group" style="margin-top:15px">
+                            <textarea id="jd-input" placeholder="Collez la description du poste ici..." style="min-height:100px"></textarea>
+                        </div>
+                        <button class="btn-submit" onclick="calculateMatch()">Analyser le Match</button>
+                        <div id="match-result" class="category-box" style="display:none; margin-top:20px; border-left-color:var(--success)"></div>
+                    </section>
+
+                    <section class="section">
+                        <h2 class="section-title">💻 Compétences</h2>
+                        <div id="neural-graph"></div>
+                        <div class="tech-grid">
+                            ${state.cvData.techSkills.map((cat,i) => `
+                            <div class="category-box">
+                                ${delBtn('techSkills',i)}
+                                <div class="category-title" ${editAttr} ${inputEvent(`updArr('techSkills',${i},'cat',this.innerText)`)}>${cat.cat}</div>
+                                <div class="category-content" ${editAttr} ${inputEvent(`updArr('techSkills',${i},'tools',this.innerText)`)}>${cat.tools}</div>
+                            </div>`).join('')}
+                        </div>
+                        <button class="btn-add" onclick="addItem('techSkills')"><i class="fas fa-plus"></i></button>
+                    </section>
+
+                    <section class="section">
+                        <h2 class="section-title">💼 Expériences</h2>
+                        ${state.cvData.experience.map((exp,i) => `
+                        <div class="timeline-item">
+                            ${delBtn('experience',i)}
+                            <div class="job-title" ${editAttr} ${inputEvent(`updArr('experience',${i},'role',this.innerText)`)}>${exp.role}</div>
+                            <div class="company" ${editAttr} ${inputEvent(`updArr('experience',${i},'company',this.innerText)`)}>${exp.company}</div>
+                            <span class="date" ${editAttr} ${inputEvent(`updArr('experience',${i},'date',this.innerText)`)}>${exp.date}</span>
+                            <div class="description">
+                                <ul>${(exp.tasks||[]).map((t,ti) => `<li><span ${editAttr} ${inputEvent(`updTask(${i},${ti},this.innerText)`)}>${t}</span><span class="task-controls"><button class="btn-task-del" onclick="delTask(${i},${ti})">x</button></span></li>`).join('')}</ul>
+                                <button class="btn-task-add" onclick="addTask(${i})">+ Tâche</button>
+                            </div>
+                        </div>`).join('')}
+                        <button class="btn-add" onclick="addItem('experience')"><i class="fas fa-plus"></i></button>
+                    </section>
+
+                    <section class="section">
+                        <h2 class="section-title">🏆 Projets</h2>
+                        <div class="project-grid">
+                            ${state.cvData.projects.map((proj,i) => `
+                            <div class="project-card">
+                                ${delBtn('projects',i)}
+                                <h3 ${editAttr} ${inputEvent(`updArr('projects',${i},'name',this.innerText)`)}>${proj.name}</h3>
+                                <p ${editAttr} ${inputEvent(`updArr('projects',${i},'desc',this.innerText)`)} class="project-desc">${proj.desc}</p>
+                                <div style="font-style:italic; font-size:0.8rem; color:var(--accent)" ${editAttr} ${inputEvent(`updArr('projects',${i},'tech',this.innerText)`)}>${proj.tech}</div>
+                                <a href="${isEdit?'#':proj.link}" class="project-link" ${editAttr} ${inputEvent(`updArr('projects',${i},'link',this.innerText)`)}>Voir projet</a>
+                            </div>`).join('')}
+                        </div>
+                        <button class="btn-add" onclick="addItem('projects')"><i class="fas fa-plus"></i></button>
+                    </section>
+
+                    <section class="section" id="contact">
+                        <h2 class="section-title">📬 Me Contacter</h2>
+                        <a href="https://calendly.com/bagaassami09/30min" target="_blank" class="btn-calendly"><i class="fas fa-calendar-alt"></i> 📅 Réserver un appel</a>
+                        <form class="contact-form" onsubmit="handleContact(event)">
+                            <div class="form-group"><input type="text" name="name" placeholder="Nom" required></div>
+                            <div class="form-group"><input type="email" name="email" placeholder="Email" required></div>
+                            <div class="form-group"><textarea name="message" placeholder="Message..." required></textarea></div>
+                            <button type="submit" class="btn-submit"><i class="fas fa-paper-plane"></i> Envoyer</button>
+                        </form>
+                        ${isEdit ? renderMessages() : ''}
+                    </section>
+                </main>
+            </div>`;
             
-            addItem: (type) => {
-                const templates = {
-                    techSkills: { cat: "Nouvelle Cat", tools: "Outils..." },
-                    softSkills: "Nouvel atout"
-                };
-                if(!State.data[type]) State.data[type] = [];
-                State.data[type].push(templates[type] || {});
-                UI.render();
-            },
-            deleteItem: (type, idx) => { if(confirm("Supprimer?")) { State.data[type].splice(idx, 1); UI.render(); } },
-
-            upload: async (input, field) => {
-                const file = input.files[0];
-                if(!file || !State.user) return;
-                const name = Date.now() + '_' + file.name;
-                const { error } = await supabase.storage.from(CONFIG.bucket).upload(name, file);
-                if(!error) {
-                    const { data } = supabase.storage.from(CONFIG.bucket).getPublicUrl(name);
-                    State.data.personal[field] = data.publicUrl;
-                    UI.render();
-                }
-            },
-
-            sendMessage: async (e) => {
-                e.preventDefault();
-                const form = e.target;
-                const { error } = await supabase.from('messages').insert({
-                    name: form.name.value, email: form.email.value, message: form.message.value
-                });
-                if(error) alert("Erreur"); else { alert("Envoyé!"); form.reset(); }
-            },
-            delMsg: async(id) => { if(confirm("Sup?")) { await supabase.from('messages').delete().eq('id', id); DataManager.loadMessages(); } },
-
-            initObservers: () => {
-                const observer = new IntersectionObserver(entries => {
-                    entries.forEach(e => { if(e.isIntersecting) { e.target.classList.add('active'); observer.unobserve(e.target); }});
-                }, { threshold: 0.1 });
-                document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-            },
-
-            toggleTheme: () => {
-                // Nettoyage des animations précédentes
-                MatrixFX.stop();
-                NeuralFX.stop();
-                HackerMode.close();
-
-                const modes = ['light', 'dark', 'neural', 'hacker'];
-                let currentIdx = modes.indexOf(State.theme);
-                State.theme = modes[(currentIdx + 1) % modes.length];
-                
-                document.body.className = State.theme + '-mode';
-                localStorage.setItem('theme', State.theme);
-                
-                // Activation des nouveaux effets
-                if(State.theme === 'hacker') MatrixFX.start();
-                if(State.theme === 'neural') { NeuralFX.start(); setTimeout(NeuralFX.initGraph, 100); }
-                
-                const icons = { light: 'fa-moon', dark: 'fa-sun', neural: 'fa-brain', hacker: 'fa-terminal' };
-                document.getElementById('theme-icon').className = `fas ${icons[State.theme]}`;
-            },
-
-            toggleChat: () => document.getElementById('chat-window').classList.toggle('open')
-        };
-
-        // ==========================================
-        // 5. FEATURES (Job Matcher, Chatbot, FX)
-        // ==========================================
-        const JobMatcher = {
-            analyze: () => {
-                const jd = document.getElementById('jd-input').value.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g," ");
-                if(!jd) return;
-                
-                document.getElementById('match-result').style.display = 'block';
-                document.getElementById('match-result').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyse...';
-
-                // Agrégation des skills
-                let mySkills = [];
-                (State.data.techSkills||[]).forEach(c => mySkills.push(...c.tools.split(',').map(s=>s.trim())));
-                mySkills.push(...(State.data.softSkills||[]));
-
-                // Détection intelligente
-                let found = new Set();
-                mySkills.forEach(skill => {
-                    const sLow = skill.toLowerCase();
-                    let terms = [sLow];
-                    // Recherche dans les alias
-                    for(const [key, aliases] of Object.entries(SKILL_ALIASES)) {
-                        if(key === sLow || aliases.includes(sLow)) terms = aliases;
-                    }
-                    
-                    for(const t of terms) {
-                        const regex = new RegExp(`(?:^|\\s)${t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:$|\\s)`, 'i');
-                        if(regex.test(jd)) { found.add(skill); break; }
-                    }
-                });
-
-                const score = Math.min(100, Math.round((found.size / 15) * 100));
-                const list = Array.from(found).map(s => `<span class="skill-tag" style="background:var(--success); color:white">${s}</span>`).join(' ');
-
-                setTimeout(() => {
-                    document.getElementById('match-result').innerHTML = `
-                        <div style="font-size:1.2rem; font-weight:bold; color:var(--primary)">Compatibilité : ${score}%</div>
-                        <div class="match-bar-container"><div class="match-bar-fill" style="width:${score}%; background:${score<50?'orange':'green'}"></div></div>
-                        <div style="margin-top:10px">${list || "Aucune correspondance trouvée."}</div>
-                    `;
-                }, 500);
-            }
-        };
-
-        const Chatbot = {
-            handleSend: async (e) => {
-                e.preventDefault();
-                const input = document.getElementById('chat-input');
-                const q = input.value.trim();
-                if(!q) return;
-                
-                Chatbot.addMsg(q, 'user');
-                input.value = '';
-                document.getElementById('typing-indicator').style.display = 'block';
-
-                try {
-                    // Essayer Supabase Edge Function si disponible
-                    const { data, error } = await supabase.functions.invoke('chat-resume', { body: { question: q, context: State.data } });
-                    if(error) throw error;
-                    Chatbot.addMsg(data.reply, 'bot');
-                } catch {
-                    // Fallback local
-                    setTimeout(() => Chatbot.fallbackResponse(q), 500);
-                }
-            },
-            fallbackResponse: (q) => {
-                document.getElementById('typing-indicator').style.display = 'none';
-                let rep = "Je ne suis pas connecté à mon cerveau (Edge Function). Essayez 'Contact' ou 'Stack'.";
-                q = q.toLowerCase();
-                if(q.includes('contact') || q.includes('mail')) rep = `Email: ${State.data.personal.email}`;
-                if(q.includes('stack') || q.includes('techno')) rep = "Je maîtrise JS, Python, Java, SQL...";
-                if(q.includes('konami')) rep = "↑ ↑ ↓ ↓ ← → ← → B A";
-                Chatbot.addMsg(rep, 'bot');
-            },
-            addMsg: (txt, type) => {
-                const div = document.createElement('div');
-                div.className = `chat-message ${type}`;
-                div.textContent = txt;
-                document.getElementById('chat-body').appendChild(div);
-            }
-        };
-
-        // --- EFFETS VISUELS ---
-        const MatrixFX = {
-            interval: null,
-            start: () => {
-                const c = document.getElementById('matrix-canvas');
-                const ctx = c.getContext('2d');
-                c.style.display = 'block';
-                c.width = window.innerWidth; c.height = window.innerHeight;
-                const cols = Math.floor(c.width / 20);
-                const ypos = Array(cols).fill(0);
-
-                MatrixFX.interval = setInterval(() => {
-                    ctx.fillStyle = '#0001';
-                    ctx.fillRect(0, 0, c.width, c.height);
-                    ctx.fillStyle = '#0f0';
-                    ctx.font = '15pt monospace';
-                    ypos.forEach((y, i) => {
-                        const text = String.fromCharCode(Math.random() * 128);
-                        const x = i * 20;
-                        ctx.fillText(text, x, y);
-                        if (y > 100 + Math.random() * 10000) ypos[i] = 0;
-                        else ypos[i] = y + 20;
-                    });
-                }, 50);
-            },
-            stop: () => {
-                if(MatrixFX.interval) clearInterval(MatrixFX.interval);
-                document.getElementById('matrix-canvas').style.display = 'none';
-            }
-        };
-
-        const NeuralFX = {
-            animId: null,
-            start: () => {
-                const c = document.getElementById('matrix-canvas'); // Réutilisation du canvas
-                const ctx = c.getContext('2d');
-                c.style.display = 'block';
-                c.width = window.innerWidth; c.height = window.innerHeight;
-                
-                let particles = Array(50).fill().map(() => ({
-                    x: Math.random() * c.width, y: Math.random() * c.height,
-                    vx: (Math.random()-.5), vy: (Math.random()-.5)
-                }));
-
-                function draw() {
-                    ctx.clearRect(0, 0, c.width, c.height);
-                    ctx.fillStyle = '#00d2ff';
-                    ctx.strokeStyle = 'rgba(0, 210, 255, 0.1)';
-                    
-                    particles.forEach((p, i) => {
-                        p.x += p.vx; p.y += p.vy;
-                        if(p.x < 0 || p.x > c.width) p.vx *= -1;
-                        if(p.y < 0 || p.y > c.height) p.vy *= -1;
-                        ctx.beginPath(); ctx.arc(p.x, p.y, 2, 0, Math.PI*2); ctx.fill();
-                        
-                        particles.slice(i+1).forEach(p2 => {
-                            const d = Math.hypot(p.x-p2.x, p.y-p2.y);
-                            if(d < 100) { ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p2.x, p2.y); ctx.stroke(); }
-                        });
-                    });
-                    NeuralFX.animId = requestAnimationFrame(draw);
-                }
-                draw();
-            },
-            stop: () => {
-                if(NeuralFX.animId) cancelAnimationFrame(NeuralFX.animId);
-                const c = document.getElementById('matrix-canvas');
-                c.style.display = 'none';
-                const ctx = c.getContext('2d');
-                ctx.clearRect(0,0,c.width, c.height);
-            },
-            initGraph: () => {
-                // Initialisation simplifiée de Vis.js pour le graphe de compétences
-                const container = document.getElementById('neural-graph');
-                if(!container || !window.vis) return;
-                // Logique Vis.js standard (similaire à ton code original)
-                // ... (Code abrégé pour la concision, mais fonctionnel)
-            }
-        };
-
-        const HackerMode = {
-            toggleTerminal: () => {
-                const term = document.getElementById('terminal-overlay');
-                const isOpen = term.classList.toggle('open');
-                if(isOpen) {
-                    document.getElementById('term-input').focus();
-                    document.getElementById('term-input').addEventListener('keydown', HackerMode.handleCmd);
-                } else {
-                    HackerMode.stopSnake();
-                }
-            },
-            close: () => {
-                document.getElementById('terminal-overlay').classList.remove('open');
-                HackerMode.stopSnake();
-            },
-            handleCmd: (e) => {
-                if(e.key === 'Enter') {
-                    const val = e.target.value.trim().toLowerCase();
-                    const output = document.getElementById('terminal-content');
-                    output.innerHTML += `<div>visitor@assami:~$ ${val}</div>`;
-                    
-                    if(val === 'help') output.innerHTML += "<div>ls, cat [file], snake, exit</div>";
-                    else if(val === 'ls') output.innerHTML += "<div>cv.pdf  skills.json  passwords.txt</div>";
-                    else if(val.startsWith('cat')) output.innerHTML += "<div>Permission denied (ou nice try!)</div>";
-                    else if(val === 'snake') HackerMode.startSnake();
-                    else if(val === 'rm -rf /') document.body.classList.add('system-crash');
-                    else if(val === 'exit') HackerMode.close();
-                    
-                    e.target.value = '';
-                    output.scrollTop = output.scrollHeight;
-                }
-            },
-            snakeInterval: null,
-            startSnake: () => {
-                document.getElementById('snake-canvas').style.display = 'block';
-                const c = document.getElementById('snake-canvas');
-                const ctx = c.getContext('2d');
-                let s = [{x:10,y:10}], dir={x:1,y:0}, food={x:15,y:15};
-                
-                document.addEventListener('keydown', e => {
-                    if(e.key==='ArrowUp') dir={x:0,y:-1}; if(e.key==='ArrowDown') dir={x:0,y:1};
-                    if(e.key==='ArrowLeft') dir={x:-1,y:0}; if(e.key==='ArrowRight') dir={x:1,y:0};
-                });
-
-                HackerMode.snakeInterval = setInterval(() => {
-                    let head = {x:s[0].x+dir.x, y:s[0].y+dir.y};
-                    if(head.x<0||head.x>=20||head.y<0||head.y>=15) return HackerMode.stopSnake(); // Die
-                    if(head.x===food.x && head.y===food.y) { food={x:Math.floor(Math.random()*20), y:Math.floor(Math.random()*15)}; }
-                    else s.pop();
-                    s.unshift(head);
-                    
-                    ctx.fillStyle='#001100'; ctx.fillRect(0,0,400,300);
-                    ctx.fillStyle='#0f0'; s.forEach(p => ctx.fillRect(p.x*20, p.y*20, 18, 18));
-                    ctx.fillStyle='red'; ctx.fillRect(food.x*20, food.y*20, 18, 18);
-                }, 100);
-            },
-            stopSnake: () => {
-                clearInterval(HackerMode.snakeInterval);
-                document.getElementById('snake-canvas').style.display = 'none';
-            }
-        };
-
-        // KONAMI CODE
-        let kKeys = []; const konami = "38,38,40,40,37,39,37,39,66,65";
-        document.addEventListener('keydown', (e) => {
-            kKeys.push(e.keyCode);
-            if (kKeys.toString().indexOf(konami) >= 0) {
-                State.theme = 'hacker'; UI.toggleTheme(); kKeys = [];
-                HackerMode.toggleTerminal();
-            }
-        });
-
-        // ==========================================
-        // 6. INITIALISATION
-        // ==========================================
-        document.addEventListener("DOMContentLoaded", () => {
-            UI.toggleTheme(); // Appliquer thème par défaut
-            UI.render();      // Rendu initial (Skeleton)
-            DataManager.init(); // Charger données dynamiques
-            googleTranslateElementInit();
-        });
-
-        function googleTranslateElementInit() {
-            if(window.google) new google.translate.TranslateElement({pageLanguage: 'fr', layout: google.translate.TranslateElement.InlineLayout.SIMPLE}, 'google_translate_element');
+            initObserver();
         }
 
+        function contactLine(icon, field, val, isEdit) {
+            return `<div class="contact-item"><i class="fas fa-${icon}"></i> <span ${isEdit ? 'contenteditable="true" class="editable"' : ''} ${isEdit ? `oninput="upd('personal', '${field}', this.innerText)"` : ''}>${val}</span></div>`;
+        }
+
+        function renderMessages() {
+            return `<div class="messages-list"><h3 style="color:var(--warning)">Reçus (${state.messages.length})</h3>${state.messages.map(m => `<div class="message-card"><button class="btn-delete" style="top:5px;right:5px;display:flex" onclick="delMsg(${m.id})">x</button><b>${m.name}</b> (${m.email})<br>${m.message}</div>`).join('')}</div>`;
+        }
+
+        // ==========================================
+        // DATA MANIPULATION (Global scope for HTML access)
+        // ==========================================
+        window.upd = (cat, field, val) => state.cvData[cat][field] = val;
+        window.updArr = (arr, i, field, val) => field ? state.cvData[arr][i][field] = val : state.cvData[arr][i] = val;
+        window.updTask = (ei, ti, val) => state.cvData.experience[ei].tasks[ti] = val;
+        
+        window.addItem = (type) => {
+            const templates = { experience: { role: "Nouveau", company: "Ent.", date: "Date", tasks: [] }, techSkills: { cat: "Cat", tools: "Outils" }, projects: { name: "Projet", desc: "...", tech: "...", link: "#" }, softSkills: "Atout" };
+            if (!state.cvData[type]) state.cvData[type] = [];
+            state.cvData[type].unshift(templates[type] || {});
+            render();
+        };
+        
+        window.deleteItem = (type, i) => { if(confirm("Supprimer ?")) { state.cvData[type].splice(i, 1); render(); } };
+        window.addTask = (i) => { state.cvData.experience[i].tasks.push("Nouvelle tâche"); render(); };
+        window.delTask = (ei, ti) => { state.cvData.experience[ei].tasks.splice(ti, 1); render(); };
+
+        // ==========================================
+        // SUPABASE ACTIONS
+        // ==========================================
+        window.login = async () => {
+            const email = prompt("Email:"); const pass = prompt("Pass:");
+            if(!email || !pass) return;
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
+            if (!error) location.reload(); else alert(error.message);
+        };
+        window.logout = async () => { await supabase.auth.signOut(); location.reload(); };
+        window.saveDataToSupabase = async () => {
+            const { error } = await supabase.from(CONFIG.table).upsert({ id: CONFIG.cvId, json_data: state.cvData });
+            alert(error ? "Erreur: " + error.message : "Sauvegardé !");
+        };
+        window.handleUpload = async (input, field) => {
+            const file = input.files[0]; if(!file) return;
+            const name = Date.now() + '_' + file.name.replace(/\s/g, '');
+            const { error } = await supabase.storage.from(CONFIG.bucket).upload(name, file);
+            if(!error) {
+                const { data } = supabase.storage.from(CONFIG.bucket).getPublicUrl(name);
+                state.cvData.personal[field] = data.publicUrl;
+                render();
+            } else alert(error.message);
+        };
+        window.handleContact = async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button'); btn.innerText = 'Envoi...'; btn.disabled = true;
+            const form = Object.fromEntries(new FormData(e.target));
+            const { error } = await supabase.from('messages').insert(form);
+            alert(error ? "Erreur" : "Message envoyé !");
+            e.target.reset(); btn.innerText = 'Envoyer'; btn.disabled = false;
+        };
+
+        // ==========================================
+        // JOB MATCHER (Optimized Regex)
+        // ==========================================
+        window.calculateMatch = () => {
+            const jd = document.getElementById('jd-input').value.toLowerCase().replace(/[^\w\s]/g, ' ');
+            if(!jd) return alert("Texte manquant");
+            
+            const result = document.getElementById('match-result');
+            result.style.display = 'block'; result.innerHTML = 'Analyse...';
+
+            const aliases = {
+                "js": ["javascript","typescript","ts","react","node"],
+                "python": ["py","pandas","django"],
+                "java": ["j2ee","spring"],
+                "ai": ["ia","machine learning","nlp","tensorflow"]
+            };
+
+            let skills = [];
+            state.cvData.techSkills.forEach(c => skills.push(...c.tools.split(',').map(s=>s.trim())));
+            skills.push(...state.cvData.softSkills, ...state.cvData.languages);
+
+            let found = new Set();
+            skills.forEach(skill => {
+                const s = skill.toLowerCase();
+                let terms = [s, ...(aliases[s] || [])];
+                for (let t of terms) {
+                    if (new RegExp(`(?:^|\\s)${t.replace('+','\\+')}(?:$|\\s)`, 'i').test(jd)) { found.add(skill); break; }
+                }
+            });
+
+            const score = Math.min(100, Math.round((found.size / 15) * 100));
+            const color = score > 50 ? 'var(--success)' : 'var(--warning)';
+            
+            setTimeout(() => {
+                result.innerHTML = `
+                <div style="font-size:1.5rem;font-weight:bold;color:var(--primary)">${score}%</div>
+                <div class="match-bar-container"><div class="match-bar-fill" style="width:${score}%;background:${color}"></div></div>
+                <div class="skills-list">${Array.from(found).map(s=>`<span class="skill-tag" style="background:${color};color:white">${s}</span>`).join('')}</div>`;
+            }, 300);
+        };
+
+        // ==========================================
+        // THEMES & ANIMATIONS
+        // ==========================================
+        window.toggleTheme = () => {
+            const modes = ['light', 'dark', 'neural', 'hacker'];
+            const next = modes[(modes.indexOf(state.theme) + 1) % modes.length];
+            applyTheme(next);
+        };
+
+        function applyTheme(t) {
+            state.theme = t; localStorage.setItem('theme', t);
+            document.body.className = t === 'light' ? '' : t + '-mode';
+            document.getElementById('theme-icon').className = `fas fa-${t==='dark'?'sun':t==='neural'?'brain':t==='hacker'?'terminal':'moon'}`;
+            
+            // Cleanup animations
+            if (state.matrixId) cancelAnimationFrame(state.matrixId);
+            if (state.neuralId) cancelAnimationFrame(state.neuralId);
+            document.getElementById('matrix-canvas').style.display = 'none';
+            document.getElementById('terminal-overlay').classList.remove('open');
+            stopSnake();
+
+            if (t === 'hacker') startMatrix();
+            if (t === 'neural') startNeural();
+        }
+
+        function startMatrix() {
+            const c = document.getElementById('matrix-canvas'); c.style.display = 'block';
+            const ctx = c.getContext('2d'); c.width = innerWidth; c.height = innerHeight;
+            const cols = Math.floor(c.width / 14); const ypos = Array(cols).fill(0);
+            function step() {
+                ctx.fillStyle = '#0001'; ctx.fillRect(0,0,c.width,c.height);
+                ctx.fillStyle = '#0f0'; ctx.font = '14px monospace';
+                ypos.forEach((y, i) => {
+                    ctx.fillText(String.fromCharCode(Math.random()*128), i*14, y);
+                    ypos[i] = y > 100 + Math.random()*1e4 ? 0 : y + 14;
+                });
+                state.matrixId = requestAnimationFrame(step);
+            }
+            step();
+        }
+
+        function startNeural() {
+            const c = document.getElementById('matrix-canvas'); c.style.display = 'block';
+            const ctx = c.getContext('2d'); c.width = innerWidth; c.height = innerHeight;
+            let parts = Array(50).fill().map(() => ({x:Math.random()*c.width, y:Math.random()*c.height, vx:(Math.random()-.5), vy:(Math.random()-.5)}));
+            function step() {
+                ctx.clearRect(0,0,c.width,c.height);
+                ctx.strokeStyle = 'rgba(0,210,255,0.2)'; ctx.fillStyle = '#00d2ff';
+                parts.forEach((p, i) => {
+                    p.x+=p.vx; p.y+=p.vy;
+                    if(p.x<0||p.x>c.width) p.vx*=-1; if(p.y<0||p.y>c.height) p.vy*=-1;
+                    ctx.beginPath(); ctx.arc(p.x,p.y,2,0,7); ctx.fill();
+                    parts.slice(i+1).forEach(p2 => {
+                        if (Math.hypot(p.x-p2.x, p.y-p2.y) < 100) { ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p2.x,p2.y); ctx.stroke(); }
+                    });
+                });
+                state.neuralId = requestAnimationFrame(step);
+            }
+            step();
+        }
+
+        // ==========================================
+        // TERMINAL & SNAKE
+        // ==========================================
+        window.toggleTerminal = () => {
+            const term = document.getElementById('terminal-overlay');
+            term.classList.toggle('open');
+            if (term.classList.contains('open')) {
+                document.getElementById('term-input').focus();
+            } else stopSnake();
+        };
+
+        const termInput = document.getElementById('term-input');
+        termInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const cmd = e.target.value.trim().toLowerCase().split(' ');
+                logTerm(`visitor:~$ ${e.target.value}`); e.target.value = '';
+                runCmd(cmd[0], cmd.slice(1).join(' '));
+            }
+        });
+
+        function logTerm(txt) {
+            const div = document.createElement('div'); div.textContent = txt;
+            document.getElementById('terminal-content').append(div);
+        }
+
+        function runCmd(cmd, arg) {
+            const fs = { "cv.pdf": "Binary file.", "passwords.txt": "Access Denied.", "skills.json": JSON.stringify(state.cvData.techSkills) };
+            if (cmd === 'help') logTerm("ls, cat [file], snake, clear, exit, sudo rm -rf /");
+            else if (cmd === 'ls') logTerm(Object.keys(fs).join('  '));
+            else if (cmd === 'cat') logTerm(fs[arg] || "File not found");
+            else if (cmd === 'clear') document.getElementById('terminal-content').innerHTML = '';
+            else if (cmd === 'snake') startSnake();
+            else if (cmd === 'exit') window.toggleTerminal();
+            else if (cmd === 'sudo' && arg === 'rm -rf /') crashSystem();
+            else logTerm("Command not found.");
+        }
+
+        function crashSystem() {
+            document.body.classList.add('system-crash');
+            setTimeout(() => location.reload(), 3000);
+        }
+
+        function startSnake() {
+            state.snake = { active: true, body: [{x:10,y:10}], dir: 'RIGHT', food: {x:15,y:15}, score:0 };
+            document.getElementById('snake-canvas').style.display = 'block';
+            document.getElementById('terminal-input-bar').style.display = 'none';
+            state.snake.interval = setInterval(gameLoop, 100);
+            window.addEventListener('keydown', snakeControl);
+        }
+
+        function stopSnake() {
+            clearInterval(state.snake.interval);
+            state.snake.active = false;
+            document.getElementById('snake-canvas').style.display = 'none';
+            document.getElementById('terminal-input-bar').style.display = 'flex';
+            window.removeEventListener('keydown', snakeControl);
+        }
+
+        function snakeControl(e) {
+            const k = e.key.replace('Arrow','').toUpperCase();
+            if (['UP','DOWN','LEFT','RIGHT'].includes(k)) state.snake.dir = k;
+            if (e.key === 'Escape') stopSnake();
+        }
+
+        function gameLoop() {
+            const ctx = document.getElementById('snake-canvas').getContext('2d');
+            let { body, dir, food } = state.snake;
+            let head = { ...body[0] };
+            
+            if (dir === 'UP') head.y--; if (dir === 'DOWN') head.y++;
+            if (dir === 'LEFT') head.x--; if (dir === 'RIGHT') head.x++;
+            
+            if (head.x < 0 || head.x > 19 || head.y < 0 || head.y > 14) return stopSnake();
+            
+            body.unshift(head);
+            if (head.x === food.x && head.y === food.y) {
+                state.snake.score++;
+                state.snake.food = {x:Math.floor(Math.random()*20), y:Math.floor(Math.random()*15)};
+            } else body.pop();
+
+            ctx.fillStyle = '#000'; ctx.fillRect(0,0,400,300);
+            ctx.fillStyle = '#0f0'; body.forEach(p => ctx.fillRect(p.x*20, p.y*20, 18, 18));
+            ctx.fillStyle = 'red'; ctx.fillRect(food.x*20, food.y*20, 18, 18);
+        }
+
+        // ==========================================
+        // CHAT & UTILS
+        // ==========================================
+        window.toggleChat = () => document.getElementById('chat-window').classList.toggle('open');
+        window.clearChat = () => document.getElementById('chat-body').innerHTML = '<div class="chat-message bot">Bonjour ! 👋</div>';
+        
+        window.handleChat = async (e) => {
+            e.preventDefault();
+            const input = document.getElementById('chat-input');
+            const txt = input.value.trim(); if(!txt) return;
+            
+            addMsg(txt, 'user'); input.value = '';
+            document.getElementById('typing-indicator').style.display = 'block';
+            
+            try {
+                // Appel Edge Function (ou fallback local)
+                const { data, error } = await supabase.functions.invoke('chat-resume', { body: { question: txt, context: state.cvData } });
+                const reply = error ? localBot(txt) : data.reply;
+                addMsg(reply, 'bot');
+            } catch { addMsg(localBot(txt), 'bot'); }
+            document.getElementById('typing-indicator').style.display = 'none';
+        };
+
+        function addMsg(txt, type) {
+            const d = document.createElement('div'); d.className = `chat-message ${type}`; d.innerText = txt;
+            const b = document.getElementById('chat-body'); b.append(d); b.scrollTop = b.scrollHeight;
+        }
+
+        function localBot(txt) {
+            txt = txt.toLowerCase();
+            if (txt.includes('contact')) return `Email: ${state.cvData.personal.email}`;
+            if (txt.includes('stack') || txt.includes('tech')) return "Je maîtrise : " + state.cvData.techSkills.map(c=>c.tools).join(', ');
+            return "Je ne suis pas connecté à mon cerveau (Edge Function). Essayez 'contact' ou 'stack'.";
+        }
+
+        function initObserver() {
+            const obs = new IntersectionObserver(es => es.forEach(e => {
+                if(e.isIntersecting) { e.target.classList.add('active'); obs.unobserve(e.target); }
+            }), { threshold: 0.1 });
+            document.querySelectorAll('.reveal').forEach(e => obs.observe(e));
+        }
+
+        async function handleVisits() {
+            if (!sessionStorage.getItem('visited')) { 
+                await supabase.rpc('increment_visits'); 
+                sessionStorage.setItem('visited', 'true'); 
+            }
+            const { data } = await supabase.from('site_stats').select('visits').single();
+            if (data) document.getElementById('visit-count').innerText = data.visits;
+        }
+
+        function setupGlobalListeners() {
+            // Konami Code
+            let k = 0; const code = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+            window.addEventListener('keydown', e => {
+                if (e.key === code[k]) { k++; if (k === code.length) { applyTheme('hacker'); k=0; } } else k=0;
+            });
+        }
+
+        // Start App
+        init();
     </script>
 </body>
 </html>
