@@ -34,6 +34,7 @@
             
             --font-main: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             --glow: none;
+            --nav-height: 70px;
         }
 
         /* --- MODE SOMBRE --- */
@@ -74,7 +75,7 @@
             --font-main: 'Segoe UI', sans-serif;
             --glow: 0 0 10px rgba(58, 123, 213, 0.3);
         }
-        body.neural-mode .sidebar, body.neural-mode .section {
+        body.neural-mode .sidebar, body.neural-mode .section, body.neural-mode .navbar {
             backdrop-filter: blur(5px);
             border: 1px solid rgba(58, 123, 213, 0.3);
         }
@@ -125,6 +126,11 @@
         }
         @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
 
+        html {
+            scroll-behavior: smooth;
+            scroll-padding-top: var(--nav-height);
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: var(--font-main); }
         
         body { 
@@ -133,6 +139,7 @@
             line-height: 1.6; 
             min-height: 100vh;
             transition: background 0.3s, color 0.3s;
+            padding-top: var(--nav-height); /* Espace pour le menu fixe */
         }
         
         body.hacker-mode * { text-shadow: var(--glow); box-shadow: none; }
@@ -148,7 +155,104 @@
         }
 
         /* =========================================
-           2. ANIMATIONS SCROLL (Reveal)
+           2. NAVIGATION BAR
+           ========================================= */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: var(--nav-height);
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--card-border);
+            z-index: 9000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 5%;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: background 0.3s;
+        }
+        
+        .logo-area {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 25px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent);
+        }
+        
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -5px;
+            left: 0;
+            background-color: var(--accent);
+            transition: width 0.3s;
+        }
+        
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .theme-toggle-nav {
+            background: transparent;
+            border: 1px solid var(--card-border);
+            color: var(--text);
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            margin-left: 10px;
+        }
+        .theme-toggle-nav:hover {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            .navbar {
+                justify-content: space-between;
+            }
+            .container {
+                padding-top: 20px;
+            }
+        }
+
+        /* =========================================
+           3. ANIMATIONS SCROLL (Reveal)
            ========================================= */
         .reveal {
             opacity: 0;
@@ -160,27 +264,14 @@
             opacity: 1;
             transform: translateY(0);
         }
-        .project-card:nth-child(1) { transition-delay: 0.1s; }
-        .project-card:nth-child(2) { transition-delay: 0.2s; }
-        .project-card:nth-child(3) { transition-delay: 0.3s; }
-        .project-card:nth-child(4) { transition-delay: 0.4s; }
         
         .timeline-item.reveal { transform: translateX(-20px); }
         .timeline-item.reveal.active { transform: translateX(0); }
 
         /* =========================================
-           3. COMPOSANTS UI
+           4. COMPOSANTS UI
            ========================================= */
-        .theme-toggle {
-            position: fixed; top: 20px; left: 20px; z-index: 9999;
-            background: var(--card-bg); border: 1px solid var(--card-border); color: var(--text);
-            width: 45px; height: 45px; border-radius: 50%;
-            cursor: pointer; display: flex; align-items: center; justify-content: center;
-            font-size: 1.2rem; box-shadow: 0 4px 15px rgba(0,0,0,0.1); transition: all 0.3s;
-        }
-        .theme-toggle:hover { transform: scale(1.1); border-color: var(--accent); }
-
-        .translate-container { position: fixed; top: 20px; right: 20px; z-index: 9999; background: var(--card-bg); padding: 8px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid var(--card-border); }
+        .translate-container { position: fixed; top: 75px; right: 20px; z-index: 8000; background: var(--card-bg); padding: 5px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid var(--card-border); font-size: 0.8rem; }
         .goog-te-gadget-simple { background: transparent !important; border: none !important; padding: 0 !important; font-size: 14px !important; color: var(--text) !important; }
         .goog-te-banner-frame { display: none !important; }
         body { top: 0 !important; }
@@ -216,12 +307,12 @@
         body.logged-in .chat-widget { bottom: 300px !important; transition: bottom 0.3s ease; }
 
         /* =========================================
-           4. LAYOUT & SECTIONS
+           5. LAYOUT & SECTIONS
            ========================================= */
-        .container { max-width: 1200px; margin: 0 auto; padding: 20px; display: grid; grid-template-columns: 300px 1fr; gap: 30px; padding-top: 80px; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; display: grid; grid-template-columns: 300px 1fr; gap: 30px; }
         
         .sidebar { background: var(--card-bg); padding: 30px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); text-align: center; border: 1px solid var(--card-border); }
-        @media (min-width: 769px) { .sidebar { height: fit-content; align-self: start; position: sticky; top: 20px; } }
+        @media (min-width: 769px) { .sidebar { height: fit-content; align-self: start; position: sticky; top: 90px; } }
         @media (max-width: 768px) { .container { grid-template-columns: 1fr; } }
         
         .profile-wrapper { position: relative; display: inline-block; width: 150px; height: 150px; margin-bottom: 20px; }
@@ -245,7 +336,7 @@
         .skill-tag-wrapper { position: relative; display: inline-block; } 
         
         .main-content { display: flex; flex-direction: column; gap: 30px; }
-        .section { background: var(--card-bg); padding: 30px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border: 1px solid var(--card-border); }
+        .section { background: var(--card-bg); padding: 30px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border: 1px solid var(--card-border); scroll-margin-top: 90px; }
         .section-title { font-size: 1.4rem; color: var(--primary); border-bottom: 2px solid var(--light); padding-bottom: 10px; margin-bottom: 20px; }
         
         .timeline-item { border-left: 3px solid var(--accent); padding-left: 20px; margin-bottom: 25px; position: relative; }
@@ -281,7 +372,7 @@
         .tech-tag:hover { background: var(--accent); color: white; border-color: var(--accent); }
 
         /* =========================================
-           5. FORMULAIRE & MESSAGES & JOB MATCHER
+           6. FORMULAIRE & MESSAGES
            ========================================= */
         .contact-form { display: flex; flex-direction: column; gap: 15px; }
         .form-group input, .form-group textarea { width: 100%; padding: 12px; border: 1px solid var(--card-border); background: var(--input-bg); color: var(--text); border-radius: 6px; font-size: 0.95rem; }
@@ -291,11 +382,6 @@
         
         .btn-calendly { background: var(--success); color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-size: 1rem; width: 100%; margin-bottom: 20px; font-weight: bold; transition: transform 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; text-decoration: none; }
         .btn-calendly:hover { transform: scale(1.02); filter: brightness(1.1); color: white; }
-
-        /* Job Matcher Styles */
-        .match-bar-container { height: 20px; background: var(--card-border); border-radius: 10px; overflow: hidden; margin: 15px 0; }
-        .match-bar-fill { height: 100%; background: var(--success); width: 0%; transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; justify-content: center; font-size: 10px; color: white; font-weight: bold; }
-        .match-score-text { font-size: 1.2rem; font-weight: bold; color: var(--primary); }
 
         .messages-list { margin-top: 30px; border-top: 2px dashed var(--card-border); padding-top: 20px; }
         .message-card { background: var(--card-bg); border-left: 4px solid var(--warning); padding: 15px; margin-bottom: 15px; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: relative; border: 1px solid var(--card-border); }
@@ -379,7 +465,7 @@
            9. PRINT MODE
            ========================================= */
         @media print {
-            .admin-controls, .theme-toggle, .translate-container, .btn-action, .btn-delete, .btn-add, .task-controls,
+            .navbar, .admin-controls, .theme-toggle, .translate-container, .btn-action, .btn-delete, .btn-add, .task-controls,
             .cv-download-wrapper, .btn-submit, .form-group, .chat-widget, .btn-calendly, .terminal-trigger, .terminal-overlay, #neural-graph { display: none !important; }
             .tech-grid { display: grid !important; }
             body, .section, .sidebar, .category-box, .project-card, .cert-item { background: white !important; color: black !important; box-shadow: none !important; border: 1px solid #ddd !important; text-shadow: none !important; }
@@ -391,9 +477,26 @@
 </head>
 <body>
 
-    <button class="theme-toggle" onclick="toggleTheme()" title="Changer de thème (Astuce : Essayez ↑ ↑ ↓ ↓ ← → ← → B A)">
-        <i id="theme-icon" class="fas fa-moon"></i>
-    </button>
+    <nav class="navbar">
+        <a href="#" class="logo-area">
+            <i class="fas fa-code"></i> Assami.Dev
+        </a>
+        
+        <div style="display: flex; align-items: center;">
+            <ul class="nav-links">
+                <li><a href="#about">À propos</a></li>
+                <li><a href="#education">Formations</a></li>
+                <li><a href="#skills">Compétences</a></li>
+                <li><a href="#experience">Expériences</a></li>
+                <li><a href="#projects">Projets</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+            
+            <button class="theme-toggle-nav" onclick="toggleTheme()" title="Changer de thème (Astuce : Essayez ↑ ↑ ↓ ↓ ← → ← → B A)">
+                <i id="theme-icon" class="fas fa-moon"></i>
+            </button>
+        </div>
+    </nav>
     
     <canvas id="matrix-canvas"></canvas>
 
@@ -486,6 +589,7 @@
                 { degree: "PUPA, LCB-FT, HDS, ISO 27001, Déontologie", school: "CDC Informatique, Bagneux", date: "Jan 2025 - Déc 2025" },
                 { degree: "RGPD, Protection des données, Sécurité incendie, HDS, ISO 27001", school: "CDC Informatique, Bagneux", date: "Jan 2024 - Déc 2024" },
                 { degree: "Technologie IP, SQL, Linux, Scripting Shell", school: "Essitech, Ouagadougou", date: "Juin 2023" },
+                { degree: "Langages C, Linux, Arduino, Électronique, Hacking", school: "Struct IOT & Assoc Linux, Bobo-Dioulasso", date: "Jan 2020 - Juil 2021" },
                 { degree: "Licence en Ingénierie des Systèmes d'Information", school: "ESI, Burkina Faso", date: "Oct 2019 - Fév 2023" }
             ],
             experience: [
@@ -889,12 +993,12 @@
                     </aside>
                     
                     <main class="main-content">
-                        <section class="section">
+                        <section class="section" id="about">
                             <h2 class="section-title">ℹ️ À propos de moi</h2>
                             <p class="${editClass}" ${contentEditable} oninput="updatePersonal('summary', this.innerText)">${p.summary}</p>
                         </section>
 
-                        <section class="section">
+                        <section class="section" id="education">
                             <h2 class="section-title">🎓 Diplômes et Formations</h2>
                             ${(cvData.education || []).map((edu, i) => `
                                 <div class="timeline-item">
@@ -906,7 +1010,7 @@
                             <button class="btn-action btn-add" onclick="addItem('education')"><i class="fas fa-plus"></i> Ajouter</button>
                         </section>
 
-                        <section class="section">
+                        <section class="section" id="skills">
                             <h2 class="section-title">💻 Compétences Techniques</h2>
                             <div id="neural-graph"></div>
                             <div class="tech-grid">
@@ -925,7 +1029,7 @@
                             <button class="btn-action btn-add" onclick="addItem('techSkills')"><i class="fas fa-plus"></i> Ajouter</button>
                         </section>
                         
-                        <section class="section">
+                        <section class="section" id="experience">
                             <h2 class="section-title">💼 Expériences Professionnelles</h2>
                             ${(cvData.experience || []).map((exp, i) => `
                                 <div class="timeline-item">
@@ -943,7 +1047,7 @@
                             <button class="btn-action btn-add" onclick="addItem('experience')"><i class="fas fa-plus"></i> Ajouter</button>
                         </section>
 
-                        <section class="section">
+                        <section class="section" id="projects">
                             <h2 class="section-title">🏆 Projets Phares</h2>
                             <div class="project-grid">
                                 ${(cvData.projects || []).map((proj, i) => `
@@ -971,17 +1075,6 @@
                             <button class="btn-action btn-add" onclick="addItem('certifications')"><i class="fas fa-plus"></i> Ajouter</button>
                         </section>
 
-                        <section class="section">
-                            <h2 class="section-title">🎯 Recruteurs : Testez le Match !</h2>
-                            <p>Collez votre offre d'emploi ci-dessous pour voir si mon profil correspond via une analyse sémantique avancée.</p>
-                            <div class="form-group" style="margin-top:15px;">
-                                <textarea id="jd-input" placeholder="Collez la description du poste ici..." style="min-height:100px; resize:vertical;"></textarea>
-                            </div>
-                            <button class="btn-submit" onclick="calculateMatch()" style="margin-top:10px; width:100%;">Analyser la compatibilité</button>
-                            
-                            <div id="match-result" class="category-box" style="display:none; margin-top:20px; border-left-color: var(--success);"></div>
-                        </section>
-
                         <section class="section" id="contact">
                             <h2 class="section-title">📬 Me Contacter</h2>
                             <a href="https://calendly.com/bagaassami09/30min" target="_blank" class="btn-calendly"><i class="fas fa-calendar-alt"></i> 📅 Réserver un appel</a>
@@ -1002,112 +1095,6 @@
             `;
             initScrollAnimations();
             attachListeners();
-        }
-
-        // ==========================================
-        // 7b. FONCTION JOB MATCHER (AMÉLIORÉE)
-        // ==========================================
-        function calculateMatch() {
-            const rawJD = document.getElementById('jd-input').value;
-            if(!rawJD) { alert("Veuillez coller une description."); return; }
-            
-            // Nettoyage: minuscules, et normalisation des espaces pour faciliter la regex
-            const jobDescription = rawJD.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g," ");
-
-            const resultDiv = document.getElementById('match-result');
-            resultDiv.style.display = 'block';
-            resultDiv.innerHTML = '<div style="text-align:center; padding:10px;"><i class="fas fa-spinner fa-spin"></i> Analyse IA en cours...</div>';
-
-            // Dictionnaire de synonymes pour augmenter le recall
-            const skillAliases = {
-                "js": ["javascript", "js", "es6", "typescript", "ts"],
-                "react": ["react", "reactjs", "react.js"],
-                "node": ["node", "nodejs", "node.js", "express", "nest"],
-                "python": ["python", "py", "pandas", "numpy", "django", "flask"],
-                "java": ["java", "j2ee", "jakarta", "spring", "springboot"],
-                "c": ["c", "embedded c"], // Attention aux faux positifs
-                "sql": ["sql", "mysql", "postgresql", "postgres", "database", "bdd"],
-                "ai": ["ai", "ia", "artificial intelligence", "machine learning", "deep learning", "nlp", "cnn", "rnn"],
-                "html": ["html", "html5"],
-                "css": ["css", "css3", "sass", "scss", "tailwind", "bootstrap"],
-                "php": ["php", "laravel", "symfony"],
-                "git": ["git", "github", "gitlab", "bitbucket"],
-                "docker": ["docker", "kubernetes", "k8s", "container"],
-                "anglais": ["english", "anglais", "bilingue"]
-            };
-
-            // Récupérer toutes les compétences du CV
-            let mySkills = [];
-            
-            // 1. Tech Skills
-            (cvData.techSkills || []).forEach(cat => {
-                mySkills = mySkills.concat(cat.tools.split(',').map(s => s.trim()));
-            });
-            // 2. Soft Skills & Langues
-            if(cvData.softSkills) mySkills = mySkills.concat(cvData.softSkills);
-            if(cvData.languages) mySkills = mySkills.concat(cvData.languages);
-
-            // Recherche Intelligente
-            let uniqueFound = new Set();
-
-            mySkills.forEach(skill => {
-                const sLower = skill.toLowerCase();
-                
-                // Vérifier s'il y a des alias connus pour ce skill
-                let searchTerms = [sLower];
-                
-                // Chercher dans le dictionnaire si ce skill a des alias
-                for (const [key, aliases] of Object.entries(skillAliases)) {
-                    // Si le skill actuel match une clé ou un des alias
-                    if (key === sLower || aliases.includes(sLower)) {
-                        searchTerms = aliases;
-                        break;
-                    }
-                }
-
-                // Tester chaque terme (skill original + alias)
-                for (const term of searchTerms) {
-                    // Création d'une Regex avec "Word Boundary" (\b) pour éviter les faux positifs
-                    // ex: éviter de trouver "Java" dans "Javascript" ou "C" dans "CSS"
-                    // On échappe les caractères spéciaux comme + (C++) ou # (C#)
-                    const escapedTerm = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                    
-                    // Regex : (début ou espace) + terme + (fin ou espace)
-                    const regex = new RegExp(`(?:^|\\s)${escapedTerm}(?:$|\\s)`, 'i');
-                    
-                    if (regex.test(jobDescription)) {
-                        uniqueFound.add(skill); // On ajoute le nom "officiel" du skill
-                        break; // Trouvé une fois, on passe au skill suivant
-                    }
-                }
-            });
-            
-            const foundArray = Array.from(uniqueFound);
-            
-            // Calcul du score (Pondéré : plus on trouve de skills, plus le score monte, max 100)
-            // On considère qu'un match de 15 skills est un "perfect match"
-            let score = Math.min(100, Math.round((foundArray.length / 15) * 100));
-            if(foundArray.length > 0 && score < 20) score = 20; // Score min d'encouragement
-            
-            setTimeout(() => {
-                let msg = "";
-                if(score > 80) msg = "🔥 C'est un match parfait !";
-                else if(score > 50) msg = "✅ Très bon profil pour ce poste.";
-                else if(score > 0) msg = "⚠️ Quelques correspondances, mais des écarts.";
-                else msg = "❌ Aucune compétence détectée (ou description trop vague).";
-
-                resultDiv.innerHTML = `
-                    <div class="match-score-text">${score}%</div>
-                    <div style="text-align:center; font-size:0.9rem; color:var(--text-muted); margin-bottom:5px;">${msg}</div>
-                    <div class="match-bar-container">
-                        <div class="match-bar-fill" style="width: ${score}%; background: ${score < 50 ? 'var(--warning)' : 'var(--success)'};"></div>
-                    </div>
-                    ${foundArray.length > 0 ? `<p>Compétences détectées (${foundArray.length}) :</p>
-                    <div class="skills-list" style="margin-top:10px;">
-                        ${foundArray.map(s => `<span class="skill-tag" style="background:var(--success); color:white; border:none;"><i class="fas fa-check"></i> ${s}</span>`).join('')}
-                    </div>` : ''}
-                `;
-            }, 600);
         }
 
         function initScrollAnimations() {
