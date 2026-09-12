@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto Open/Close Tab</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .card {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 350px;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-top: 0;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            color: #666;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        button:hover {
+            background-color: #1d4ed8;
+        }
+        button:disabled {
+            background-color: #93c5fd;
+            cursor: not-allowed;
+        }
+        #statusBox {
+            margin-top: 15px;
+            padding: 12px;
+            background: #f8fafc;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 14px;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+        }
+        .error { color: #dc2626 !important; background: #fef2f2 !important; border-color: #fecaca !important; }
+        .success { color: #16a34a !important; background: #f0fdf4 !important; border-color: #bbf7d0 !important; }
+        .active { color: #b45309 !important; background: #fffbeb !important; border-color: #fde68a !important; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>Auto-Onglet</h2>
+        
+        <div class="form-group">
+            <label for="urlInput">URL cible :</label>
+            <input type="text" id="urlInput" value="https://bagus-full-stack.me/">
+        </div>
+
+        <div class="form-group">
+            <label for="countInput">Nombre d'ouvertures :</label>
+            <input type="number" id="countInput" value="5" min="1" max="100">
+        </div>
+
+        <button id="startBtn">Lancer le script</button>
+
+        <div id="statusBox">En attente de lancement...</div>
+    </div>
+
+    <script>
+        const startBtn = document.getElementById('startBtn');
+        const urlInput = document.getElementById('urlInput');
+        const countInput = document.getElementById('countInput');
+        const statusBox = document.getElementById('statusBox');
+
+        async function ouvrirEtFermerOnglets(url, nombreDeFois) {
+            startBtn.disabled = true; 
+            
+            for (let i = 0; i < nombreDeFois; i++) {
+                // Mise à jour de l'interface
+                statusBox.textContent = `⏳ Ouverture ${i + 1} sur ${nombreDeFois}...`;
+                statusBox.className = 'active';
+
+                // Ouvre l'onglet
+                let onglet = window.open(url, '_blank');
+
+                // Gestion du bloqueur de pop-ups
+                if (!onglet) {
+                    statusBox.innerHTML = "❌ <b>Bloqué par le navigateur !</b><br>Autorisez les pop-ups en haut à droite de l'écran, puis réessayez.";
+                    statusBox.className = 'error';
+                    startBtn.disabled = false;
+                    return; 
+                }
+
+                // Temps d'affichage du site (2.5 secondes: 2500 ms)
+                await new Promise(resolve => setTimeout(resolve, 2));
+                
+                // Ferme l'onglet
+                onglet.close();
+                statusBox.textContent = `✔️ Onglet ${i + 1} fermé.`;
+                
+                // Pause avant l'ouverture suivante (1 seconde)
+                if (i < nombreDeFois - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 1));
+                }
+            }
+            
+            // Fin de la boucle
+            statusBox.textContent = "✅ Opération terminée !";
+            statusBox.className = 'success';
+            startBtn.disabled = false;
+        }
+
+        // Événement au clic du bouton
+        startBtn.addEventListener('click', () => {
+            const url = urlInput.value.trim();
+            const count = parseInt(countInput.value, 10);
+
+            if (!url) {
+                statusBox.textContent = "❌ L'URL ne peut pas être vide.";
+                statusBox.className = 'error';
+                return;
+            }
+            if (isNaN(count) || count <= 0) {
+                statusBox.textContent = "❌ Le nombre doit être supérieur à 0.";
+                statusBox.className = 'error';
+                return;
+            }
+
+            // Lancement de la fonction principale
+            ouvrirEtFermerOnglets(url, count);
+        });
+    </script>
+
+</body>
+</html>
