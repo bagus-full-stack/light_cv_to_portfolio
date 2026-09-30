@@ -340,6 +340,8 @@
         .cv-download-wrapper { margin-top: 20px; margin-bottom: 20px; }
         .btn-cv { display: inline-flex; align-items: center; gap: 10px; background: var(--primary); color: white; padding: 10px 20px; border-radius: 30px; text-decoration: none; font-weight: bold; transition: all 0.3s; border: 2px solid var(--primary); cursor: pointer; }
         .btn-cv:hover { background: transparent; color: var(--primary); }
+        .cv-duo { display: flex; flex-wrap: wrap; gap: 10px; }
+        .cv-duo .btn-cv { padding: 10px 16px; font-size: 0.9rem; }
         .btn-cv.upload-mode { background: var(--warning); border-color: var(--warning); }
         
         .skills-list { text-align: left; margin-top: 30px; display: flex; flex-wrap: wrap; gap: 5px; }
@@ -639,7 +641,7 @@
                 {"degree": "Licence en Ingénierie des Systèmes d'Information", "school": "École Supérieure d'Informatique (ESI), Burkina Faso", "date": "Oct 2019 - Fév 2023"}
             ],
             experience: [
-                {"role": "Ingénieur Data & Systèmes d'Information", "company": "CDC Informatique, Bagneux", "date": "Sept 2024 - Sept 2026", "tasks": ["Conçu en Python et déployé PYMQCOPY (MQ Series, Bash, Control-M), programme critique de routage de messages vers le cloud et les micro-services : 200+ flux/jour, avec suivi des incidents et correction en production.", "Modélisé et documenté un Référentiel des Services Flux (80+ services) avec 3 équipes IT, base de l'analyse d'impact des évolutions du SI.", "Diagnostiqué avec des équipes pluridisciplinaires des problèmes techniques complexes, identifié les causes et proposé des corrections."]},
+                {"role": "Full Stack Engineer (Data & Systèmes d'Information)", "company": "CDC Informatique, Bagneux", "date": "Sept 2024 - Sept 2026", "tasks": ["Conçu en Python et déployé PYMQCOPY (MQ Series, Bash, Control-M), programme critique de routage de messages vers le cloud et les micro-services : 200+ flux/jour, avec suivi des incidents et correction en production.", "Modélisé et documenté un Référentiel des Services Flux (80+ services) avec 3 équipes IT, base de l'analyse d'impact des évolutions du SI.", "Diagnostiqué avec des équipes pluridisciplinaires des problèmes techniques complexes, identifié les causes et proposé des corrections."]},
                 {"role": "Bénévole - Mentorat et Accompagnement", "company": "AFEV, Calais", "date": "Sept 2023 - Sept 2024", "tasks": ["Accompagnement régulier de jeunes en difficulté scolaire : pédagogie et partage de connaissances.", "Création de lien dans les quartiers populaires, renforçant ma communication et mon adaptabilité."]},
                 {"role": "Ingénieur Full Stack", "company": "Orange, Ouagadougou", "date": "Sept 2022 - Sept 2023", "tasks": ["PNP+ (Angular, Spring Boot, PostgreSQL) : traduit les besoins des équipes métier en spécifications, puis développé l'outil qui automatise la conception des offres commerciales, soit -60% de temps de production d'une proposition.", "Refonte des portails MySpace (parcours d'éligibilité fibre) et BourseFondation (gestion des bourses) en API REST et micro-services, avec traitement sécurisé des données : +30% de sessions."]},
                 {"role": "Software Engineer", "company": "WAKATLAB, Ouagadougou", "date": "Sept 2021 - Oct 2021", "tasks": ["Conception et réalisation collaborative de projets IoT.", "Développement logiciel et intégration matérielle."]}
@@ -721,6 +723,33 @@
             if (/\bc, linux|bash/.test(t)) return 'fa-terminal';
             if (/angular|react|next\.js|laravel|html|javascript|php/.test(t)) return 'fa-globe';
             return 'fa-code';
+        }
+
+        // Deux CV : « IA » et « Full Stack »
+        function cvButton(label, field, url, isEditing) {
+            const inputId = 'cv-upload-' + field;
+            if (isEditing) {
+                return `<a href="#" class="btn-cv upload-mode" title="Cliquer pour envoyer ou remplacer ce CV (PDF)" onclick="document.getElementById('${inputId}').click(); return false;"><i class="fas fa-file-upload"></i> ${url ? '✔ ' : ''}CV ${label}</a><input type="file" id="${inputId}" data-field="${field}" data-slug="${label.replace(/\s/g, '')}" accept="application/pdf" style="display:none">`;
+            }
+            if (!url) return '';
+            return `<a href="${esc(url)}" target="_blank" rel="noopener" class="btn-cv"><i class="fas fa-download"></i> CV ${label}</a>`;
+        }
+
+        // Envoi d'un CV sous un nom lisible (Assami_BAGA_CV_IA.pdf). Si le remplacement direct est refusé
+        // par les règles du bucket, on retombe sur un nom horodaté.
+        async function uploadCV(file, slug) {
+            if (!user) return null;
+            const bucket = supabaseClient.storage.from(STORAGE_BUCKET);
+            const base = `cv/Assami_BAGA_CV_${slug}.pdf`;
+            let path = base;
+            let { error } = await bucket.upload(path, file, { upsert: true, contentType: 'application/pdf', cacheControl: '60' });
+            if (error) {
+                path = `cv/${Date.now()}_Assami_BAGA_CV_${slug}.pdf`;
+                ({ error } = await bucket.upload(path, file, { contentType: 'application/pdf' }));
+            }
+            if (error) { alert("Erreur upload: " + error.message); return null; }
+            const { data } = bucket.getPublicUrl(path);
+            return data.publicUrl + '?v=' + Date.now();
         }
 
         // Certifications : afficher / replier la liste complète
@@ -1087,14 +1116,11 @@
                         </div>
                         ` : ''}
                         
-                        ${(isEditing || p.cvUrl) ? `
-                        <div class="cv-download-wrapper">
-                            <a href="${p.cvUrl || '#'}" class="btn-cv ${isEditing ? 'upload-mode' : ''}" ${isEditing ? 'onclick="document.getElementById(\'cv-upload\').click(); return false;"' : 'target="_blank"'}>
-                                <i class="fas ${isEditing ? 'fa-file-upload' : 'fa-download'}"></i> ${isEditing ? 'Uploader CV' : 'Télécharger CV'}
-                            </a>
-                            <input type="file" id="cv-upload" accept="application/pdf" style="display:none">
-                        </div>
-                        ` : ''}
+                        ${(isEditing || p.cvUrlIA || p.cvUrlFullStack || p.cvUrl) ? `
+                        <div class="cv-download-wrapper cv-duo">
+                            ${cvButton('IA', 'cvUrlIA', p.cvUrlIA || p.cvUrl, isEditing)}
+                            ${cvButton('Full Stack', 'cvUrlFullStack', p.cvUrlFullStack, isEditing)}
+                        </div>` : ''}
                         
                         <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--card-border);">
                         
@@ -1261,8 +1287,14 @@
         function attachListeners() {
             const pi = document.getElementById('photo-upload');
             if(pi) pi.onchange = async (e) => { const f = e.target.files[0]; if(f) { const url = await uploadFileToSupabase(f); if(url) { cvData.personal.photoUrl = url; render(); } } };
-            const ci = document.getElementById('cv-upload');
-            if(ci) ci.onchange = async (e) => { const f = e.target.files[0]; if(f) { const url = await uploadFileToSupabase(f); if(url) { cvData.personal.cvUrl = url; alert("CV Uploadé !"); render(); } } };
+            document.querySelectorAll('input[data-field]').forEach(inp => {
+                inp.onchange = async (e) => {
+                    const f = e.target.files[0]; if (!f) return;
+                    if (f.type !== 'application/pdf') { alert("Le CV doit être un fichier PDF."); return; }
+                    const url = await uploadCV(f, inp.dataset.slug);
+                    if (url) { cvData.personal[inp.dataset.field] = url; alert("CV uploadé ! Pense à cliquer sur Sauvegarder."); render(); }
+                };
+            });
         }
 
         async function handleVisits() {
@@ -1316,7 +1348,7 @@
             const w = document.getElementById('chat-window'); w.classList.toggle('open');
             if(w.classList.contains('open')) document.getElementById('chat-input').focus();
         }
-        const CHAT_GREETING = `<div class="chat-message bot">Bonjour ! Je suis l'assistant IA d'Assami. Posez-moi une question sur son parcours, ses projets ou ses technos.</div><div class="chat-chips"><button type="button" class="chat-chip" onclick="askQuick('Quelle est ta disponibilité ?')">Disponibilité</button><button type="button" class="chat-chip" onclick="askQuick('Quel est ton projet le plus marquant ?')">Projet marquant</button><button type="button" class="chat-chip" onclick="askQuick('Quelle est ta stack principale ?')">Stack principale</button><button type="button" class="chat-chip" onclick="askQuick('Quel est ton parcours ?')">Parcours</button></div>`;
+        const CHAT_GREETING = `<div class="chat-message bot">Bonjour ! Je suis l'assistant IA d'Assami. Posez-moi une question sur son parcours, ses projets ou ses technos. Les réponses sont générées par IA et peuvent contenir des erreurs.</div><div class="chat-chips"><button type="button" class="chat-chip" onclick="askQuick('Quelle est ta disponibilité ?')">Disponibilité</button><button type="button" class="chat-chip" onclick="askQuick('Quel est ton projet le plus marquant ?')">Projet marquant</button><button type="button" class="chat-chip" onclick="askQuick('Quelle est ta stack principale ?')">Stack principale</button><button type="button" class="chat-chip" onclick="askQuick('Quel est ton parcours ?')">Parcours</button></div>`;
         function clearChat() { document.getElementById('chat-body').innerHTML = CHAT_GREETING; }
         function askQuick(q) { document.getElementById('chat-input').value = q; handleChat({ preventDefault() {} }); }
 
@@ -1343,7 +1375,7 @@
             e.preventDefault(); const inputField = document.getElementById('chat-input'); const msg = inputField.value.trim(); if (!msg) return; if (!chatAllowed()) return;
             addMessage(msg, 'user'); inputField.value = ''; document.getElementById('typing-indicator').style.display = 'block';
             try {
-                const { data, error } = await supabaseClient.functions.invoke('chat-resume', { body: { question: msg, context: cvData } });
+                const { data, error } = await supabaseClient.functions.invoke('chat-resume', { body: { question: msg } });
                 if (error) throw error; document.getElementById('typing-indicator').style.display = 'none'; addMessage(data.reply, 'bot');
             } catch (err) {
                 console.warn("IA Error", err); document.getElementById('typing-indicator').style.display = 'none';
