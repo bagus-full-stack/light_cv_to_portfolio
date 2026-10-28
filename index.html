@@ -622,7 +622,7 @@
         // ==========================================
         
         const DEFAULT_DATA = {
-            contentVersion: 8,
+            contentVersion: 9,
             personal: {
                 name: "Assami BAGA",
                 title: "Ingénieur Full Stack & IA",
@@ -632,7 +632,7 @@
                 location: "Île-de-France",
                 linkedin: "assami-baga",
                 social: "bagus-full-stack",
-                summary: "Ingénieur diplômé Bac+5 en Ingénierie Logicielle et Intelligence Artificielle (EILCO, 2026), disponible immédiatement en CDI. J'ai 3 ans d'expérience en entreprise (stage chez Orange, alternance chez CDC Informatique), sur des applications web (Angular, Spring Boot, React) et des systèmes critiques de traitement de flux (200+ flux/jour en production). Je pars toujours du besoin métier pour livrer une solution pragmatique, maintenable et adoptée par les équipes. Je m'appuie sur l'IA (LLM, RAG, vision par ordinateur, IA générative, NLP) là où elle apporte une vraie valeur : traduction et synthèse vocale pour 7 langues du Burkina Faso, analyse nutritionnelle par photo, génération d'images optimisée. Formé à la conformité (RGPD, ISO 27001, LCB-FT), rigoureux et curieux, j'aime expliquer clairement et partager ce que j'apprends."
+                summary: "Ingénieur diplômé Bac+5 en Ingénierie Logicielle et Intelligence Artificielle (EILCO, 2026), disponible immédiatement en CDI. J'ai 3 ans d'expérience en entreprise, sur des applications web (Angular, Spring Boot, React) et des systèmes critiques de traitement de flux (200+ flux/jour en production). Je pars toujours du besoin métier pour livrer une solution pragmatique, maintenable et adoptée par les équipes. Je m'appuie sur l'IA (LLM, RAG, vision par ordinateur, IA générative, NLP) là où elle apporte une vraie valeur : traduction et synthèse vocale pour 7 langues du Burkina Faso, analyse nutritionnelle par photo, génération d'images optimisée. Formé à la conformité (RGPD, ISO 27001, LCB-FT), rigoureux et curieux, j'aime expliquer clairement et partager ce que j'apprends."
             },
             softSkills: ["Orienté besoin métier", "Esprit d'analyse et de synthèse", "Rigueur et fiabilité en production", "Collaboration transverse", "Pédagogie et partage de connaissances", "Autonomie et proactivité", "Résolution de problèmes complexes", "Pragmatisme orienté résultat", "Curiosité technique"],
             languages: ["Français", "Anglais"],
@@ -804,8 +804,8 @@
                 const { data, error } = await supabaseClient.from(DB_TABLE).select('json_data').eq('id', CV_ID).single();
                 if (data && data.json_data) {
                     cvData = data.json_data;
-                    // Migration de contenu (v8) : titre, lieu, résumé, expériences, projets, compétences, atouts, formations, certifications, disponibilité
-                    if (!cvData.contentVersion || cvData.contentVersion < 8) {
+                    // Migration de contenu (v9) : titre, lieu, résumé, expériences, projets, compétences, atouts, formations, certifications, disponibilité
+                    if (!cvData.contentVersion || cvData.contentVersion < 9) {
                         const fresh = JSON.parse(JSON.stringify(DEFAULT_DATA));
                         cvData.projects = fresh.projects;
                         cvData.experience = fresh.experience;
@@ -814,7 +814,7 @@
                         cvData.education = fresh.education;
                         cvData.certifications = fresh.certifications;
                         cvData.personal = Object.assign({}, cvData.personal, { title: fresh.personal.title, location: fresh.personal.location, summary: fresh.personal.summary, availability: fresh.personal.availability });
-                        cvData.contentVersion = 8;
+                        cvData.contentVersion = 9;
                     }
                 }
                 render();
