@@ -804,8 +804,8 @@
                 const { data, error } = await supabaseClient.from(DB_TABLE).select('json_data').eq('id', CV_ID).single();
                 if (data && data.json_data) {
                     cvData = data.json_data;
-                    // Migration de contenu (v7) : titre, lieu, résumé, expériences, projets, compétences, atouts, formations, certifications, disponibilité
-                    if (!cvData.contentVersion || cvData.contentVersion < 7) {
+                    // Migration de contenu (v8) : titre, lieu, résumé, expériences, projets, compétences, atouts, formations, certifications, disponibilité
+                    if (!cvData.contentVersion || cvData.contentVersion < 8) {
                         const fresh = JSON.parse(JSON.stringify(DEFAULT_DATA));
                         cvData.projects = fresh.projects;
                         cvData.experience = fresh.experience;
@@ -814,7 +814,7 @@
                         cvData.education = fresh.education;
                         cvData.certifications = fresh.certifications;
                         cvData.personal = Object.assign({}, cvData.personal, { title: fresh.personal.title, location: fresh.personal.location, summary: fresh.personal.summary, availability: fresh.personal.availability });
-                        cvData.contentVersion = 7;
+                        cvData.contentVersion = 8;
                     }
                 }
                 render();
