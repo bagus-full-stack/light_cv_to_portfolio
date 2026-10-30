@@ -1273,7 +1273,7 @@
             const elementsToAnimate = document.querySelectorAll('.section, .timeline-item, .project-card, .category-box, .cert-item');
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('active'); observer.unobserve(entry.target); } });
-            }, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
+            }, { threshold: 0, rootMargin: "0px 0px -50px 0px" });
             elementsToAnimate.forEach(el => { el.classList.add('reveal'); observer.observe(el); });
         }
 
