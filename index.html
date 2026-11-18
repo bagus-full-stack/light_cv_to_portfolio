@@ -320,6 +320,9 @@
         /* =========================================
            5. LAYOUT & SECTIONS
            ========================================= */
+        .move-banner { max-width: 1160px; margin: 20px auto 0; padding: 12px 16px; text-align: center; background: var(--accent); color: white; border-radius: 8px; font-weight: bold; }
+        .move-banner a { color: white; text-decoration: underline; }
+        @media print { .move-banner { display: none !important; } }
         .container { max-width: 1200px; margin: 0 auto; padding: 20px; display: grid; grid-template-columns: 300px 1fr; gap: 30px; }
         
         .sidebar { background: var(--card-bg); padding: 30px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); text-align: center; border: 1px solid var(--card-border); }
@@ -1095,6 +1098,7 @@
             const photoSrc = p.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=3498db&color=fff&size=150`;
 
             app.innerHTML = `
+                <div class="move-banner">🚀 Mon nouveau portfolio est en ligne : <a href="https://assamibaga.com/">assamibaga.com</a></div>
                 <div class="container">
                     <aside class="sidebar">
                         <div class="profile-wrapper">
